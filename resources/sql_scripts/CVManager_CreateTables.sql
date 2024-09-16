@@ -10,7 +10,7 @@ CREATE SEQUENCE cvmanager.manufacturers_manufacturer_id_seq
 
 CREATE TABLE IF NOT EXISTS cvmanager.manufacturers
 (
-   manufacturer_id integer NOT NULL DEFAULT nextval('manufacturers_manufacturer_id_seq'::regclass),
+   manufacturer_id integer NOT NULL DEFAULT nextval('cvmanager.manufacturers_manufacturer_id_seq'::regclass),
    name character varying(128) COLLATE pg_catalog.default NOT NULL,
    CONSTRAINT manufacturers_pkey PRIMARY KEY (manufacturer_id),
    CONSTRAINT manufacturers_name UNIQUE (name)
@@ -25,7 +25,7 @@ CREATE SEQUENCE cvmanager.rsu_models_rsu_model_id_seq
 
 CREATE TABLE IF NOT EXISTS cvmanager.rsu_models
 (
-   rsu_model_id integer NOT NULL DEFAULT nextval('rsu_models_rsu_model_id_seq'::regclass),
+   rsu_model_id integer NOT NULL DEFAULT nextval('cvmanager.rsu_models_rsu_model_id_seq'::regclass),
    name character varying(128) COLLATE pg_catalog.default NOT NULL,
    supported_radio character varying(128) COLLATE pg_catalog.default NOT NULL,
    manufacturer integer NOT NULL,
@@ -46,7 +46,7 @@ CREATE SEQUENCE cvmanager.firmware_images_firmware_id_seq
 
 CREATE TABLE IF NOT EXISTS cvmanager.firmware_images
 (
-   firmware_id integer NOT NULL DEFAULT nextval('firmware_images_firmware_id_seq'::regclass),
+   firmware_id integer NOT NULL DEFAULT nextval('cvmanager.firmware_images_firmware_id_seq'::regclass),
    name character varying(128) COLLATE pg_catalog.default NOT NULL,
    model integer NOT NULL,
    install_package character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -70,7 +70,7 @@ CREATE SEQUENCE cvmanager.firmware_upgrade_rules_firmware_upgrade_rule_id_seq
 
 CREATE TABLE IF NOT EXISTS cvmanager.firmware_upgrade_rules
 (
-   firmware_upgrade_rule_id integer NOT NULL DEFAULT nextval('firmware_upgrade_rules_firmware_upgrade_rule_id_seq'::regclass),
+   firmware_upgrade_rule_id integer NOT NULL DEFAULT nextval('cvmanager.firmware_upgrade_rules_firmware_upgrade_rule_id_seq'::regclass),
    from_id integer NOT NULL,
    to_id integer NOT NULL,
    CONSTRAINT firmware_upgrade_rules_pkey PRIMARY KEY (firmware_upgrade_rule_id),
@@ -93,7 +93,7 @@ CREATE SEQUENCE cvmanager.rsu_credentials_credential_id_seq
 
 CREATE TABLE IF NOT EXISTS cvmanager.rsu_credentials
 (
-   credential_id integer NOT NULL DEFAULT nextval('rsu_credentials_credential_id_seq'::regclass),
+   credential_id integer NOT NULL DEFAULT nextval('cvmanager.rsu_credentials_credential_id_seq'::regclass),
    username character varying(128) COLLATE pg_catalog.default NOT NULL,
    password character varying(128) COLLATE pg_catalog.default NOT NULL,
    nickname character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -110,7 +110,7 @@ CREATE SEQUENCE cvmanager.snmp_credentials_snmp_credential_id_seq
 
 CREATE TABLE IF NOT EXISTS cvmanager.snmp_credentials
 (
-   snmp_credential_id integer NOT NULL DEFAULT nextval('snmp_credentials_snmp_credential_id_seq'::regclass),
+   snmp_credential_id integer NOT NULL DEFAULT nextval('cvmanager.snmp_credentials_snmp_credential_id_seq'::regclass),
    username character varying(128) COLLATE pg_catalog.default NOT NULL,
    password character varying(128) COLLATE pg_catalog.default NOT NULL,
    encrypt_password character varying(128) COLLATE pg_catalog.default,
@@ -128,7 +128,7 @@ CREATE SEQUENCE cvmanager.snmp_versions_snmp_version_id_seq
 
 CREATE TABLE IF NOT EXISTS cvmanager.snmp_versions
 (
-   snmp_version_id integer NOT NULL DEFAULT nextval('snmp_versions_snmp_version_id_seq'::regclass),
+   snmp_version_id integer NOT NULL DEFAULT nextval('cvmanager.snmp_versions_snmp_version_id_seq'::regclass),
    version_code character varying(128) COLLATE pg_catalog.default NOT NULL,
    nickname character varying(128) COLLATE pg_catalog.default NOT NULL,
    CONSTRAINT snmp_versions_pkey PRIMARY KEY (snmp_version_id),
@@ -144,7 +144,7 @@ CREATE SEQUENCE cvmanager.rsus_rsu_id_seq
 
 CREATE TABLE IF NOT EXISTS cvmanager.rsus
 (
-   rsu_id integer NOT NULL DEFAULT nextval('rsus_rsu_id_seq'::regclass),
+   rsu_id integer NOT NULL DEFAULT nextval('cvmanager.rsus_rsu_id_seq'::regclass),
    geography geography NOT NULL,
    milepost double precision NOT NULL,
    ipv4_address inet NOT NULL,
@@ -197,7 +197,7 @@ CREATE SEQUENCE cvmanager.ping_ping_id_seq
 
 CREATE TABLE IF NOT EXISTS cvmanager.ping
 (
-   ping_id integer NOT NULL DEFAULT nextval('ping_ping_id_seq'::regclass),
+   ping_id integer NOT NULL DEFAULT nextval('cvmanager.ping_ping_id_seq'::regclass),
    timestamp timestamp without time zone NOT NULL,
    result bit(1) NOT NULL,
    rsu_id integer NOT NULL,
@@ -217,7 +217,7 @@ CREATE SEQUENCE cvmanager.roles_role_id_seq
 
 CREATE TABLE IF NOT EXISTS cvmanager.roles
 (
-   role_id integer NOT NULL DEFAULT nextval('roles_role_id_seq'::regclass),
+   role_id integer NOT NULL DEFAULT nextval('cvmanager.roles_role_id_seq'::regclass),
    name character varying(128) COLLATE pg_catalog.default NOT NULL,
    CONSTRAINT roles_pkey PRIMARY KEY (role_id),
    CONSTRAINT roles_name UNIQUE (name)
@@ -232,7 +232,7 @@ CREATE SEQUENCE cvmanager.users_user_id_seq
 
 CREATE TABLE IF NOT EXISTS cvmanager.users
 (
-   user_id integer NOT NULL DEFAULT nextval('users_user_id_seq'::regclass),
+   user_id integer NOT NULL DEFAULT nextval('cvmanager.users_user_id_seq'::regclass),
    email character varying(128) COLLATE pg_catalog.default NOT NULL,
    first_name character varying(128) NOT NULL,
    last_name character varying(128) NOT NULL,
@@ -251,7 +251,7 @@ CREATE SEQUENCE cvmanager.organizations_organization_id_seq
 
 CREATE TABLE IF NOT EXISTS cvmanager.organizations
 (
-   organization_id integer NOT NULL DEFAULT nextval('organizations_organization_id_seq'::regclass),
+   organization_id integer NOT NULL DEFAULT nextval('cvmanager.organizations_organization_id_seq'::regclass),
    name character varying(128) COLLATE pg_catalog.default NOT NULL,
    CONSTRAINT organizations_pkey PRIMARY KEY (organization_id),
    CONSTRAINT organizations_name UNIQUE (name)
@@ -266,7 +266,7 @@ CREATE SEQUENCE cvmanager.user_organization_user_organization_id_seq
 
 CREATE TABLE IF NOT EXISTS cvmanager.user_organization
 (
-   user_organization_id integer NOT NULL DEFAULT nextval('user_organization_user_organization_id_seq'::regclass),
+   user_organization_id integer NOT NULL DEFAULT nextval('cvmanager.user_organization_user_organization_id_seq'::regclass),
    user_id integer NOT NULL,
    organization_id integer NOT NULL,
    role_id integer NOT NULL,
@@ -294,7 +294,7 @@ CREATE SEQUENCE cvmanager.rsu_organization_rsu_organization_id_seq
 
 CREATE TABLE IF NOT EXISTS cvmanager.rsu_organization
 (
-   rsu_organization_id integer NOT NULL DEFAULT nextval('rsu_organization_rsu_organization_id_seq'::regclass),
+   rsu_organization_id integer NOT NULL DEFAULT nextval('cvmanager.rsu_organization_rsu_organization_id_seq'::regclass),
    rsu_id integer NOT NULL,
    organization_id integer NOT NULL,
    CONSTRAINT rsu_organization_pkey PRIMARY KEY (rsu_organization_id),
@@ -335,7 +335,7 @@ CREATE SEQUENCE cvmanager.iss_keys_iss_key_id_seq
 
 CREATE TABLE IF NOT EXISTS cvmanager.iss_keys
 (
-   iss_key_id integer NOT NULL DEFAULT nextval('iss_keys_iss_key_id_seq'::regclass),
+   iss_key_id integer NOT NULL DEFAULT nextval('cvmanager.iss_keys_iss_key_id_seq'::regclass),
    common_name character varying(128) COLLATE pg_catalog.default NOT NULL,
    token character varying(128) COLLATE pg_catalog.default NOT NULL
 );
@@ -350,7 +350,7 @@ CREATE SEQUENCE cvmanager.scms_health_scms_health_id_seq
 
 CREATE TABLE IF NOT EXISTS cvmanager.scms_health
 (
-   scms_health_id integer NOT NULL DEFAULT nextval('scms_health_scms_health_id_seq'::regclass),
+   scms_health_id integer NOT NULL DEFAULT nextval('cvmanager.scms_health_scms_health_id_seq'::regclass),
    timestamp timestamp without time zone NOT NULL,
    health bit(1) NOT NULL,
    expiration timestamp without time zone,
@@ -372,7 +372,7 @@ CREATE SEQUENCE cvmanager.snmp_msgfwd_type_id_seq
 
 CREATE TABLE IF NOT EXISTS cvmanager.snmp_msgfwd_type
 (
-   snmp_msgfwd_type_id integer NOT NULL DEFAULT nextval('snmp_msgfwd_type_id_seq'::regclass),
+   snmp_msgfwd_type_id integer NOT NULL DEFAULT nextval('cvmanager.snmp_msgfwd_type_id_seq'::regclass),
    name character varying(128) COLLATE pg_catalog.default NOT NULL,
    CONSTRAINT snmp_msgfwd_type_pkey PRIMARY KEY (snmp_msgfwd_type_id),
    CONSTRAINT snmp_msgfwd_type_name UNIQUE (name)
@@ -400,5 +400,3 @@ CREATE TABLE IF NOT EXISTS cvmanager.snmp_msgfwd_config
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION
 );
-
-CREATE SCHEMA IF NOT EXISTS keycloak;
