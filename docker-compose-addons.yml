@@ -115,44 +115,45 @@ services:
       GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
 
       LOGGING_LEVEL: ${ISS_LOGGING_LEVEL}
+      STORAGE_TYPE: POSTGRES
+      ISS_KEY_TABLE_NAME: iss_keys
     volumes:
       - ${GOOGLE_APPLICATION_CREDENTIALS}:/google/gcp_credentials.json
     logging:
       options:
         max-size: '10m'
         max-file: '5'
-
-  firmware_manager:
-    build:
-      context: services
-      dockerfile: Dockerfile.firmware_manager
-    image: jpo_firmware_manager:latest
-    restart: on-failure:3
-
-    ports:
-      - '8089:8080'
-    environment:
-      PG_DB_HOST: ${PG_DB_HOST}
-      PG_DB_NAME: postgres
-      PG_DB_USER: ${PG_DB_USER}
-      PG_DB_PASS: ${PG_DB_PASS}
-
-      BLOB_STORAGE_PROVIDER: ${BLOB_STORAGE_PROVIDER}
-      BLOB_STORAGE_BUCKET: ${BLOB_STORAGE_BUCKET}
-
-      GCP_PROJECT: ${GCP_PROJECT}
-      GOOGLE_APPLICATION_CREDENTIALS: '/google/gcp_credentials.json'
-
-      FW_EMAIL_RECIPIENTS: ${FW_EMAIL_RECIPIENTS}
-      SMTP_SERVER_IP: ${SMTP_SERVER_IP}
-      SMTP_EMAIL: ${SMTP_EMAIL}
-      SMTP_USERNAME: ${SMTP_USERNAME}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-      LOGGING_LEVEL: ${FIRMWARE_MANAGER_LOGGING_LEVEL}
-    volumes:
-      - ${GOOGLE_APPLICATION_CREDENTIALS}:/google/gcp_credentials.json
-      - ${HOST_BLOB_STORAGE_DIRECTORY}:/mnt/blob_storage
-    logging:
-      options:
-        max-size: '10m'
-        max-file: '5'
+#  firmware_manager:
+#    build:
+#      context: services
+#      dockerfile: Dockerfile.firmware_manager
+#    image: jpo_firmware_manager:latest
+#    restart: on-failure:3
+#
+#    ports:
+#      - '8089:8080'
+#    environment:
+#      PG_DB_HOST: ${PG_DB_HOST}
+#      PG_DB_NAME: postgres
+#      PG_DB_USER: ${PG_DB_USER}
+#      PG_DB_PASS: ${PG_DB_PASS}
+#
+#      BLOB_STORAGE_PROVIDER: ${BLOB_STORAGE_PROVIDER}
+#      BLOB_STORAGE_BUCKET: ${BLOB_STORAGE_BUCKET}
+#
+#      GCP_PROJECT: ${GCP_PROJECT}
+#      GOOGLE_APPLICATION_CREDENTIALS: '/google/gcp_credentials.json'
+#
+#      FW_EMAIL_RECIPIENTS: ${FW_EMAIL_RECIPIENTS}
+#      SMTP_SERVER_IP: ${SMTP_SERVER_IP}
+#      SMTP_EMAIL: ${SMTP_EMAIL}
+#      SMTP_USERNAME: ${SMTP_USERNAME}
+#      SMTP_PASSWORD: ${SMTP_PASSWORD}
+#      LOGGING_LEVEL: ${FIRMWARE_MANAGER_LOGGING_LEVEL}
+#    volumes:
+#      - ${GOOGLE_APPLICATION_CREDENTIALS}:/google/gcp_credentials.json
+#      - ${HOST_BLOB_STORAGE_DIRECTORY}:/mnt/blob_storage
+#    logging:
+#      options:
+#        max-size: '10m'
+#        max-file: '5'
