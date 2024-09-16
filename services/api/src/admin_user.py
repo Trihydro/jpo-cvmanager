@@ -10,10 +10,10 @@ def get_user_data(user_email):
         "SELECT to_jsonb(row) "
         "FROM ("
         "SELECT email, first_name, last_name, super_user, receive_error_emails, org.name, roles.name AS role "
-        "FROM public.users "
-        "JOIN public.user_organization AS uo ON uo.user_id = users.user_id "
-        "JOIN public.organizations AS org ON org.organization_id = uo.organization_id "
-        "JOIN public.roles ON roles.role_id = uo.role_id"
+        "FROM cvmanager.users "
+        "JOIN cvmanager.user_organization AS uo ON uo.user_id = users.user_id "
+        "JOIN cvmanager.organizations AS org ON org.organization_id = uo.organization_id "
+        "JOIN cvmanager.roles ON roles.role_id = uo.role_id"
     )
     if user_email != "all":
         query += f" WHERE email = '{user_email}'"
@@ -30,9 +30,9 @@ def get_user_data(user_email):
                 "first_name": row["first_name"],
                 "last_name": row["last_name"],
                 "super_user": True if row["super_user"] == "1" else False,
-                "receive_error_emails": True
-                if row["receive_error_emails"] == "1"
-                else False,
+                "receive_error_emails": (
+                    True if row["receive_error_emails"] == "1" else False
+                ),
                 "organizations": [],
             }
         user_dict[row["email"]]["organizations"].append(
@@ -97,7 +97,7 @@ def modify_user(user_spec):
     try:
         # Modify the existing user data
         query = (
-            "UPDATE public.users SET "
+            "UPDATE cvmanager.users SET "
             f"email='{user_spec['email']}', "
             f"first_name='{user_spec['first_name']}', "
             f"last_name='{user_spec['last_name']}', "
@@ -109,13 +109,13 @@ def modify_user(user_spec):
 
         # Add the user-to-organization relationships
         if len(user_spec["organizations_to_add"]) > 0:
-            org_add_query = "INSERT INTO public.user_organization(user_id, organization_id, role_id) VALUES"
+            org_add_query = "INSERT INTO cvmanager.user_organization(user_id, organization_id, role_id) VALUES"
             for organization in user_spec["organizations_to_add"]:
                 org_add_query += (
                     " ("
-                    f"(SELECT user_id FROM public.users WHERE email = '{user_spec['email']}'), "
-                    f"(SELECT organization_id FROM public.organizations WHERE name = '{organization['name']}'), "
-                    f"(SELECT role_id FROM public.roles WHERE name = '{organization['role']}')"
+                    f"(SELECT user_id FROM cvmanager.users WHERE email = '{user_spec['email']}'), "
+                    f"(SELECT organization_id FROM cvmanager.organizations WHERE name = '{organization['name']}'), "
+                    f"(SELECT role_id FROM cvmanager.roles WHERE name = '{organization['role']}')"
                     "),"
                 )
             org_add_query = org_add_query[:-1]
@@ -124,19 +124,19 @@ def modify_user(user_spec):
         # Modify the user-to-organization relationships
         for organization in user_spec["organizations_to_modify"]:
             org_modify_query = (
-                "UPDATE public.user_organization "
-                f"SET role_id = (SELECT role_id FROM public.roles WHERE name = '{organization['role']}') "
-                f"WHERE user_id = (SELECT user_id FROM public.users WHERE email = '{user_spec['email']}') "
-                f"AND organization_id = (SELECT organization_id FROM public.organizations WHERE name = '{organization['name']}')"
+                "UPDATE cvmanager.user_organization "
+                f"SET role_id = (SELECT role_id FROM cvmanager.roles WHERE name = '{organization['role']}') "
+                f"WHERE user_id = (SELECT user_id FROM cvmanager.users WHERE email = '{user_spec['email']}') "
+                f"AND organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = '{organization['name']}')"
             )
             pgquery.write_db(org_modify_query)
 
         # Remove the user-to-organization relationships
         for organization in user_spec["organizations_to_remove"]:
             org_remove_query = (
-                "DELETE FROM public.user_organization WHERE "
-                f"user_id = (SELECT user_id FROM public.users WHERE email = '{user_spec['email']}') "
-                f"AND organization_id = (SELECT organization_id FROM public.organizations WHERE name = '{organization['name']}')"
+                "DELETE FROM cvmanager.user_organization WHERE "
+                f"user_id = (SELECT user_id FROM cvmanager.users WHERE email = '{user_spec['email']}') "
+                f"AND organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = '{organization['name']}')"
             )
             pgquery.write_db(org_remove_query)
     except sqlalchemy.exc.IntegrityError as e:
@@ -156,13 +156,13 @@ def modify_user(user_spec):
 def delete_user(user_email):
     # Delete user-to-organization relationships
     org_remove_query = (
-        "DELETE FROM public.user_organization WHERE "
-        f"user_id = (SELECT user_id FROM public.users WHERE email = '{user_email}')"
+        "DELETE FROM cvmanager.user_organization WHERE "
+        f"user_id = (SELECT user_id FROM cvmanager.users WHERE email = '{user_email}')"
     )
     pgquery.write_db(org_remove_query)
 
     # Delete user data
-    user_remove_query = "DELETE FROM public.users WHERE " f"email = '{user_email}'"
+    user_remove_query = "DELETE FROM cvmanager.users WHERE " f"email = '{user_email}'"
     pgquery.write_db(user_remove_query)
 
     return {"message": "User successfully deleted"}

@@ -37,13 +37,13 @@ def test_get_iss_status_no_data(mock_pgquery):
     expected_rsu_data = {}
     expected_query = (
         "SELECT jsonb_build_object('ip', rd.ipv4_address, 'health', scms_health_data.health, 'expiration', scms_health_data.expiration) "
-        "FROM public.rsus AS rd "
-        "JOIN public.rsu_organization_name AS ron_v ON ron_v.rsu_id = rd.rsu_id "
+        "FROM cvmanager.rsus AS rd "
+        "JOIN cvmanager.rsu_organization_name AS ron_v ON ron_v.rsu_id = rd.rsu_id "
         "LEFT JOIN ("
         "SELECT a.rsu_id, a.health, a.timestamp, a.expiration "
         "FROM ("
         "SELECT sh.rsu_id, sh.health, sh.timestamp, sh.expiration, ROW_NUMBER() OVER (PARTITION BY sh.rsu_id order by sh.timestamp DESC) AS row_id "
-        "FROM public.scms_health AS sh"
+        "FROM cvmanager.scms_health AS sh"
         ") AS a "
         "WHERE a.row_id <= 1 ORDER BY rsu_id"
         ") AS scms_health_data ON rd.rsu_id = scms_health_data.rsu_id "

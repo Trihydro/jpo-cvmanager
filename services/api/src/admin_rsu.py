@@ -12,14 +12,14 @@ def get_rsu_data(rsu_ip):
         "SELECT ipv4_address, ST_X(geography::geometry) AS longitude, ST_Y(geography::geometry) AS latitude, "
         "milepost, primary_route, serial_number, iss_scms_id, concat(man.name, ' ',rm.name) AS model, "
         "rsu_cred.nickname AS ssh_credential, snmp_cred.nickname AS snmp_credential, snmp_ver.nickname AS snmp_version, org.name AS org_name "
-        "FROM public.rsus "
-        "JOIN public.rsu_models AS rm ON rm.rsu_model_id = rsus.model "
-        "JOIN public.manufacturers AS man ON man.manufacturer_id = rm.manufacturer "
-        "JOIN public.rsu_credentials AS rsu_cred ON rsu_cred.credential_id = rsus.credential_id "
-        "JOIN public.snmp_credentials AS snmp_cred ON snmp_cred.snmp_credential_id = rsus.snmp_credential_id "
-        "JOIN public.snmp_versions AS snmp_ver ON snmp_ver.snmp_version_id = rsus.snmp_version_id "
-        "JOIN public.rsu_organization AS ro ON ro.rsu_id = rsus.rsu_id  "
-        "JOIN public.organizations AS org ON org.organization_id = ro.organization_id"
+        "FROM cvmanager.rsus "
+        "JOIN cvmanager.rsu_models AS rm ON rm.rsu_model_id = rsus.model "
+        "JOIN cvmanager.manufacturers AS man ON man.manufacturer_id = rm.manufacturer "
+        "JOIN cvmanager.rsu_credentials AS rsu_cred ON rsu_cred.credential_id = rsus.credential_id "
+        "JOIN cvmanager.snmp_credentials AS snmp_cred ON snmp_cred.snmp_credential_id = rsus.snmp_credential_id "
+        "JOIN cvmanager.snmp_versions AS snmp_ver ON snmp_ver.snmp_version_id = rsus.snmp_version_id "
+        "JOIN cvmanager.rsu_organization AS ro ON ro.rsu_id = rsus.rsu_id  "
+        "JOIN cvmanager.organizations AS org ON org.organization_id = ro.organization_id"
     )
     if rsu_ip != "all":
         query += f" WHERE ipv4_address = '{rsu_ip}'"
@@ -82,16 +82,16 @@ def modify_rsu(rsu_spec):
     try:
         # Modify the existing RSU data
         query = (
-            "UPDATE public.rsus SET "
+            "UPDATE cvmanager.rsus SET "
             f"geography=ST_GeomFromText('POINT({str(rsu_spec['geo_position']['longitude'])} {str(rsu_spec['geo_position']['latitude'])})'), "
             f"milepost={str(rsu_spec['milepost'])}, "
             f"ipv4_address='{rsu_spec['ip']}', "
             f"serial_number='{rsu_spec['serial_number']}', "
             f"primary_route='{rsu_spec['primary_route']}', "
-            f"model=(SELECT rsu_model_id FROM public.rsu_models WHERE name = '{model}'), "
-            f"credential_id=(SELECT credential_id FROM public.rsu_credentials WHERE nickname = '{rsu_spec['ssh_credential_group']}'), "
-            f"snmp_credential_id=(SELECT snmp_credential_id FROM public.snmp_credentials WHERE nickname = '{rsu_spec['snmp_credential_group']}'), "
-            f"snmp_version_id=(SELECT snmp_version_id FROM public.snmp_versions WHERE nickname = '{rsu_spec['snmp_version_group']}'), "
+            f"model=(SELECT rsu_model_id FROM cvmanager.rsu_models WHERE name = '{model}'), "
+            f"credential_id=(SELECT credential_id FROM cvmanager.rsu_credentials WHERE nickname = '{rsu_spec['ssh_credential_group']}'), "
+            f"snmp_credential_id=(SELECT snmp_credential_id FROM cvmanager.snmp_credentials WHERE nickname = '{rsu_spec['snmp_credential_group']}'), "
+            f"snmp_version_id=(SELECT snmp_version_id FROM cvmanager.snmp_versions WHERE nickname = '{rsu_spec['snmp_version_group']}'), "
             f"iss_scms_id='{rsu_spec['scms_id']}' "
             f"WHERE ipv4_address='{rsu_spec['orig_ip']}'"
         )
@@ -100,13 +100,13 @@ def modify_rsu(rsu_spec):
         # Add the rsu-to-organization relationships for the organizations to add
         if len(rsu_spec["organizations_to_add"]) > 0:
             org_add_query = (
-                "INSERT INTO public.rsu_organization(rsu_id, organization_id) VALUES"
+                "INSERT INTO cvmanager.rsu_organization(rsu_id, organization_id) VALUES"
             )
             for organization in rsu_spec["organizations_to_add"]:
                 org_add_query += (
                     " ("
-                    f"(SELECT rsu_id FROM public.rsus WHERE ipv4_address = '{rsu_spec['ip']}'), "
-                    f"(SELECT organization_id FROM public.organizations WHERE name = '{organization}')"
+                    f"(SELECT rsu_id FROM cvmanager.rsus WHERE ipv4_address = '{rsu_spec['ip']}'), "
+                    f"(SELECT organization_id FROM cvmanager.organizations WHERE name = '{organization}')"
                     "),"
                 )
             org_add_query = org_add_query[:-1]
@@ -115,9 +115,9 @@ def modify_rsu(rsu_spec):
         # Remove the rsu-to-organization relationships for the organizations to remove
         for organization in rsu_spec["organizations_to_remove"]:
             org_remove_query = (
-                "DELETE FROM public.rsu_organization WHERE "
-                f"rsu_id=(SELECT rsu_id FROM public.rsus WHERE ipv4_address = '{rsu_spec['ip']}') "
-                f"AND organization_id=(SELECT organization_id FROM public.organizations WHERE name = '{organization}')"
+                "DELETE FROM cvmanager.rsu_organization WHERE "
+                f"rsu_id=(SELECT rsu_id FROM cvmanager.rsus WHERE ipv4_address = '{rsu_spec['ip']}') "
+                f"AND organization_id=(SELECT organization_id FROM cvmanager.organizations WHERE name = '{organization}')"
             )
             pgquery.write_db(org_remove_query)
     except sqlalchemy.exc.IntegrityError as e:
@@ -137,27 +137,27 @@ def modify_rsu(rsu_spec):
 def delete_rsu(rsu_ip):
     # Delete RSU to Organization relationships
     org_remove_query = (
-        "DELETE FROM public.rsu_organization WHERE "
-        f"rsu_id=(SELECT rsu_id FROM public.rsus WHERE ipv4_address = '{rsu_ip}')"
+        "DELETE FROM cvmanager.rsu_organization WHERE "
+        f"rsu_id=(SELECT rsu_id FROM cvmanager.rsus WHERE ipv4_address = '{rsu_ip}')"
     )
     pgquery.write_db(org_remove_query)
 
     # Delete recorded RSU ping data
     ping_remove_query = (
-        "DELETE FROM public.ping WHERE "
-        f"rsu_id=(SELECT rsu_id FROM public.rsus WHERE ipv4_address = '{rsu_ip}')"
+        "DELETE FROM cvmanager.ping WHERE "
+        f"rsu_id=(SELECT rsu_id FROM cvmanager.rsus WHERE ipv4_address = '{rsu_ip}')"
     )
     pgquery.write_db(ping_remove_query)
 
     # Delete recorded RSU SCMS health data
     scms_remove_query = (
-        "DELETE FROM public.scms_health WHERE "
-        f"rsu_id=(SELECT rsu_id FROM public.rsus WHERE ipv4_address = '{rsu_ip}')"
+        "DELETE FROM cvmanager.scms_health WHERE "
+        f"rsu_id=(SELECT rsu_id FROM cvmanager.rsus WHERE ipv4_address = '{rsu_ip}')"
     )
     pgquery.write_db(scms_remove_query)
 
     # Delete RSU data
-    rsu_remove_query = "DELETE FROM public.rsus WHERE " f"ipv4_address = '{rsu_ip}'"
+    rsu_remove_query = "DELETE FROM cvmanager.rsus WHERE " f"ipv4_address = '{rsu_ip}'"
     pgquery.write_db(rsu_remove_query)
 
     return {"message": "RSU successfully deleted"}

@@ -15,7 +15,7 @@ def test_get_rsu_data_no_data(mock_query_db):
     assert result == expected
     mock_query_db.assert_called_once()
     mock_query_db.assert_called_with(
-        "SELECT jsonb_build_object('rsu_id', rsu_id, 'iss_scms_id', iss_scms_id) FROM public.rsus WHERE iss_scms_id IS NOT NULL ORDER BY rsu_id"
+        "SELECT jsonb_build_object('rsu_id', rsu_id, 'iss_scms_id', iss_scms_id) FROM cvmanager.rsus WHERE iss_scms_id IS NOT NULL ORDER BY rsu_id"
     )
 
 
@@ -29,13 +29,15 @@ def test_get_rsu_data_with_data(mock_query_db):
     ]
     result = iss_health_checker.get_rsu_data()
 
-    expected_result = RsuDataWrapper({"ABC": {"rsu_id": 1}, "DEF": {"rsu_id": 2}, "GHI": {"rsu_id": 3}})
+    expected_result = RsuDataWrapper(
+        {"ABC": {"rsu_id": 1}, "DEF": {"rsu_id": 2}, "GHI": {"rsu_id": 3}}
+    )
 
     # check
     assert result == expected_result
     mock_query_db.assert_called_once()
     mock_query_db.assert_called_with(
-        "SELECT jsonb_build_object('rsu_id', rsu_id, 'iss_scms_id', iss_scms_id) FROM public.rsus WHERE iss_scms_id IS NOT NULL ORDER BY rsu_id"
+        "SELECT jsonb_build_object('rsu_id', rsu_id, 'iss_scms_id', iss_scms_id) FROM cvmanager.rsus WHERE iss_scms_id IS NOT NULL ORDER BY rsu_id"
     )
 
 
@@ -54,7 +56,9 @@ def test_get_rsu_data_with_data(mock_query_db):
 def test_get_scms_status_data(
     mock_get_rsu_data, mock_get_token, mock_requests, mock_response
 ):
-    mock_get_rsu_data.return_value = RsuDataWrapper({"ABC": {"rsu_id": 1}, "DEF": {"rsu_id": 2}})
+    mock_get_rsu_data.return_value = RsuDataWrapper(
+        {"ABC": {"rsu_id": 1}, "DEF": {"rsu_id": 2}}
+    )
     mock_get_token.get_token.return_value = "test-token"
     mock_requests.get.return_value = mock_response
     mock_response.json.side_effect = [
@@ -138,7 +142,7 @@ def test_insert_scms_data(mock_write_db, mock_datetime):
     iss_health_checker.insert_scms_data(test_data)
 
     expectedQuery = (
-        'INSERT INTO public.scms_health("timestamp", health, expiration, rsu_id) VALUES '
+        'INSERT INTO cvmanager.scms_health("timestamp", health, expiration, rsu_id) VALUES '
         "('2022-11-03T00:00:00.000Z', '1', '2022-11-02T00:00:00.000Z', 1), "
         "('2022-11-03T00:00:00.000Z', '0', NULL, 2)"
     )
@@ -160,7 +164,7 @@ def test_insert_scms_data_no_rsu_id(mock_write_db, mock_datetime):
     iss_health_checker.insert_scms_data(test_data)
 
     expectedQuery = (
-        'INSERT INTO public.scms_health("timestamp", health, expiration, rsu_id) VALUES '
+        'INSERT INTO cvmanager.scms_health("timestamp", health, expiration, rsu_id) VALUES '
         "('2022-11-03T00:00:00.000Z', '0', NULL, 2)"
     )
     mock_write_db.assert_called_with(expectedQuery)
@@ -181,7 +185,7 @@ def test_insert_scms_data_no_deviceHealth(mock_write_db, mock_datetime):
     iss_health_checker.insert_scms_data(test_data)
 
     expectedQuery = (
-        'INSERT INTO public.scms_health("timestamp", health, expiration, rsu_id) VALUES '
+        'INSERT INTO cvmanager.scms_health("timestamp", health, expiration, rsu_id) VALUES '
         "('2022-11-03T00:00:00.000Z', '0', NULL, 2)"
     )
     mock_write_db.assert_called_with(expectedQuery)
@@ -202,7 +206,7 @@ def test_insert_scms_data_no_expiration(mock_write_db, mock_datetime):
     iss_health_checker.insert_scms_data(test_data)
 
     expectedQuery = (
-        'INSERT INTO public.scms_health("timestamp", health, expiration, rsu_id) VALUES '
+        'INSERT INTO cvmanager.scms_health("timestamp", health, expiration, rsu_id) VALUES '
         "('2022-11-03T00:00:00.000Z', '0', 'test', 2)"
     )
     mock_write_db.assert_called_with(expectedQuery)

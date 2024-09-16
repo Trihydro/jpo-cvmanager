@@ -3,7 +3,7 @@ import multidict
 
 ##################################### test_data ###########################################
 get_subscribed_users_query = (
-    "SELECT email FROM public.users WHERE receive_error_emails = '1'"
+    "SELECT email FROM cvmanager.users WHERE receive_error_emails = '1'"
 )
 get_subscribed_users_query_resp = [
     {"email": "test@gmail.com"},
@@ -11,10 +11,10 @@ get_subscribed_users_query_resp = [
 ]
 
 get_unsubscribe_user_query = (
-    "SELECT receive_error_emails FROM public.users WHERE email = 'test@gmail.com'"
+    "SELECT receive_error_emails FROM cvmanager.users WHERE email = 'test@gmail.com'"
 )
 get_unsubscribe_user_remove_query = (
-    "UPDATE public.users SET receive_error_emails='0' WHERE email = 'test@gmail.com'"
+    "UPDATE cvmanager.users SET receive_error_emails='0' WHERE email = 'test@gmail.com'"
 )
 
 subscribed_user_emails = ["test1@gmail.com", "test2@gmail.com"]

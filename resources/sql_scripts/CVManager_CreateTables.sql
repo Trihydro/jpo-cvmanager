@@ -1,14 +1,14 @@
 -- RSU Manager Cloud Run Tables
 CREATE EXTENSION IF NOT EXISTS postgis;
 
-CREATE SEQUENCE public.manufacturers_manufacturer_id_seq
+CREATE SEQUENCE cvmanager.manufacturers_manufacturer_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.manufacturers
+CREATE TABLE IF NOT EXISTS cvmanager.manufacturers
 (
    manufacturer_id integer NOT NULL DEFAULT nextval('manufacturers_manufacturer_id_seq'::regclass),
    name character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -16,14 +16,14 @@ CREATE TABLE IF NOT EXISTS public.manufacturers
    CONSTRAINT manufacturers_name UNIQUE (name)
 );
 
-CREATE SEQUENCE public.rsu_models_rsu_model_id_seq
+CREATE SEQUENCE cvmanager.rsu_models_rsu_model_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.rsu_models
+CREATE TABLE IF NOT EXISTS cvmanager.rsu_models
 (
    rsu_model_id integer NOT NULL DEFAULT nextval('rsu_models_rsu_model_id_seq'::regclass),
    name character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -32,19 +32,19 @@ CREATE TABLE IF NOT EXISTS public.rsu_models
    CONSTRAINT rsu_models_pkey PRIMARY KEY (rsu_model_id),
    CONSTRAINT rsu_models_name UNIQUE (name),
    CONSTRAINT fk_manufacturer FOREIGN KEY (manufacturer)
-      REFERENCES public.manufacturers (manufacturer_id) MATCH SIMPLE
+      REFERENCES cvmanager.manufacturers (manufacturer_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE SEQUENCE public.firmware_images_firmware_id_seq
+CREATE SEQUENCE cvmanager.firmware_images_firmware_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.firmware_images
+CREATE TABLE IF NOT EXISTS cvmanager.firmware_images
 (
    firmware_id integer NOT NULL DEFAULT nextval('firmware_images_firmware_id_seq'::regclass),
    name character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -56,42 +56,42 @@ CREATE TABLE IF NOT EXISTS public.firmware_images
    CONSTRAINT firmware_images_install_package UNIQUE (install_package),
    CONSTRAINT firmware_images_version UNIQUE (version),
    CONSTRAINT fk_model FOREIGN KEY (model)
-      REFERENCES public.rsu_models (rsu_model_id) MATCH SIMPLE
+      REFERENCES cvmanager.rsu_models (rsu_model_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE SEQUENCE public.firmware_upgrade_rules_firmware_upgrade_rule_id_seq
+CREATE SEQUENCE cvmanager.firmware_upgrade_rules_firmware_upgrade_rule_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.firmware_upgrade_rules
+CREATE TABLE IF NOT EXISTS cvmanager.firmware_upgrade_rules
 (
    firmware_upgrade_rule_id integer NOT NULL DEFAULT nextval('firmware_upgrade_rules_firmware_upgrade_rule_id_seq'::regclass),
    from_id integer NOT NULL,
    to_id integer NOT NULL,
    CONSTRAINT firmware_upgrade_rules_pkey PRIMARY KEY (firmware_upgrade_rule_id),
    CONSTRAINT fk_from_id FOREIGN KEY (from_id)
-      REFERENCES public.firmware_images (firmware_id) MATCH SIMPLE
+      REFERENCES cvmanager.firmware_images (firmware_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_to_id FOREIGN KEY (to_id)
-      REFERENCES public.firmware_images (firmware_id) MATCH SIMPLE
+      REFERENCES cvmanager.firmware_images (firmware_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE SEQUENCE public.rsu_credentials_credential_id_seq
+CREATE SEQUENCE cvmanager.rsu_credentials_credential_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.rsu_credentials
+CREATE TABLE IF NOT EXISTS cvmanager.rsu_credentials
 (
    credential_id integer NOT NULL DEFAULT nextval('rsu_credentials_credential_id_seq'::regclass),
    username character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -101,14 +101,14 @@ CREATE TABLE IF NOT EXISTS public.rsu_credentials
    CONSTRAINT rsu_credentials_nickname UNIQUE (nickname)
 );
 
-CREATE SEQUENCE public.snmp_credentials_snmp_credential_id_seq
+CREATE SEQUENCE cvmanager.snmp_credentials_snmp_credential_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.snmp_credentials
+CREATE TABLE IF NOT EXISTS cvmanager.snmp_credentials
 (
    snmp_credential_id integer NOT NULL DEFAULT nextval('snmp_credentials_snmp_credential_id_seq'::regclass),
    username character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -119,14 +119,14 @@ CREATE TABLE IF NOT EXISTS public.snmp_credentials
    CONSTRAINT snmp_credentials_nickname UNIQUE (nickname)
 );
 
-CREATE SEQUENCE public.snmp_versions_snmp_version_id_seq
+CREATE SEQUENCE cvmanager.snmp_versions_snmp_version_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.snmp_versions
+CREATE TABLE IF NOT EXISTS cvmanager.snmp_versions
 (
    snmp_version_id integer NOT NULL DEFAULT nextval('snmp_versions_snmp_version_id_seq'::regclass),
    version_code character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -135,14 +135,14 @@ CREATE TABLE IF NOT EXISTS public.snmp_versions
    CONSTRAINT snmp_versions_nickname UNIQUE (nickname)
 );
 
-CREATE SEQUENCE public.rsus_rsu_id_seq
+CREATE SEQUENCE cvmanager.rsus_rsu_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.rsus
+CREATE TABLE IF NOT EXISTS cvmanager.rsus
 (
    rsu_id integer NOT NULL DEFAULT nextval('rsus_rsu_id_seq'::regclass),
    geography geography NOT NULL,
@@ -163,39 +163,39 @@ CREATE TABLE IF NOT EXISTS public.rsus
    CONSTRAINT rsu_serial_number UNIQUE (serial_number),
    CONSTRAINT rsu_iss_scms_id UNIQUE (iss_scms_id),
    CONSTRAINT fk_model FOREIGN KEY (model)
-      REFERENCES public.rsu_models (rsu_model_id) MATCH SIMPLE
+      REFERENCES cvmanager.rsu_models (rsu_model_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_credential_id FOREIGN KEY (credential_id)
-      REFERENCES public.rsu_credentials (credential_id) MATCH SIMPLE
+      REFERENCES cvmanager.rsu_credentials (credential_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_snmp_credential_id FOREIGN KEY (snmp_credential_id)
-      REFERENCES public.snmp_credentials (snmp_credential_id) MATCH SIMPLE
+      REFERENCES cvmanager.snmp_credentials (snmp_credential_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_snmp_version_id FOREIGN KEY (snmp_version_id)
-      REFERENCES public.snmp_versions (snmp_version_id) MATCH SIMPLE
+      REFERENCES cvmanager.snmp_versions (snmp_version_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_firmware_version FOREIGN KEY (firmware_version)
-      REFERENCES public.firmware_images (firmware_id) MATCH SIMPLE
+      REFERENCES cvmanager.firmware_images (firmware_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_target_firmware_version FOREIGN KEY (target_firmware_version)
-      REFERENCES public.firmware_images (firmware_id) MATCH SIMPLE
+      REFERENCES cvmanager.firmware_images (firmware_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE SEQUENCE public.ping_ping_id_seq
+CREATE SEQUENCE cvmanager.ping_ping_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.ping
+CREATE TABLE IF NOT EXISTS cvmanager.ping
 (
    ping_id integer NOT NULL DEFAULT nextval('ping_ping_id_seq'::regclass),
    timestamp timestamp without time zone NOT NULL,
@@ -203,19 +203,19 @@ CREATE TABLE IF NOT EXISTS public.ping
    rsu_id integer NOT NULL,
    CONSTRAINT ping_pkey PRIMARY KEY (ping_id),
    CONSTRAINT fk_rsu_id FOREIGN KEY (rsu_id)
-      REFERENCES public.rsus (rsu_id) MATCH SIMPLE
+      REFERENCES cvmanager.rsus (rsu_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE SEQUENCE public.roles_role_id_seq
+CREATE SEQUENCE cvmanager.roles_role_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.roles
+CREATE TABLE IF NOT EXISTS cvmanager.roles
 (
    role_id integer NOT NULL DEFAULT nextval('roles_role_id_seq'::regclass),
    name character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -223,14 +223,14 @@ CREATE TABLE IF NOT EXISTS public.roles
    CONSTRAINT roles_name UNIQUE (name)
 );
 
-CREATE SEQUENCE public.users_user_id_seq
+CREATE SEQUENCE cvmanager.users_user_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.users
+CREATE TABLE IF NOT EXISTS cvmanager.users
 (
    user_id integer NOT NULL DEFAULT nextval('users_user_id_seq'::regclass),
    email character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -242,14 +242,14 @@ CREATE TABLE IF NOT EXISTS public.users
    CONSTRAINT users_email UNIQUE (email)
 );
 
-CREATE SEQUENCE public.organizations_organization_id_seq
+CREATE SEQUENCE cvmanager.organizations_organization_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.organizations
+CREATE TABLE IF NOT EXISTS cvmanager.organizations
 (
    organization_id integer NOT NULL DEFAULT nextval('organizations_organization_id_seq'::regclass),
    name character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -257,14 +257,14 @@ CREATE TABLE IF NOT EXISTS public.organizations
    CONSTRAINT organizations_name UNIQUE (name)
 );
 
-CREATE SEQUENCE public.user_organization_user_organization_id_seq
+CREATE SEQUENCE cvmanager.user_organization_user_organization_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.user_organization
+CREATE TABLE IF NOT EXISTS cvmanager.user_organization
 (
    user_organization_id integer NOT NULL DEFAULT nextval('user_organization_user_organization_id_seq'::regclass),
    user_id integer NOT NULL,
@@ -272,68 +272,68 @@ CREATE TABLE IF NOT EXISTS public.user_organization
    role_id integer NOT NULL,
    CONSTRAINT user_organization_pkey PRIMARY KEY (user_organization_id),
    CONSTRAINT fk_user_id FOREIGN KEY (user_id)
-      REFERENCES public.users (user_id) MATCH SIMPLE
+      REFERENCES cvmanager.users (user_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_organization_id FOREIGN KEY (organization_id)
-      REFERENCES public.organizations (organization_id) MATCH SIMPLE
+      REFERENCES cvmanager.organizations (organization_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_role_id FOREIGN KEY (role_id)
-      REFERENCES public.roles (role_id) MATCH SIMPLE
+      REFERENCES cvmanager.roles (role_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE SEQUENCE public.rsu_organization_rsu_organization_id_seq
+CREATE SEQUENCE cvmanager.rsu_organization_rsu_organization_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.rsu_organization
+CREATE TABLE IF NOT EXISTS cvmanager.rsu_organization
 (
    rsu_organization_id integer NOT NULL DEFAULT nextval('rsu_organization_rsu_organization_id_seq'::regclass),
    rsu_id integer NOT NULL,
    organization_id integer NOT NULL,
    CONSTRAINT rsu_organization_pkey PRIMARY KEY (rsu_organization_id),
    CONSTRAINT fk_rsu_id FOREIGN KEY (rsu_id)
-      REFERENCES public.rsus (rsu_id) MATCH SIMPLE
+      REFERENCES cvmanager.rsus (rsu_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_organization_id FOREIGN KEY (organization_id)
-      REFERENCES public.organizations (organization_id) MATCH SIMPLE
+      REFERENCES cvmanager.organizations (organization_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE TABLE IF NOT EXISTS public.map_info
+CREATE TABLE IF NOT EXISTS cvmanager.map_info
 (
    ipv4_address inet NOT NULL,
    geojson json NOT NULL,
    date character varying(64) COLLATE pg_catalog.default,
    CONSTRAINT map_info_pkey PRIMARY KEY (ipv4_address),
    CONSTRAINT fk_ipv4_address FOREIGN KEY (ipv4_address)
-      REFERENCES public.rsus (ipv4_address) MATCH SIMPLE
+      REFERENCES cvmanager.rsus (ipv4_address) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE VIEW public.rsu_organization_name AS
+CREATE VIEW cvmanager.rsu_organization_name AS
 SELECT ro.rsu_id, org.name
-FROM public.rsu_organization AS ro
-JOIN public.organizations AS org ON ro.organization_id = org.organization_id;
+FROM cvmanager.rsu_organization AS ro
+JOIN cvmanager.organizations AS org ON ro.organization_id = org.organization_id;
 
 -- Create iss keys table (id, iss_key, creation_date, expiration_date)
-CREATE SEQUENCE public.iss_keys_iss_key_id_seq
+CREATE SEQUENCE cvmanager.iss_keys_iss_key_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.iss_keys
+CREATE TABLE IF NOT EXISTS cvmanager.iss_keys
 (
    iss_key_id integer NOT NULL DEFAULT nextval('iss_keys_iss_key_id_seq'::regclass),
    common_name character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -341,14 +341,14 @@ CREATE TABLE IF NOT EXISTS public.iss_keys
 );
 
 -- Create scms_health table
-CREATE SEQUENCE public.scms_health_scms_health_id_seq
+CREATE SEQUENCE cvmanager.scms_health_scms_health_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.scms_health
+CREATE TABLE IF NOT EXISTS cvmanager.scms_health
 (
    scms_health_id integer NOT NULL DEFAULT nextval('scms_health_scms_health_id_seq'::regclass),
    timestamp timestamp without time zone NOT NULL,
@@ -357,20 +357,20 @@ CREATE TABLE IF NOT EXISTS public.scms_health
    rsu_id integer NOT NULL,
    CONSTRAINT scms_health_pkey PRIMARY KEY (scms_health_id),
    CONSTRAINT fk_rsu_id FOREIGN KEY (rsu_id)
-		REFERENCES public.rsus (rsu_id) MATCH SIMPLE
+		REFERENCES cvmanager.rsus (rsu_id) MATCH SIMPLE
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION
 );
 
 -- Create snmp_msgfwd_type table
-CREATE SEQUENCE public.snmp_msgfwd_type_id_seq
+CREATE SEQUENCE cvmanager.snmp_msgfwd_type_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.snmp_msgfwd_type
+CREATE TABLE IF NOT EXISTS cvmanager.snmp_msgfwd_type
 (
    snmp_msgfwd_type_id integer NOT NULL DEFAULT nextval('snmp_msgfwd_type_id_seq'::regclass),
    name character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -379,7 +379,7 @@ CREATE TABLE IF NOT EXISTS public.snmp_msgfwd_type
 );
 
 -- Create snmp_msgfwd_config table
-CREATE TABLE IF NOT EXISTS public.snmp_msgfwd_config
+CREATE TABLE IF NOT EXISTS cvmanager.snmp_msgfwd_config
 (
    rsu_id integer NOT NULL,
    msgfwd_type integer NOT NULL,
@@ -392,11 +392,11 @@ CREATE TABLE IF NOT EXISTS public.snmp_msgfwd_config
    active bit(1) NOT NULL,
    CONSTRAINT snmp_msgfwd_config_pkey PRIMARY KEY (rsu_id, msgfwd_type, snmp_index),
    CONSTRAINT fk_rsu_id FOREIGN KEY (rsu_id)
-		REFERENCES public.rsus (rsu_id) MATCH SIMPLE
+		REFERENCES cvmanager.rsus (rsu_id) MATCH SIMPLE
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION,
    CONSTRAINT fk_msgfwd_type FOREIGN KEY (msgfwd_type)
-		REFERENCES public.snmp_msgfwd_type (snmp_msgfwd_type_id) MATCH SIMPLE
+		REFERENCES cvmanager.snmp_msgfwd_type (snmp_msgfwd_type_id) MATCH SIMPLE
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION
 );

@@ -16,24 +16,24 @@ def get_allowed_selections():
     allowed = {}
 
     primary_routes_query = (
-        "SELECT DISTINCT primary_route FROM public.rsus ORDER BY primary_route ASC"
+        "SELECT DISTINCT primary_route FROM cvmanager.rsus ORDER BY primary_route ASC"
     )
     rsu_models_query = (
         "SELECT manufacturers.name as manufacturer, rsu_models.name as model "
-        "FROM public.rsu_models "
-        "JOIN public.manufacturers ON rsu_models.manufacturer = manufacturers.manufacturer_id "
+        "FROM cvmanager.rsu_models "
+        "JOIN cvmanager.manufacturers ON rsu_models.manufacturer = manufacturers.manufacturer_id "
         "ORDER BY manufacturer, model ASC"
     )
     ssh_credential_nicknames_query = (
-        "SELECT nickname FROM public.rsu_credentials ORDER BY nickname ASC"
+        "SELECT nickname FROM cvmanager.rsu_credentials ORDER BY nickname ASC"
     )
     snmp_credential_nicknames_query = (
-        "SELECT nickname FROM public.snmp_credentials ORDER BY nickname ASC"
+        "SELECT nickname FROM cvmanager.snmp_credentials ORDER BY nickname ASC"
     )
     snmp_version_nicknames_query = (
-        "SELECT nickname FROM public.snmp_versions ORDER BY nickname ASC"
+        "SELECT nickname FROM cvmanager.snmp_versions ORDER BY nickname ASC"
     )
-    organizations_query = "SELECT name FROM public.organizations ORDER BY name ASC"
+    organizations_query = "SELECT name FROM cvmanager.organizations ORDER BY name ASC"
 
     allowed["primary_routes"] = query_and_return_list(primary_routes_query)
     allowed["rsu_models"] = query_and_return_list(rsu_models_query)
@@ -107,30 +107,30 @@ def add_rsu(rsu_spec):
 
     try:
         query = (
-            "INSERT INTO public.rsus(geography, milepost, ipv4_address, serial_number, primary_route, model, credential_id, snmp_credential_id, snmp_version_id, iss_scms_id) "
+            "INSERT INTO cvmanager.rsus(geography, milepost, ipv4_address, serial_number, primary_route, model, credential_id, snmp_credential_id, snmp_version_id, iss_scms_id) "
             "VALUES ("
             f"ST_GeomFromText('POINT({str(rsu_spec['geo_position']['longitude'])} {str(rsu_spec['geo_position']['latitude'])})'), "
             f"{str(rsu_spec['milepost'])}, "
             f"'{rsu_spec['ip']}', "
             f"'{rsu_spec['serial_number']}', "
             f"'{rsu_spec['primary_route']}', "
-            f"(SELECT rsu_model_id FROM public.rsu_models WHERE name = '{model}'), "
-            f"(SELECT credential_id FROM public.rsu_credentials WHERE nickname = '{rsu_spec['ssh_credential_group']}'), "
-            f"(SELECT snmp_credential_id FROM public.snmp_credentials WHERE nickname = '{rsu_spec['snmp_credential_group']}'), "
-            f"(SELECT snmp_version_id FROM public.snmp_versions WHERE nickname = '{rsu_spec['snmp_version_group']}'), "
+            f"(SELECT rsu_model_id FROM cvmanager.rsu_models WHERE name = '{model}'), "
+            f"(SELECT credential_id FROM cvmanager.rsu_credentials WHERE nickname = '{rsu_spec['ssh_credential_group']}'), "
+            f"(SELECT snmp_credential_id FROM cvmanager.snmp_credentials WHERE nickname = '{rsu_spec['snmp_credential_group']}'), "
+            f"(SELECT snmp_version_id FROM cvmanager.snmp_versions WHERE nickname = '{rsu_spec['snmp_version_group']}'), "
             f"'{scms_id}'"
             ")"
         )
         pgquery.write_db(query)
 
         org_query = (
-            "INSERT INTO public.rsu_organization(rsu_id, organization_id) VALUES"
+            "INSERT INTO cvmanager.rsu_organization(rsu_id, organization_id) VALUES"
         )
         for organization in rsu_spec["organizations"]:
             org_query += (
                 " ("
-                f"(SELECT rsu_id FROM public.rsus WHERE ipv4_address = '{rsu_spec['ip']}'), "
-                f"(SELECT organization_id FROM public.organizations WHERE name = '{organization}')"
+                f"(SELECT rsu_id FROM cvmanager.rsus WHERE ipv4_address = '{rsu_spec['ip']}'), "
+                f"(SELECT organization_id FROM cvmanager.organizations WHERE name = '{organization}')"
                 "),"
             )
         org_query = org_query[:-1]

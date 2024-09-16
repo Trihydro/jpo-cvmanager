@@ -13,7 +13,7 @@ def test_insert_ping_data(mock_write_db):
 
     # check
     expected_query = (
-        "INSERT INTO public.ping (timestamp, result, rsu_id) VALUES "
+        "INSERT INTO cvmanager.ping (timestamp, result, rsu_id) VALUES "
         "(TO_TIMESTAMP('2023-11-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), B'0', 1), "
         "(TO_TIMESTAMP('2023-11-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), B'1', 2), "
         "(TO_TIMESTAMP('2023-11-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), B'1', 3)"

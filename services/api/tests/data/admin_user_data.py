@@ -74,10 +74,10 @@ expected_get_user_query = (
     "SELECT to_jsonb(row) "
     "FROM ("
     "SELECT email, first_name, last_name, super_user, receive_error_emails, org.name, roles.name AS role "
-    "FROM public.users "
-    "JOIN public.user_organization AS uo ON uo.user_id = users.user_id "
-    "JOIN public.organizations AS org ON org.organization_id = uo.organization_id "
-    "JOIN public.roles ON roles.role_id = uo.role_id"
+    "FROM cvmanager.users "
+    "JOIN cvmanager.user_organization AS uo ON uo.user_id = users.user_id "
+    "JOIN cvmanager.organizations AS org ON org.organization_id = uo.organization_id "
+    "JOIN cvmanager.roles ON roles.role_id = uo.role_id"
     ") as row"
 )
 
@@ -85,16 +85,16 @@ expected_get_user_query_one = (
     "SELECT to_jsonb(row) "
     "FROM ("
     "SELECT email, first_name, last_name, super_user, receive_error_emails, org.name, roles.name AS role "
-    "FROM public.users "
-    "JOIN public.user_organization AS uo ON uo.user_id = users.user_id "
-    "JOIN public.organizations AS org ON org.organization_id = uo.organization_id "
-    "JOIN public.roles ON roles.role_id = uo.role_id"
+    "FROM cvmanager.users "
+    "JOIN cvmanager.user_organization AS uo ON uo.user_id = users.user_id "
+    "JOIN cvmanager.organizations AS org ON org.organization_id = uo.organization_id "
+    "JOIN cvmanager.roles ON roles.role_id = uo.role_id"
     " WHERE email = 'test@email.com'"
     ") as row"
 )
 
 modify_user_sql = (
-    "UPDATE public.users SET "
+    "UPDATE cvmanager.users SET "
     "email='test@email.com', "
     "first_name='test', "
     "last_name='test', "
@@ -104,28 +104,28 @@ modify_user_sql = (
 )
 
 add_org_sql = (
-    "INSERT INTO public.user_organization(user_id, organization_id, role_id) VALUES"
+    "INSERT INTO cvmanager.user_organization(user_id, organization_id, role_id) VALUES"
     " ("
-    "(SELECT user_id FROM public.users WHERE email = 'test@email.com'), "
-    "(SELECT organization_id FROM public.organizations WHERE name = 'Test Org3'), "
-    "(SELECT role_id FROM public.roles WHERE name = 'admin')"
+    "(SELECT user_id FROM cvmanager.users WHERE email = 'test@email.com'), "
+    "(SELECT organization_id FROM cvmanager.organizations WHERE name = 'Test Org3'), "
+    "(SELECT role_id FROM cvmanager.roles WHERE name = 'admin')"
     ")"
 )
 
 modify_org_sql = (
-    "UPDATE public.user_organization "
-    "SET role_id = (SELECT role_id FROM public.roles WHERE name = 'user') "
-    "WHERE user_id = (SELECT user_id FROM public.users WHERE email = 'test@email.com') "
-    "AND organization_id = (SELECT organization_id FROM public.organizations WHERE name = 'Test Org2')"
+    "UPDATE cvmanager.user_organization "
+    "SET role_id = (SELECT role_id FROM cvmanager.roles WHERE name = 'user') "
+    "WHERE user_id = (SELECT user_id FROM cvmanager.users WHERE email = 'test@email.com') "
+    "AND organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = 'Test Org2')"
 )
 
 remove_org_sql = (
-    "DELETE FROM public.user_organization WHERE "
-    "user_id = (SELECT user_id FROM public.users WHERE email = 'test@email.com') "
-    "AND organization_id = (SELECT organization_id FROM public.organizations WHERE name = 'Test Org1')"
+    "DELETE FROM cvmanager.user_organization WHERE "
+    "user_id = (SELECT user_id FROM cvmanager.users WHERE email = 'test@email.com') "
+    "AND organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = 'Test Org1')"
 )
 
 delete_user_calls = [
-    "DELETE FROM public.user_organization WHERE user_id = (SELECT user_id FROM public.users WHERE email = 'test@email.com')",
-    "DELETE FROM public.users WHERE email = 'test@email.com'",
+    "DELETE FROM cvmanager.user_organization WHERE user_id = (SELECT user_id FROM cvmanager.users WHERE email = 'test@email.com')",
+    "DELETE FROM cvmanager.users WHERE email = 'test@email.com'",
 ]

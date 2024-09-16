@@ -102,7 +102,7 @@ def prepare_rsu_dict():
         "SELECT to_jsonb(row) "
         "FROM ("
         "SELECT ipv4_address, primary_route "
-        "FROM public.rsus "
+        "FROM cvmanager.rsus "
         "ORDER BY primary_route ASC, milepost ASC"
         ") as row"
     )

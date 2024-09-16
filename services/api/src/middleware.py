@@ -23,10 +23,10 @@ def get_user_role(token):
         email = userinfo["email"]
         query = (
             "SELECT jsonb_build_object('email', u.email, 'first_name', u.first_name, 'last_name', u.last_name, 'organization', org.name, 'role', roles.name, 'super_user', u.super_user) "
-            "FROM public.users u "
-            "JOIN public.user_organization uo on u.user_id = uo.user_id "
-            "JOIN public.organizations org on uo.organization_id = org.organization_id "
-            "JOIN public.roles on uo.role_id = roles.role_id "
+            "FROM cvmanager.users u "
+            "JOIN cvmanager.user_organization uo on u.user_id = uo.user_id "
+            "JOIN cvmanager.organizations org on uo.organization_id = org.organization_id "
+            "JOIN cvmanager.roles on uo.role_id = roles.role_id "
             f"WHERE u.email = '{email}'"
         )
 

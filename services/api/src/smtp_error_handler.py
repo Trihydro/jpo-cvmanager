@@ -14,7 +14,7 @@ import common.pgquery as pgquery
 
 
 def get_subscribed_users():
-    query = "SELECT email FROM public.users WHERE receive_error_emails = '1'"
+    query = "SELECT email FROM cvmanager.users WHERE receive_error_emails = '1'"
 
     data = pgquery.query_db(query)
 
@@ -22,12 +22,16 @@ def get_subscribed_users():
 
 
 def unsubscribe_user(email: str):
-    pre_check = f"SELECT receive_error_emails FROM public.users WHERE email = '{email}'"
+    pre_check = (
+        f"SELECT receive_error_emails FROM cvmanager.users WHERE email = '{email}'"
+    )
     pre_check_results = pgquery.query_db(pre_check)
     if not pre_check_results:
         return 400
 
-    query = f"UPDATE public.users SET receive_error_emails='0' WHERE email = '{email}'"
+    query = (
+        f"UPDATE cvmanager.users SET receive_error_emails='0' WHERE email = '{email}'"
+    )
 
     pgquery.write_db(query)
 

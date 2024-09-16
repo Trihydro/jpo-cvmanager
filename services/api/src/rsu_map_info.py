@@ -7,9 +7,9 @@ import os
 def get_map_data(ip_address, organization):
     query = (
         "SELECT mi.geojson, mi.date "
-        "FROM public.map_info AS mi "
-        "JOIN public.rsus AS rd ON rd.ipv4_address = mi.ipv4_address "
-        "JOIN public.rsu_organization_name AS ron_v ON ron_v.rsu_id = rd.rsu_id "
+        "FROM cvmanager.map_info AS mi "
+        "JOIN cvmanager.rsus AS rd ON rd.ipv4_address = mi.ipv4_address "
+        "JOIN cvmanager.rsu_organization_name AS ron_v ON ron_v.rsu_id = rd.rsu_id "
         f"WHERE ron_v.name = '{organization}' AND mi.ipv4_address = '{ip_address}'"
     )
     try:
@@ -27,9 +27,9 @@ def get_map_data(ip_address, organization):
 def get_ip_list(organization):
     query = (
         "SELECT mi.ipv4_address "
-        "FROM public.map_info AS mi "
-        "JOIN public.rsus AS rd ON rd.ipv4_address = mi.ipv4_address "
-        "JOIN public.rsu_organization_name AS ron_v ON ron_v.rsu_id = rd.rsu_id "
+        "FROM cvmanager.map_info AS mi "
+        "JOIN cvmanager.rsus AS rd ON rd.ipv4_address = mi.ipv4_address "
+        "JOIN cvmanager.rsu_organization_name AS ron_v ON ron_v.rsu_id = rd.rsu_id "
         f"WHERE ron_v.name = '{organization}'"
     )
     try:

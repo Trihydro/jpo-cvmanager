@@ -10,7 +10,7 @@ def test_insert_config_list(mock_write_db):
 
     # check
     expected_query = (
-        "INSERT INTO public.snmp_msgfwd_config("
+        "INSERT INTO cvmanager.snmp_msgfwd_config("
         "rsu_id, msgfwd_type, snmp_index, message_type, dest_ipv4, dest_port, start_datetime, end_datetime, active) "
         "VALUES "
         "(1, 2, 1, 'BSM', '5.5.5.5', 46800, '2024-02-05 00:00', '2034-02-05 00:00', '1'), "
@@ -28,10 +28,10 @@ def test_delete_config_list(mock_write_db):
     mock_write_db.assert_has_calls(
         [
             call(
-                "DELETE FROM public.snmp_msgfwd_config WHERE rsu_id=1 AND msgfwd_type=2 AND snmp_index=1"
+                "DELETE FROM cvmanager.snmp_msgfwd_config WHERE rsu_id=1 AND msgfwd_type=2 AND snmp_index=1"
             ),
             call(
-                "DELETE FROM public.snmp_msgfwd_config WHERE rsu_id=2 AND msgfwd_type=3 AND snmp_index=1"
+                "DELETE FROM cvmanager.snmp_msgfwd_config WHERE rsu_id=2 AND msgfwd_type=3 AND snmp_index=1"
             ),
         ]
     )

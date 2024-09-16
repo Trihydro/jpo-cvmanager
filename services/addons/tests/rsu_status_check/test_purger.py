@@ -59,9 +59,9 @@ def test_purge_ping_data(mock_write_db, mock_glorr):
     mock_write_db.assert_has_calls(
         [
             call(
-                "DELETE FROM public.ping WHERE rsu_id = 1 AND timestamp < '2023-07-05T00:00:00'::timestamp"
+                "DELETE FROM cvmanager.ping WHERE rsu_id = 1 AND timestamp < '2023-07-05T00:00:00'::timestamp"
             ),
-            call("DELETE FROM public.ping WHERE rsu_id = 2 AND ping_id != 2"),
+            call("DELETE FROM cvmanager.ping WHERE rsu_id = 2 AND ping_id != 2"),
         ]
     )
 

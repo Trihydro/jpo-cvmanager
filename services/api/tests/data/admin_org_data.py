@@ -51,9 +51,9 @@ get_all_orgs_sql = (
     "SELECT to_jsonb(row) "
     "FROM ("
     "SELECT org.name, "
-    "(SELECT COUNT(*) FROM public.user_organization uo WHERE uo.organization_id = org.organization_id) num_users, "
-    "(SELECT COUNT(*) FROM public.rsu_organization ro WHERE ro.organization_id = org.organization_id) num_rsus "
-    "FROM public.organizations org"
+    "(SELECT COUNT(*) FROM cvmanager.user_organization uo WHERE uo.organization_id = org.organization_id) num_users, "
+    "(SELECT COUNT(*) FROM cvmanager.rsu_organization ro WHERE ro.organization_id = org.organization_id) num_rsus "
+    "FROM cvmanager.organizations org"
     ") as row"
 )
 
@@ -90,12 +90,12 @@ get_org_data_user_sql = (
     "SELECT to_jsonb(row) "
     "FROM ("
     "SELECT u.email, u.first_name, u.last_name, u.name role_name "
-    "FROM public.organizations AS org "
+    "FROM cvmanager.organizations AS org "
     "JOIN ("
     "SELECT uo.organization_id, users.email, users.first_name, users.last_name, roles.name "
-    "FROM public.user_organization uo "
-    "JOIN public.users ON uo.user_id = users.user_id "
-    "JOIN public.roles ON uo.role_id = roles.role_id"
+    "FROM cvmanager.user_organization uo "
+    "JOIN cvmanager.users ON uo.user_id = users.user_id "
+    "JOIN cvmanager.roles ON uo.role_id = roles.role_id"
     ") u ON u.organization_id = org.organization_id "
     f"WHERE org.name = 'test org'"
     ") as row"
@@ -105,11 +105,11 @@ get_org_data_rsu_sql = (
     "SELECT to_jsonb(row) "
     "FROM ("
     "SELECT r.ipv4_address, r.primary_route, r.milepost "
-    "FROM public.organizations AS org "
+    "FROM cvmanager.organizations AS org "
     "JOIN ("
     "SELECT ro.organization_id, rsus.ipv4_address, rsus.primary_route, rsus.milepost "
-    "FROM public.rsu_organization ro "
-    "JOIN public.rsus ON ro.rsu_id = rsus.rsu_id"
+    "FROM cvmanager.rsu_organization ro "
+    "JOIN cvmanager.rsus ON ro.rsu_id = rsus.rsu_id"
     ") r ON r.organization_id = org.organization_id "
     f"WHERE org.name = 'test org'"
     ") as row"
@@ -125,55 +125,55 @@ get_allowed_selections_return = [
 get_allowed_selections_result = {"user_roles": ["admin", "user"]}
 
 get_allowed_selections_sql = (
-    "SELECT to_jsonb(row) FROM (SELECT name FROM public.roles) as row"
+    "SELECT to_jsonb(row) FROM (SELECT name FROM cvmanager.roles) as row"
 )
 
 # modify_org
 
 modify_org_sql = (
-    "UPDATE public.organizations SET " "name = 'test org' " "WHERE name = 'test org'"
+    "UPDATE cvmanager.organizations SET " "name = 'test org' " "WHERE name = 'test org'"
 )
 
 modify_org_add_user_sql = (
-    "INSERT INTO public.user_organization(user_id, organization_id, role_id) VALUES"
+    "INSERT INTO cvmanager.user_organization(user_id, organization_id, role_id) VALUES"
     " ("
-    f"(SELECT user_id FROM public.users WHERE email = 'test1@email.com'), "
-    f"(SELECT organization_id FROM public.organizations WHERE name = 'test org'), "
-    f"(SELECT role_id FROM public.roles WHERE name = 'admin')"
+    f"(SELECT user_id FROM cvmanager.users WHERE email = 'test1@email.com'), "
+    f"(SELECT organization_id FROM cvmanager.organizations WHERE name = 'test org'), "
+    f"(SELECT role_id FROM cvmanager.roles WHERE name = 'admin')"
     ")"
 )
 
 modify_org_modify_user_sql = (
-    "UPDATE public.user_organization "
-    "SET role_id = (SELECT role_id FROM public.roles WHERE name = 'user') "
-    "WHERE user_id = (SELECT user_id FROM public.users WHERE email = 'test2@email.com') "
-    "AND organization_id = (SELECT organization_id FROM public.organizations WHERE name = 'test org')"
+    "UPDATE cvmanager.user_organization "
+    "SET role_id = (SELECT role_id FROM cvmanager.roles WHERE name = 'user') "
+    "WHERE user_id = (SELECT user_id FROM cvmanager.users WHERE email = 'test2@email.com') "
+    "AND organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = 'test org')"
 )
 
 modify_org_remove_user_sql = (
-    "DELETE FROM public.user_organization WHERE "
-    "user_id = (SELECT user_id FROM public.users WHERE email = 'test3@email.com') "
-    "AND organization_id = (SELECT organization_id FROM public.organizations WHERE name = 'test org')"
+    "DELETE FROM cvmanager.user_organization WHERE "
+    "user_id = (SELECT user_id FROM cvmanager.users WHERE email = 'test3@email.com') "
+    "AND organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = 'test org')"
 )
 
 modify_org_add_rsu_sql = (
-    "INSERT INTO public.rsu_organization(rsu_id, organization_id) VALUES"
+    "INSERT INTO cvmanager.rsu_organization(rsu_id, organization_id) VALUES"
     " ("
-    "(SELECT rsu_id FROM public.rsus WHERE ipv4_address = '10.0.0.2'), "
-    "(SELECT organization_id FROM public.organizations WHERE name = 'test org')"
+    "(SELECT rsu_id FROM cvmanager.rsus WHERE ipv4_address = '10.0.0.2'), "
+    "(SELECT organization_id FROM cvmanager.organizations WHERE name = 'test org')"
     ")"
 )
 
 modify_org_remove_rsu_sql = (
-    "DELETE FROM public.rsu_organization WHERE "
-    "rsu_id=(SELECT rsu_id FROM public.rsus WHERE ipv4_address = '10.0.0.1') "
-    "AND organization_id=(SELECT organization_id FROM public.organizations WHERE name = 'test org')"
+    "DELETE FROM cvmanager.rsu_organization WHERE "
+    "rsu_id=(SELECT rsu_id FROM cvmanager.rsus WHERE ipv4_address = '10.0.0.1') "
+    "AND organization_id=(SELECT organization_id FROM cvmanager.organizations WHERE name = 'test org')"
 )
 
 # delete_org
 
 delete_org_calls = [
-    "DELETE FROM public.user_organization WHERE organization_id = (SELECT organization_id FROM public.organizations WHERE name = 'test org')",
-    "DELETE FROM public.rsu_organization WHERE organization_id = (SELECT organization_id FROM public.organizations WHERE name = 'test org')",
-    "DELETE FROM public.organizations WHERE name = 'test org'",
+    "DELETE FROM cvmanager.user_organization WHERE organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = 'test org')",
+    "DELETE FROM cvmanager.rsu_organization WHERE organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = 'test org')",
+    "DELETE FROM cvmanager.organizations WHERE name = 'test org'",
 ]

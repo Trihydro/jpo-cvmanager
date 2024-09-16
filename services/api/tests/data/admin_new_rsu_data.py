@@ -97,41 +97,41 @@ mock_post_body_yunex_no_scms = {
 }
 
 rsu_query_commsignia = (
-    "INSERT INTO public.rsus(geography, milepost, ipv4_address, serial_number, primary_route, model, credential_id, snmp_credential_id, snmp_version_id, iss_scms_id) "
+    "INSERT INTO cvmanager.rsus(geography, milepost, ipv4_address, serial_number, primary_route, model, credential_id, snmp_credential_id, snmp_version_id, iss_scms_id) "
     "VALUES ("
     "ST_GeomFromText('POINT(-104.984451 39.89645)'), "
     "900.52, "
     "'10.0.0.1', "
     "'test', "
     "'Test Route', "
-    "(SELECT rsu_model_id FROM public.rsu_models WHERE name = 'RSU'), "
-    "(SELECT credential_id FROM public.rsu_credentials WHERE nickname = 'test'), "
-    "(SELECT snmp_credential_id FROM public.snmp_credentials WHERE nickname = 'test'), "
-    "(SELECT snmp_version_id FROM public.snmp_versions WHERE nickname = 'test'), "
+    "(SELECT rsu_model_id FROM cvmanager.rsu_models WHERE name = 'RSU'), "
+    "(SELECT credential_id FROM cvmanager.rsu_credentials WHERE nickname = 'test'), "
+    "(SELECT snmp_credential_id FROM cvmanager.snmp_credentials WHERE nickname = 'test'), "
+    "(SELECT snmp_version_id FROM cvmanager.snmp_versions WHERE nickname = 'test'), "
     "'test'"
     ")"
 )
 
 rsu_query_yunex = (
-    "INSERT INTO public.rsus(geography, milepost, ipv4_address, serial_number, primary_route, model, credential_id, snmp_credential_id, snmp_version_id, iss_scms_id) "
+    "INSERT INTO cvmanager.rsus(geography, milepost, ipv4_address, serial_number, primary_route, model, credential_id, snmp_credential_id, snmp_version_id, iss_scms_id) "
     "VALUES ("
     "ST_GeomFromText('POINT(-104.984451 39.89645)'), "
     "900.52, "
     "'10.0.0.1', "
     "'test', "
     "'Test Route', "
-    "(SELECT rsu_model_id FROM public.rsu_models WHERE name = 'RSU'), "
-    "(SELECT credential_id FROM public.rsu_credentials WHERE nickname = 'test'), "
-    "(SELECT snmp_credential_id FROM public.snmp_credentials WHERE nickname = 'test'), "
-    "(SELECT snmp_version_id FROM public.snmp_versions WHERE nickname = 'test'), "
+    "(SELECT rsu_model_id FROM cvmanager.rsu_models WHERE name = 'RSU'), "
+    "(SELECT credential_id FROM cvmanager.rsu_credentials WHERE nickname = 'test'), "
+    "(SELECT snmp_credential_id FROM cvmanager.snmp_credentials WHERE nickname = 'test'), "
+    "(SELECT snmp_version_id FROM cvmanager.snmp_versions WHERE nickname = 'test'), "
     "'custom'"
     ")"
 )
 
 rsu_org_query = (
-    "INSERT INTO public.rsu_organization(rsu_id, organization_id) VALUES"
+    "INSERT INTO cvmanager.rsu_organization(rsu_id, organization_id) VALUES"
     " ("
-    "(SELECT rsu_id FROM public.rsus WHERE ipv4_address = '10.0.0.1'), "
-    "(SELECT organization_id FROM public.organizations WHERE name = 'test')"
+    "(SELECT rsu_id FROM cvmanager.rsus WHERE ipv4_address = '10.0.0.1'), "
+    "(SELECT organization_id FROM cvmanager.organizations WHERE name = 'test')"
     ")"
 )

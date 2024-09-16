@@ -7,7 +7,7 @@ from datetime import datetime
 
 def insert_config_list(snmp_config_list):
     query = (
-        "INSERT INTO public.snmp_msgfwd_config("
+        "INSERT INTO cvmanager.snmp_msgfwd_config("
         "rsu_id, msgfwd_type, snmp_index, message_type, dest_ipv4, dest_port, start_datetime, end_datetime, active) "
         "VALUES"
     )
@@ -25,7 +25,7 @@ def insert_config_list(snmp_config_list):
 def delete_config_list(snmp_config_list):
     for snmp_config in snmp_config_list:
         query = (
-            "DELETE FROM public.snmp_msgfwd_config "
+            "DELETE FROM cvmanager.snmp_msgfwd_config "
             f"WHERE rsu_id={snmp_config['rsu_id']} AND msgfwd_type={snmp_config['msgfwd_type']} AND snmp_index={snmp_config['snmp_index']}"
         )
 
@@ -37,7 +37,7 @@ def get_msgfwd_types():
         "SELECT to_jsonb(row) "
         "FROM ("
         "SELECT snmp_msgfwd_type_id, name "
-        "FROM public.snmp_msgfwd_type"
+        "FROM cvmanager.snmp_msgfwd_type"
         ") as row"
     )
 
@@ -57,8 +57,8 @@ def get_config_list(rsu_obj={}):
         "SELECT to_jsonb(row) "
         "FROM ("
         "SELECT rsu_id, smt.name msgfwd_type, snmp_index, message_type, dest_ipv4, dest_port, start_datetime, end_datetime, active "
-        "FROM public.snmp_msgfwd_config smc "
-        "JOIN public.snmp_msgfwd_type smt ON smc.msgfwd_type = smt.snmp_msgfwd_type_id"
+        "FROM cvmanager.snmp_msgfwd_config smc "
+        "JOIN cvmanager.snmp_msgfwd_type smt ON smc.msgfwd_type = smt.snmp_msgfwd_type_id"
     )
 
     # If an rsu_obj was provided, only return the RSU information for the subset

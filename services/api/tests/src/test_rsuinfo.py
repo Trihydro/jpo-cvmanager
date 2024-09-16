@@ -39,10 +39,10 @@ def test_get_rsu_data_no_data(mock_pgquery):
         "SELECT jsonb_build_object('type', 'Feature', 'id', row.rsu_id, 'geometry', ST_AsGeoJSON(row.geography)::jsonb, 'properties', to_jsonb(row)) "
         "FROM ("
         "SELECT rd.rsu_id, rd.geography, rd.milepost, rd.ipv4_address, rd.serial_number, rd.primary_route, rm.name AS model_name, man.name AS manufacturer_name "
-        "FROM public.rsus AS rd "
-        "JOIN public.rsu_organization_name AS ron_v ON ron_v.rsu_id = rd.rsu_id "
-        "JOIN public.rsu_models AS rm ON rm.rsu_model_id = rd.model "
-        "JOIN public.manufacturers AS man ON man.manufacturer_id = rm.manufacturer "
+        "FROM cvmanager.rsus AS rd "
+        "JOIN cvmanager.rsu_organization_name AS ron_v ON ron_v.rsu_id = rd.rsu_id "
+        "JOIN cvmanager.rsu_models AS rm ON rm.rsu_model_id = rd.model "
+        "JOIN cvmanager.manufacturers AS man ON man.manufacturer_id = rm.manufacturer "
         "WHERE ron_v.name = 'Test'"
         ") AS row"
     )
@@ -90,7 +90,7 @@ def test_get_rsu_data(mock_pgquery_query_db):
     assert result == expectedResult
 
     # check that pgquery.query_db was called with expected arguments
-    expectedQuery = "SELECT jsonb_build_object('type', 'Feature', 'id', row.rsu_id, 'geometry', ST_AsGeoJSON(row.geography)::jsonb, 'properties', to_jsonb(row)) FROM (SELECT rd.rsu_id, rd.geography, rd.milepost, rd.ipv4_address, rd.serial_number, rd.primary_route, rm.name AS model_name, man.name AS manufacturer_name FROM public.rsus AS rd JOIN public.rsu_organization_name AS ron_v ON ron_v.rsu_id = rd.rsu_id JOIN public.rsu_models AS rm ON rm.rsu_model_id = rd.model JOIN public.manufacturers AS man ON man.manufacturer_id = rm.manufacturer WHERE ron_v.name = 'test') AS row"
+    expectedQuery = "SELECT jsonb_build_object('type', 'Feature', 'id', row.rsu_id, 'geometry', ST_AsGeoJSON(row.geography)::jsonb, 'properties', to_jsonb(row)) FROM (SELECT rd.rsu_id, rd.geography, rd.milepost, rd.ipv4_address, rd.serial_number, rd.primary_route, rm.name AS model_name, man.name AS manufacturer_name FROM cvmanager.rsus AS rd JOIN cvmanager.rsu_organization_name AS ron_v ON ron_v.rsu_id = rd.rsu_id JOIN cvmanager.rsu_models AS rm ON rm.rsu_model_id = rd.model JOIN cvmanager.manufacturers AS man ON man.manufacturer_id = rm.manufacturer WHERE ron_v.name = 'test') AS row"
     rsuinfo.pgquery.query_db.assert_called_once_with(expectedQuery)
 
 

@@ -14,4 +14,4 @@ good_input = {"name": "new org"}
 
 bad_input = {"name": "new--^@^&! org"}
 
-org_insert_query = "INSERT INTO public.organizations(name) " "VALUES ('new org')"
+org_insert_query = "INSERT INTO cvmanager.organizations(name) " "VALUES ('new org')"

@@ -5,8 +5,8 @@ import os
 
 def query_org_rsus(orgName):
     query = (
-        "SELECT ipv4_address from public.rsus as rd "
-        "JOIN public.rsu_organization_name AS ron_v ON ron_v.rsu_id = rd.rsu_id "
+        "SELECT ipv4_address from cvmanager.rsus as rd "
+        "JOIN cvmanager.rsu_organization_name AS ron_v ON ron_v.rsu_id = rd.rsu_id "
         f"WHERE ron_v.name = '{orgName}'"
     )
 
@@ -45,12 +45,12 @@ def query_rsu_devices(ipList, pointList, vendor=None):
     if vendor is not None:
         query += (
             f" AND ipv4_address IN (SELECT rd.ipv4_address "
-            "FROM public.rsus as rd "
-            "JOIN public.rsu_models as rm ON rm.rsu_model_id = rd.model "
-            "JOIN public.manufacturers as man on man.manufacturer_id = rm.manufacturer "
+            "FROM cvmanager.rsus as rd "
+            "JOIN cvmanager.rsu_models as rm ON rm.rsu_model_id = rd.model "
+            "JOIN cvmanager.manufacturers as man on man.manufacturer_id = rm.manufacturer "
             f"WHERE man.name = '{vendor}') "
         )
-    query +=  f"AND ST_Contains(ST_SetSRID(ST_GeomFromText('{geogString}'), 4326), rsus.geography::geometry)) as row"
+    query += f"AND ST_Contains(ST_SetSRID(ST_GeomFromText('{geogString}'), 4326), rsus.geography::geometry)) as row"
 
     logging.debug(query)
     logging.info(f"Running query_rsu_devices")

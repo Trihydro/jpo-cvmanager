@@ -21,7 +21,8 @@ def add_organization(org_spec):
 
     try:
         org_insert_query = (
-            "INSERT INTO public.organizations(name) " f"VALUES ('{org_spec['name']}')"
+            "INSERT INTO cvmanager.organizations(name) "
+            f"VALUES ('{org_spec['name']}')"
         )
         pgquery.write_db(org_insert_query)
     except sqlalchemy.exc.IntegrityError as e:

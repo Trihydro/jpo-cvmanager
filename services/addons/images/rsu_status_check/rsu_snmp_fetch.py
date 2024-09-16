@@ -9,9 +9,9 @@ def get_rsu_list():
         "SELECT to_jsonb(row) "
         "FROM ("
         "SELECT rd.rsu_id, rd.ipv4_address, snmp.username AS snmp_username, snmp.password AS snmp_password, sver.version_code AS snmp_version "
-        "FROM public.rsus AS rd "
-        "LEFT JOIN public.snmp_credentials AS snmp ON snmp.snmp_credential_id = rd.snmp_credential_id "
-        "LEFT JOIN public.snmp_versions AS sver ON sver.snmp_version_id = rd.snmp_version_id"
+        "FROM cvmanager.rsus AS rd "
+        "LEFT JOIN cvmanager.snmp_credentials AS snmp ON snmp.snmp_credential_id = rd.snmp_credential_id "
+        "LEFT JOIN cvmanager.snmp_versions AS sver ON sver.snmp_version_id = rd.snmp_version_id"
         ") as row"
     )
 

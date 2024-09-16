@@ -365,7 +365,7 @@ def test_firmware_upgrade_completed_success_status(mock_writedb):
             message, code = firmware_manager.firmware_upgrade_completed()
 
             mock_writedb.assert_called_with(
-                "UPDATE public.rsus SET firmware_version=2 WHERE ipv4_address='8.8.8.8'"
+                "UPDATE cvmanager.rsus SET firmware_version=2 WHERE ipv4_address='8.8.8.8'"
             )
             assert "8.8.8.8" not in firmware_manager.active_upgrades
             mock_flask_jsonify.assert_called_with(
@@ -399,7 +399,7 @@ def test_firmware_upgrade_completed_success_status_exception(mock_writedb):
             message, code = firmware_manager.firmware_upgrade_completed()
 
             mock_writedb.assert_called_with(
-                "UPDATE public.rsus SET firmware_version=2 WHERE ipv4_address='8.8.8.8'"
+                "UPDATE cvmanager.rsus SET firmware_version=2 WHERE ipv4_address='8.8.8.8'"
             )
             mock_flask_jsonify.assert_called_with(
                 {

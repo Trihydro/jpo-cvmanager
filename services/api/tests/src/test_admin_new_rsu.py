@@ -93,15 +93,15 @@ def test_get_allowed_selections(mock_query_and_return_list):
 
     calls = [
         call(
-            "SELECT DISTINCT primary_route FROM public.rsus ORDER BY primary_route ASC"
+            "SELECT DISTINCT primary_route FROM cvmanager.rsus ORDER BY primary_route ASC"
         ),
         call(
-            "SELECT manufacturers.name as manufacturer, rsu_models.name as model FROM public.rsu_models JOIN public.manufacturers ON rsu_models.manufacturer = manufacturers.manufacturer_id ORDER BY manufacturer, model ASC"
+            "SELECT manufacturers.name as manufacturer, rsu_models.name as model FROM cvmanager.rsu_models JOIN cvmanager.manufacturers ON rsu_models.manufacturer = manufacturers.manufacturer_id ORDER BY manufacturer, model ASC"
         ),
-        call("SELECT nickname FROM public.rsu_credentials ORDER BY nickname ASC"),
-        call("SELECT nickname FROM public.snmp_credentials ORDER BY nickname ASC"),
-        call("SELECT nickname FROM public.snmp_versions ORDER BY nickname ASC"),
-        call("SELECT name FROM public.organizations ORDER BY name ASC"),
+        call("SELECT nickname FROM cvmanager.rsu_credentials ORDER BY nickname ASC"),
+        call("SELECT nickname FROM cvmanager.snmp_credentials ORDER BY nickname ASC"),
+        call("SELECT nickname FROM cvmanager.snmp_versions ORDER BY nickname ASC"),
+        call("SELECT name FROM cvmanager.organizations ORDER BY name ASC"),
     ]
     mock_query_and_return_list.assert_has_calls(calls)
     assert actual_result == expected_result
