@@ -1,5 +1,30 @@
 version: '3'
 services:
+  cvmanager_nginx_proxy:
+    build:
+      context: ../nginx_proxy_resources
+    image: cvmanager_nginx_proxy:latest
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    environment:
+      NGINX_ENVSUBST_OUTPUT_DIR: /etc/nginx
+      SERVER_HOST: ${WEBAPP_DOMAIN}
+    volumes:
+      - <nginx-proxy-resources>/nginx-ssl.conf:/etc/nginx/templates/nginx.conf.template
+      - <nginx-proxy-resources>/gen_dhparam.sh:/docker-entrypoint.d/gen_dhparam.sh
+      - <nginx-proxy-resources>/ssl/server.crt:/etc/ssl/certs/server.crt
+      - <nginx-proxy-resources>/ssl/server.key:/etc/ssl/private/server.key
+    depends_on:
+      - cvmanager_webapp
+      - cvmanager_keycloak
+      - cvmanager_api
+    logging:
+      options:
+        max-size: '10m'
+        max-file: '5'
+
   cvmanager_api:
     build:
       context: services
@@ -7,10 +32,7 @@ services:
     image: jpo_cvmanager_api:latest
     restart: always
     extra_hosts:
-      ${WEBAPP_DOMAIN}: ${WEBAPP_HOST_IP}
-      ${KEYCLOAK_DOMAIN}: ${KC_HOST_IP}
-    ports:
-      - '8081:5000'
+      <dnsnamehere>: ${WEBAPP_HOST_IP}
     environment:
       PG_DB_HOST: ${PG_DB_HOST}
       PG_DB_USER: ${PG_DB_USER}
@@ -36,7 +58,7 @@ services:
       WZDX_ENDPOINT: ${WZDX_ENDPOINT}
 
       CORS_DOMAIN: ${CORS_DOMAIN}
-      KEYCLOAK_ENDPOINT: http://${KEYCLOAK_DOMAIN}:8084/
+      KEYCLOAK_ENDPOINT: https://${KEYCLOAK_DOMAIN}
       KEYCLOAK_REALM: ${KEYCLOAK_REALM}
       KEYCLOAK_API_CLIENT_ID: ${KEYCLOAK_API_CLIENT_ID}
       KEYCLOAK_API_CLIENT_SECRET_KEY: ${KEYCLOAK_API_CLIENT_SECRET_KEY}
@@ -54,6 +76,8 @@ services:
       LOGGING_LEVEL: ${API_LOGGING_LEVEL}
     volumes:
       - ${GOOGLE_APPLICATION_CREDENTIALS}:/google/gcp_credentials.json
+      - <nginx-proxy-resources>/ssl/server.crt:/etc/ssl/certs/server.crt
+      - <nginx-proxy-resources>/ssl/server.key:/etc/ssl/private/server.key
     logging:
       options:
         max-size: '10m'
@@ -64,9 +88,9 @@ services:
       context: webapp
       dockerfile: Dockerfile
       args:
-        API_URI: http://${WEBAPP_DOMAIN}:8081
+        API_URI: https://${WEBAPP_DOMAIN}
         MAPBOX_TOKEN: ${MAPBOX_TOKEN}
-        KEYCLOAK_HOST_URL: http://${KEYCLOAK_DOMAIN}:8084/
+        KEYCLOAK_HOST_URL: https://${KEYCLOAK_DOMAIN}
         COUNT_MESSAGE_TYPES: ${COUNTS_MSG_TYPES}
         VIEWER_MESSAGE_TYPES: ${VIEWER_MSG_TYPES}
         DOT_NAME: ${DOT_NAME}
@@ -79,10 +103,7 @@ services:
       cvmanager_keycloak:
         condition: service_healthy
     extra_hosts:
-      ${WEBAPP_DOMAIN}: ${WEBAPP_HOST_IP}
-      ${KEYCLOAK_DOMAIN}: ${KC_HOST_IP}
-    ports:
-      - '80:80'
+      <dnsnamehere>: ${WEBAPP_HOST_IP}
     logging:
       options:
         max-size: '10m'
@@ -115,13 +136,11 @@ services:
     extra_hosts:
       ${WEBAPP_DOMAIN}: ${WEBAPP_HOST_IP}
       ${KEYCLOAK_DOMAIN}: ${KC_HOST_IP}
-    ports:
-      - '8084:8080'
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      WEBAPP_ORIGIN: http://${WEBAPP_DOMAIN}
-      WEBAPP_CM_ORIGIN: http://${WEBAPP_CM_DOMAIN}
+      WEBAPP_ORIGIN: https://${WEBAPP_DOMAIN}
+      WEBAPP_CM_ORIGIN: https://${WEBAPP_CM_DOMAIN}
       KC_HEALTH_ENABLED: true
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://${PG_DB_HOST}/postgres?currentSchema=keycloak
@@ -137,6 +156,7 @@ services:
       - --log-level=${KC_LOGGING_LEVEL}
       - --import-realm
       - --spi-theme-welcome-theme=custom-welcome
+      - --proxy edge
     logging:
       options:
         max-size: '10m'
