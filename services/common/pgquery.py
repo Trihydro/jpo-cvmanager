@@ -1,4 +1,5 @@
 import os
+import ssl
 import sqlalchemy
 import logging
 
@@ -23,6 +24,8 @@ db = None
 def init_tcp_connection_engine(db_user, db_pass, db_name, db_hostname, db_port):
     logging.info(f"Creating DB pool")
     logging.info(f"{db_user},{db_pass},{db_name},{db_hostname},{db_port}")
+    ssl_context = ssl.create_default_context()
+    ssl_context.load_verify_locations("/etc/ssl/ca/ca.crt")
     pool = sqlalchemy.create_engine(
         # Equivalent URL:
         # postgresql+pg8000://<db_user>:<db_pass>@<db_host>:<db_port>/<db_name>
@@ -34,6 +37,7 @@ def init_tcp_connection_engine(db_user, db_pass, db_name, db_hostname, db_port):
             port=db_port,  # e.g. 5432
             database=db_name,  # e.g. "my-database-name"
         ),
+        connect_args={"ssl_context": ssl_context},
         **db_config,
     )
     # pool.dialect.description_encoding = None

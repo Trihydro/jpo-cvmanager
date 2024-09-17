@@ -76,8 +76,7 @@ services:
       LOGGING_LEVEL: ${API_LOGGING_LEVEL}
     volumes:
       - ${GOOGLE_APPLICATION_CREDENTIALS}:/google/gcp_credentials.json
-      - <nginx-proxy-resources>/ssl/server.crt:/etc/ssl/certs/server.crt
-      - <nginx-proxy-resources>/ssl/server.key:/etc/ssl/private/server.key
+      - <certname>.crt:/etc/ssl/ca/ca.crt
     logging:
       options:
         max-size: '10m'
@@ -108,20 +107,20 @@ services:
       options:
         max-size: '10m'
 
-  cvmanager_postgres:
-    image: postgis/postgis:15-master
-    restart: always
-    ports:
-      - '5432:5432'
-    environment:
-      POSTGRES_USER: ${PG_DB_USER}
-      POSTGRES_PASSWORD: ${PG_DB_PASS}
-    volumes:
-      - pgdb:/var/lib/postgresql/data
-      - ./resources/sql_scripts:/docker-entrypoint-initdb.d
-    logging:
-      options:
-        max-size: '10m'
+  # cvmanager_postgres:
+  #   image: postgis/postgis:15-master
+  #   restart: always
+  #   ports:
+  #     - '5432:5432'
+  #   environment:
+  #     POSTGRES_USER: ${PG_DB_USER}
+  #     POSTGRES_PASSWORD: ${PG_DB_PASS}
+  #   volumes:
+  #     - pgdb:/var/lib/postgresql/data
+  #     - ./resources/sql_scripts:/docker-entrypoint-initdb.d
+  #   logging:
+  #     options:
+  #       max-size: '10m'
 
   cvmanager_keycloak:
     build:
@@ -131,8 +130,8 @@ services:
         KEYCLOAK_LOGIN_THEME_NAME: ${KEYCLOAK_LOGIN_THEME_NAME}.jar
     image: jpo_cvmanager_keycloak:latest
     restart: always
-    depends_on:
-      - cvmanager_postgres
+    # depends_on:
+    #   - cvmanager_postgres
     extra_hosts:
       ${WEBAPP_DOMAIN}: ${WEBAPP_HOST_IP}
       ${KEYCLOAK_DOMAIN}: ${KC_HOST_IP}
