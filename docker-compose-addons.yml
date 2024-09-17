@@ -58,6 +58,8 @@ services:
       KAFKA_BIGQUERY_TABLENAME: ${KAFKA_BIGQUERY_TABLENAME}
 
       LOGGING_LEVEL: ${COUNTS_LOGGING_LEVEL}
+    volumes:
+      - <certname>.crt:/etc/ssl/ca/ca.crt
     logging:
       options:
         max-size: '10m'
@@ -86,6 +88,8 @@ services:
       PG_DB_PASS: ${PG_DB_PASS}
 
       LOGGING_LEVEL: ${RSU_STATUS_LOGGING_LEVEL}
+    volumes:
+      - <certname>.crt:/etc/ssl/ca/ca.crt
     logging:
       options:
         max-size: '10m'
@@ -97,8 +101,8 @@ services:
       dockerfile: Dockerfile.iss_health_check
     image: iss_health_check:latest
     restart: on-failure:3
-    depends_on:
-      - cvmanager_postgres
+    # depends_on:
+    #   - cvmanager_postgres
     environment:
       ISS_API_KEY: ${ISS_API_KEY}
       ISS_API_KEY_NAME: ${ISS_API_KEY_NAME}
@@ -119,6 +123,7 @@ services:
       ISS_KEY_TABLE_NAME: iss_keys
     volumes:
       - ${GOOGLE_APPLICATION_CREDENTIALS}:/google/gcp_credentials.json
+      - <certname>.crt:/etc/ssl/ca/ca.crt
     logging:
       options:
         max-size: '10m'
