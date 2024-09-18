@@ -2,7 +2,7 @@ version: '3'
 services:
   cvmanager_nginx_proxy:
     build:
-      context: ../nginx_proxy_resources
+      context: <nginx-proxy-resources>
     image: cvmanager_nginx_proxy:latest
     restart: unless-stopped
     ports:

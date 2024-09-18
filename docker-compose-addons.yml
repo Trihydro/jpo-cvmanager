@@ -158,6 +158,7 @@ services:
 #    volumes:
 #      - ${GOOGLE_APPLICATION_CREDENTIALS}:/google/gcp_credentials.json
 #      - ${HOST_BLOB_STORAGE_DIRECTORY}:/mnt/blob_storage
+#      - <certname>.crt:/etc/ssl/ca/ca.crt
 #    logging:
 #      options:
 #        max-size: '10m'
