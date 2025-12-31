@@ -98,11 +98,13 @@ services:
 
       TIMEZONE: ${TIMEZONE}
       LOGGING_LEVEL: ${API_LOGGING_LEVEL}
+      KEYCLOAK_VERIFY: /etc/ssl/certs/server.crt
+      PG_SSL_REQUIRED: ${PG_SSL_REQUIRED:-True}
     depends_on:
       - cvmanager_postgres
     volumes:
       - ./resources/google/${GOOGLE_ACCESS_KEY_NAME}:/home/gcp_key.json
-      - ${CA_CERT_PATH:-./resources/certs/ca.crt}:/etc/ssl/ca/ca.crt
+      - ${NGINX_PROXY_RESOURCES:-./resources/nginx}/ssl/server.crt:/etc/ssl/certs/server.crt
     logging:
       options:
         max-size: '10m'
@@ -219,7 +221,7 @@ services:
       options:
         max-size: '10m'
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:9000/health']
+      test: ['CMD', 'curl', '-f', 'http://localhost:8080/auth/realms/master']
       interval: 30s
       timeout: 10s
       retries: 3
