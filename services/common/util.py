@@ -52,9 +52,9 @@ def validate_file_type(file_name, extension=".tar"):
         file_name (str): The name of the file to be downloaded.
         extension (str): The file extension to validate against.
     """
-    if not file_name.endswith(extension):
-        logging.error(
-            f'Unsupported file type for storage object {file_name}. Only "{extension}" files are supported.'
-        )
-        return False
+    # if not file_name.endswith(extension):
+    #     logging.error(
+    #         f'Unsupported file type for storage object {file_name}. Only "{extension}" files are supported.'
+    #     )
+    #     return False
     return True
