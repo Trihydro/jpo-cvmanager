@@ -6,8 +6,11 @@ include:
 
 services:
   cvmanager_nginx_proxy:
+    profiles:
+      - nginx_proxy
     build:
       context: ${NGINX_PROXY_RESOURCES:-./resources/nginx}
+      dockerfile: Dockerfile
     image: cvmanager_nginx_proxy:latest
     restart: unless-stopped
     ports:
@@ -25,6 +28,7 @@ services:
       - cvmanager_webapp
       - cvmanager_keycloak
       - cvmanager_api
+      - cvmanager_postgres
     logging:
       options:
         max-size: '10m'
@@ -95,6 +99,8 @@ services:
 
       TIMEZONE: ${TIMEZONE}
       LOGGING_LEVEL: ${API_LOGGING_LEVEL}
+    depends_on:
+      - cvmanager_postgres
     volumes:
       - ./resources/google/${GOOGLE_ACCESS_KEY_NAME}:/home/gcp_key.json
       - ${CA_CERT_PATH:-./resources/certs/ca.crt}:/etc/ssl/ca/ca.crt
@@ -146,24 +152,24 @@ services:
       options:
         max-size: '10m'
 
-#  cvmanager_postgres:
-#    profiles:
-#      - basic
-#      - cvmanager_postgres
-#      - intersection_no_api
-#    image: postgis/postgis:15-master
-#    restart: always
-#    ports:
-#      - '5432:5432'
-#    environment:
-#      POSTGRES_USER: ${PG_DB_USER}
-#      POSTGRES_PASSWORD: ${PG_DB_PASS}
-#    volumes:
-#      - pgdb:/var/lib/postgresql/data
-#      - ./resources/sql_scripts:/docker-entrypoint-initdb.d
-#    logging:
-#      options:
-#        max-size: '10m'
+  cvmanager_postgres:
+    profiles:
+      - basic
+      - cvmanager_postgres
+      - intersection_no_api
+    image: postgis/postgis:15-master
+    restart: always
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: ${PG_DB_USER}
+      POSTGRES_PASSWORD: ${PG_DB_PASS}
+    volumes:
+      - pgdb:/var/lib/postgresql/data
+      - ./resources/sql_scripts:/docker-entrypoint-initdb.d
+    logging:
+      options:
+        max-size: '10m'
 
   cvmanager_keycloak:
     profiles:
@@ -178,10 +184,10 @@ services:
         KEYCLOAK_LOGIN_THEME_NAME: ${KEYCLOAK_LOGIN_THEME_NAME}.jar
     image: jpo_cvmanager_keycloak:latest
     restart: always
-#    depends_on:
-#      cvmanager_postgres:
-#        required: false
-#        condition: service_started
+    depends_on:
+      cvmanager_postgres:
+        required: false
+        condition: service_started
 
     extra_hosts:
       ${WEBAPP_DOMAIN}: ${WEBAPP_HOST_IP}
