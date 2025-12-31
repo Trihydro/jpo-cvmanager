@@ -29,10 +29,10 @@ def get_ping_data(user: EnvironWithOrg):
     # Execute the query and fetch all results
     query = (
         "SELECT jsonb_build_object('id', rd.rsu_id, 'ip', rd.ipv4_address, 'datetime', ping_data.timestamp, 'online_status', ping_data.result) "
-        "FROM public.rsus AS rd "
-        "JOIN public.rsu_organization_name AS ron_v ON ron_v.rsu_id = rd.rsu_id "
+        "FROM cvmanager.rsus AS rd "
+        "JOIN cvmanager.rsu_organization_name AS ron_v ON ron_v.rsu_id = rd.rsu_id "
         "JOIN ("
-        "SELECT * FROM public.ping AS ping_data "
+        "SELECT * FROM cvmanager.ping AS ping_data "
         f"WHERE ping_data.timestamp >= '{t.strftime('%Y/%m/%dT%H:%M:%S')}'::timestamp"
         ") AS ping_data ON rd.rsu_id = ping_data.rsu_id "
     )
@@ -81,11 +81,11 @@ def get_last_online_data_authorized(ip: str):
     # Execute the query and fetch all results
     query = (
         "SELECT ping.timestamp "
-        "FROM public.ping "
+        "FROM cvmanager.ping "
         "JOIN ("
         "SELECT rsus.rsu_id, rsus.ipv4_address "
-        "FROM public.rsus "
-        "JOIN public.rsu_organization_name AS ron_v ON ron_v.rsu_id = rsus.rsu_id "
+        "FROM cvmanager.rsus "
+        "JOIN cvmanager.rsu_organization_name AS ron_v ON ron_v.rsu_id = rsus.rsu_id "
         "WHERE rsus.ipv4_address = :rsu_ip "
         ") AS rd ON ping.rsu_id = rd.rsu_id "
         "WHERE ping.rsu_id = rd.rsu_id "

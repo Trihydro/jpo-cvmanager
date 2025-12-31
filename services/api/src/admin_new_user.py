@@ -25,7 +25,7 @@ def get_allowed_selections(user: EnvironWithOrg):
         user, ORG_ROLE_LITERAL.ADMIN, include_super_user=True
     )
 
-    roles_query = "SELECT name FROM public.roles ORDER BY name"
+    roles_query = "SELECT name FROM cvmanager.roles ORDER BY name"
     allowed["roles"] = pgquery.query_and_return_list(roles_query)
 
     return allowed
@@ -98,18 +98,18 @@ def add_user(user_spec: dict):
     try:
         current_timestamp = int(time.time() * 1000)
         user_insert_query = (
-            "INSERT INTO public.users(email, first_name, last_name, super_user, created_timestamp) "
+            "INSERT INTO cvmanager.users(email, first_name, last_name, super_user, created_timestamp) "
             f"VALUES ('{user_spec['email']}', '{user_spec['first_name']}', '{user_spec['last_name']}', '{'1' if user_spec['super_user'] else '0'}', {current_timestamp})"
         )
         pgquery.write_db(user_insert_query)
 
-        user_org_insert_query = "INSERT INTO public.user_organization(user_id, organization_id, role_id) VALUES"
+        user_org_insert_query = "INSERT INTO cvmanager.user_organization(user_id, organization_id, role_id) VALUES"
         for organization in user_spec["organizations"]:
             user_org_insert_query += (
                 " ("
-                f"(SELECT user_id FROM public.users WHERE email = '{user_spec['email']}'), "
-                f"(SELECT organization_id FROM public.organizations WHERE name = '{organization['name']}'), "
-                f"(SELECT role_id FROM public.roles WHERE name = '{organization['role']}')"
+                f"(SELECT user_id FROM cvmanager.users WHERE email = '{user_spec['email']}'), "
+                f"(SELECT organization_id FROM cvmanager.organizations WHERE name = '{organization['name']}'), "
+                f"(SELECT role_id FROM cvmanager.roles WHERE name = '{organization['role']}')"
                 "),"
             )
         user_org_insert_query = user_org_insert_query[:-1]

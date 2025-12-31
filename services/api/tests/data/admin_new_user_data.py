@@ -39,15 +39,15 @@ bad_input = {
 }
 
 user_insert_query = (
-    "INSERT INTO public.users(email, first_name, last_name, super_user, created_timestamp) "
+    "INSERT INTO cvmanager.users(email, first_name, last_name, super_user, created_timestamp) "
     "VALUES ('jdoe@example.com', 'John', 'Doe', '1', 1678901234000)"
 )
 
 user_org_insert_query = (
-    "INSERT INTO public.user_organization(user_id, organization_id, role_id) VALUES"
+    "INSERT INTO cvmanager.user_organization(user_id, organization_id, role_id) VALUES"
     " ("
-    "(SELECT user_id FROM public.users WHERE email = 'jdoe@example.com'), "
-    "(SELECT organization_id FROM public.organizations WHERE name = 'Test Org'), "
-    "(SELECT role_id FROM public.roles WHERE name = 'operator')"
+    "(SELECT user_id FROM cvmanager.users WHERE email = 'jdoe@example.com'), "
+    "(SELECT organization_id FROM cvmanager.organizations WHERE name = 'Test Org'), "
+    "(SELECT role_id FROM cvmanager.roles WHERE name = 'operator')"
     ")"
 )

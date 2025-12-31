@@ -24,18 +24,18 @@ def get_all_orgs(organizations: list[str] | None):
         "SELECT to_jsonb(row) "
         "FROM ("
         "SELECT org.name, org.email, "
-        "(SELECT COUNT(*) FROM public.user_organization uo WHERE uo.organization_id = org.organization_id) num_users, "
-        "(SELECT COUNT(*) FROM public.rsu_organization ro WHERE ro.organization_id = org.organization_id) num_rsus, "
-        "(SELECT COUNT(*) FROM public.intersection_organization io WHERE io.organization_id = org.organization_id) num_intersections "
+        "(SELECT COUNT(*) FROM cvmanager.user_organization uo WHERE uo.organization_id = org.organization_id) num_users, "
+        "(SELECT COUNT(*) FROM cvmanager.rsu_organization ro WHERE ro.organization_id = org.organization_id) num_rsus, "
+        "(SELECT COUNT(*) FROM cvmanager.intersection_organization io WHERE io.organization_id = org.organization_id) num_intersections "
     )
     params: dict[str, Any] = {}
     if organizations is None:
-        query += "FROM public.organizations org "
+        query += "FROM cvmanager.organizations org "
     else:
         org_names_placeholder, _ = generate_sql_placeholders_for_list(
             organizations, params_to_update=params
         )
-        query += f"FROM public.organizations org WHERE org.name IN ({org_names_placeholder}) "
+        query += f"FROM cvmanager.organizations org WHERE org.name IN ({org_names_placeholder}) "
     query += ") as row"
 
     data = pgquery.query_db(query, params=params)
@@ -63,12 +63,12 @@ def get_org_data(org_name: str, is_admin_in_org: bool):
             "SELECT to_jsonb(row) "
             "FROM ("
             "SELECT u.email, u.first_name, u.last_name, u.name role_name "
-            "FROM public.organizations AS org "
+            "FROM cvmanager.organizations AS org "
             "JOIN ("
             "SELECT uo.organization_id, users.email, users.first_name, users.last_name, roles.name "
-            "FROM public.user_organization uo "
-            "JOIN public.users ON uo.user_id = users.user_id "
-            "JOIN public.roles ON uo.role_id = roles.role_id"
+            "FROM cvmanager.user_organization uo "
+            "JOIN cvmanager.users ON uo.user_id = users.user_id "
+            "JOIN cvmanager.roles ON uo.role_id = roles.role_id"
             ") u ON u.organization_id = org.organization_id "
             "WHERE org.name = :org_name"
             ") as row"
@@ -89,11 +89,11 @@ def get_org_data(org_name: str, is_admin_in_org: bool):
         "SELECT to_jsonb(row) "
         "FROM ("
         "SELECT r.ipv4_address, r.primary_route, r.milepost "
-        "FROM public.organizations AS org "
+        "FROM cvmanager.organizations AS org "
         "JOIN ("
         "SELECT ro.organization_id, rsus.ipv4_address, rsus.primary_route, rsus.milepost "
-        "FROM public.rsu_organization ro "
-        "JOIN public.rsus ON ro.rsu_id = rsus.rsu_id"
+        "FROM cvmanager.rsu_organization ro "
+        "JOIN cvmanager.rsus ON ro.rsu_id = rsus.rsu_id"
         ") r ON r.organization_id = org.organization_id "
         "WHERE org.name = :org_name"
         ") as row"
@@ -113,11 +113,11 @@ def get_org_data(org_name: str, is_admin_in_org: bool):
         "SELECT to_jsonb(row) "
         "FROM ("
         "SELECT i.intersection_number, i.intersection_name, i.origin_ip "
-        "FROM public.organizations AS org "
+        "FROM cvmanager.organizations AS org "
         "JOIN ("
         "SELECT io.organization_id, intersections.intersection_number, intersections.intersection_name, intersections.origin_ip "
-        "FROM public.intersection_organization io "
-        "JOIN public.intersections ON io.intersection_id = intersections.intersection_id"
+        "FROM cvmanager.intersection_organization io "
+        "JOIN cvmanager.intersections ON io.intersection_id = intersections.intersection_id"
         ") i ON i.organization_id = org.organization_id "
         "WHERE org.name = :org_name"
         ") as row"
@@ -137,7 +137,7 @@ def get_org_data(org_name: str, is_admin_in_org: bool):
 
 def get_allowed_selections():
     obj = {"user_roles": []}
-    query = "SELECT to_jsonb(row) FROM (SELECT name FROM public.roles) as row"
+    query = "SELECT to_jsonb(row) FROM (SELECT name FROM cvmanager.roles) as row"
     data = pgquery.query_db(query)
     for row in data:
         row = dict(row[0])
@@ -222,7 +222,7 @@ def modify_org_authorized(orig_name: str, org_spec: dict):
     try:
         # Modify the existing organization data
         query = (
-            "UPDATE public.organizations SET "
+            "UPDATE cvmanager.organizations SET "
             "name = :name, "
             "email = :email "
             "WHERE name = :orig_name"
@@ -242,9 +242,9 @@ def modify_org_authorized(orig_name: str, org_spec: dict):
                 query_rows.append(
                     (
                         "("
-                        f"(SELECT user_id FROM public.users WHERE email = :{email_placeholder}), "
-                        "(SELECT organization_id FROM public.organizations WHERE name = :org_name), "
-                        f"(SELECT role_id FROM public.roles WHERE name = :{role_placeholder})"
+                        f"(SELECT user_id FROM cvmanager.users WHERE email = :{email_placeholder}), "
+                        "(SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name), "
+                        f"(SELECT role_id FROM cvmanager.roles WHERE name = :{role_placeholder})"
                         ")",
                         {
                             email_placeholder: user["email"],
@@ -253,7 +253,7 @@ def modify_org_authorized(orig_name: str, org_spec: dict):
                     )
                 )
 
-            query_prefix = "INSERT INTO public.user_organization(user_id, organization_id, role_id) VALUES "
+            query_prefix = "INSERT INTO cvmanager.user_organization(user_id, organization_id, role_id) VALUES "
             pgquery.write_db_batched(
                 query_prefix,
                 query_rows,
@@ -263,10 +263,10 @@ def modify_org_authorized(orig_name: str, org_spec: dict):
         # Modify the user-to-organization relationships
         for user in org_spec["users_to_modify"]:
             user_modify_query = (
-                "UPDATE public.user_organization "
-                "SET role_id = (SELECT role_id FROM public.roles WHERE name = :role) "
-                "WHERE user_id = (SELECT user_id FROM public.users WHERE email = :email) "
-                "AND organization_id = (SELECT organization_id FROM public.organizations WHERE name = :org_name)"
+                "UPDATE cvmanager.user_organization "
+                "SET role_id = (SELECT role_id FROM cvmanager.roles WHERE name = :role) "
+                "WHERE user_id = (SELECT user_id FROM cvmanager.users WHERE email = :email) "
+                "AND organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name)"
             )
             params = {
                 "role": user["role"],
@@ -286,9 +286,9 @@ def modify_org_authorized(orig_name: str, org_spec: dict):
                 params[key] = user["email"]
 
             query = (
-                "DELETE FROM public.user_organization WHERE "
-                f"user_id IN (SELECT user_id FROM public.users WHERE email IN ({', '.join(email_placeholders)})) "
-                "AND organization_id = (SELECT organization_id FROM public.organizations WHERE name = :org_name)"
+                "DELETE FROM cvmanager.user_organization WHERE "
+                f"user_id IN (SELECT user_id FROM cvmanager.users WHERE email IN ({', '.join(email_placeholders)})) "
+                "AND organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name)"
             )
             pgquery.write_db(query, params=params)
 
@@ -300,15 +300,15 @@ def modify_org_authorized(orig_name: str, org_spec: dict):
                 query_rows.append(
                     (
                         "("
-                        f"(SELECT rsu_id FROM public.rsus WHERE ipv4_address = :{ip_placeholder}), "
-                        "(SELECT organization_id FROM public.organizations WHERE name = :org_name)"
+                        f"(SELECT rsu_id FROM cvmanager.rsus WHERE ipv4_address = :{ip_placeholder}), "
+                        "(SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name)"
                         ")",
                         {ip_placeholder: rsu_ip},
                     )
                 )
 
             query_prefix = (
-                "INSERT INTO public.rsu_organization(rsu_id, organization_id) VALUES "
+                "INSERT INTO cvmanager.rsu_organization(rsu_id, organization_id) VALUES "
             )
             pgquery.write_db_batched(
                 query_prefix,
@@ -327,9 +327,9 @@ def modify_org_authorized(orig_name: str, org_spec: dict):
                 params[key] = rsu_ip
 
             query = (
-                "DELETE FROM public.rsu_organization WHERE "
-                f"rsu_id IN (SELECT rsu_id FROM public.rsus WHERE ipv4_address IN ({', '.join(ip_placeholders)})) "
-                "AND organization_id = (SELECT organization_id FROM public.organizations WHERE name = :org_name)"
+                "DELETE FROM cvmanager.rsu_organization WHERE "
+                f"rsu_id IN (SELECT rsu_id FROM cvmanager.rsus WHERE ipv4_address IN ({', '.join(ip_placeholders)})) "
+                "AND organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name)"
             )
             pgquery.write_db(query, params=params)
 
@@ -341,14 +341,14 @@ def modify_org_authorized(orig_name: str, org_spec: dict):
                 query_rows.append(
                     (
                         "("
-                        f"(SELECT intersection_id FROM public.intersections WHERE intersection_number = :{id_placeholder}), "
-                        "(SELECT organization_id FROM public.organizations WHERE name = :org_name)"
+                        f"(SELECT intersection_id FROM cvmanager.intersections WHERE intersection_number = :{id_placeholder}), "
+                        "(SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name)"
                         ")",
                         {id_placeholder: str(intersection_id)},
                     )
                 )
 
-            query_prefix = "INSERT INTO public.intersection_organization(intersection_id, organization_id) VALUES "
+            query_prefix = "INSERT INTO cvmanager.intersection_organization(intersection_id, organization_id) VALUES "
             pgquery.write_db_batched(
                 query_prefix,
                 query_rows,
@@ -366,9 +366,9 @@ def modify_org_authorized(orig_name: str, org_spec: dict):
                 params[key] = str(intersection_id)
 
             query = (
-                "DELETE FROM public.intersection_organization WHERE "
-                f"intersection_id IN (SELECT intersection_id FROM public.intersections WHERE intersection_number IN ({', '.join(id_placeholders)})) "
-                "AND organization_id = (SELECT organization_id FROM public.organizations WHERE name = :org_name)"
+                "DELETE FROM cvmanager.intersection_organization WHERE "
+                f"intersection_id IN (SELECT intersection_id FROM cvmanager.intersections WHERE intersection_number IN ({', '.join(id_placeholders)})) "
+                "AND organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name)"
             )
             pgquery.write_db(query, params=params)
     except IntegrityError as e:
@@ -409,27 +409,27 @@ def delete_org_authorized(org_name: str):
 
     # Delete user-to-organization relationships
     user_org_remove_query = (
-        "DELETE FROM public.user_organization WHERE "
-        "organization_id = (SELECT organization_id FROM public.organizations WHERE name = :org_name)"
+        "DELETE FROM cvmanager.user_organization WHERE "
+        "organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name)"
     )
     pgquery.write_db(user_org_remove_query, params={"org_name": org_name})
 
     # Delete rsu-to-organization relationships
     rsu_org_remove_query = (
-        "DELETE FROM public.rsu_organization WHERE "
-        "organization_id = (SELECT organization_id FROM public.organizations WHERE name = :org_name)"
+        "DELETE FROM cvmanager.rsu_organization WHERE "
+        "organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name)"
     )
     pgquery.write_db(rsu_org_remove_query, params={"org_name": org_name})
 
     # Delete intersection-to-organization relationships
     intersection_org_remove_query = (
-        "DELETE FROM public.intersection_organization WHERE "
-        "organization_id = (SELECT organization_id FROM public.organizations WHERE name = :org_name)"
+        "DELETE FROM cvmanager.intersection_organization WHERE "
+        "organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name)"
     )
     pgquery.write_db(intersection_org_remove_query, params={"org_name": org_name})
 
     # Delete organization data
-    org_remove_query = "DELETE FROM public.organizations WHERE name = :org_name"
+    org_remove_query = "DELETE FROM cvmanager.organizations WHERE name = :org_name"
     pgquery.write_db(org_remove_query, params={"org_name": org_name})
 
     return {"message": "Organization successfully deleted"}

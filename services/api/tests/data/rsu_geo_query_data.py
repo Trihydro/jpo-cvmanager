@@ -31,8 +31,8 @@ request_params_good = multidict.MultiDict(
 ##################################### query_org_rsus ###########################################
 
 rsu_org_query = (
-    "SELECT ipv4_address from public.rsus as rd "
-    "JOIN public.rsu_organization_name AS ron_v ON ron_v.rsu_id = rd.rsu_id "
+    "SELECT ipv4_address from cvmanager.rsus as rd "
+    "JOIN cvmanager.rsu_organization_name AS ron_v ON ron_v.rsu_id = rd.rsu_id "
     "WHERE ron_v.name = :org_name"
 )
 
@@ -61,7 +61,7 @@ rsu_devices_query = (
 )
 
 rsu_devices_query_vendor = (
-    "SELECT to_jsonb(row) FROM (SELECT ipv4_address as ip, ST_X(geography::geometry) AS long, ST_Y(geography::geometry) AS lat FROM rsus WHERE ipv4_address IN (:item_0) AND ipv4_address IN (SELECT rd.ipv4_address FROM public.rsus as rd JOIN public.rsu_models as rm ON rm.rsu_model_id = rd.model JOIN public.manufacturers as man on man.manufacturer_id = rm.manufacturer WHERE man.name = :vendor) AND ST_Contains(ST_SetSRID(ST_GeomFromText(:polygon), 4326), rsus.geography::geometry)) as row",
+    "SELECT to_jsonb(row) FROM (SELECT ipv4_address as ip, ST_X(geography::geometry) AS long, ST_Y(geography::geometry) AS lat FROM rsus WHERE ipv4_address IN (:item_0) AND ipv4_address IN (SELECT rd.ipv4_address FROM cvmanager.rsus as rd JOIN cvmanager.rsu_models as rm ON rm.rsu_model_id = rd.model JOIN cvmanager.manufacturers as man on man.manufacturer_id = rm.manufacturer WHERE man.name = :vendor) AND ST_Contains(ST_SetSRID(ST_GeomFromText(:polygon), 4326), rsus.geography::geometry)) as row",
     {
         "item_0": "10.11.81.12",
         "vendor": "Test",

@@ -76,10 +76,10 @@ get_all_orgs_sql = (
     "SELECT to_jsonb(row) "
     "FROM ("
     "SELECT org.name, org.email, "
-    "(SELECT COUNT(*) FROM public.user_organization uo WHERE uo.organization_id = org.organization_id) num_users, "
-    "(SELECT COUNT(*) FROM public.rsu_organization ro WHERE ro.organization_id = org.organization_id) num_rsus, "
-    "(SELECT COUNT(*) FROM public.intersection_organization io WHERE io.organization_id = org.organization_id) num_intersections "
-    "FROM public.organizations org WHERE org.name IN (:item_0, :item_1, :item_2) "
+    "(SELECT COUNT(*) FROM cvmanager.user_organization uo WHERE uo.organization_id = org.organization_id) num_users, "
+    "(SELECT COUNT(*) FROM cvmanager.rsu_organization ro WHERE ro.organization_id = org.organization_id) num_rsus, "
+    "(SELECT COUNT(*) FROM cvmanager.intersection_organization io WHERE io.organization_id = org.organization_id) num_intersections "
+    "FROM cvmanager.organizations org WHERE org.name IN (:item_0, :item_1, :item_2) "
     ") as row",
     {"item_0": "Test Org", "item_1": "Test Org 2", "item_2": "Test Org 3"},
 )
@@ -132,12 +132,12 @@ get_org_data_user_sql = (
     "SELECT to_jsonb(row) "
     "FROM ("
     "SELECT u.email, u.first_name, u.last_name, u.name role_name "
-    "FROM public.organizations AS org "
+    "FROM cvmanager.organizations AS org "
     "JOIN ("
     "SELECT uo.organization_id, users.email, users.first_name, users.last_name, roles.name "
-    "FROM public.user_organization uo "
-    "JOIN public.users ON uo.user_id = users.user_id "
-    "JOIN public.roles ON uo.role_id = roles.role_id"
+    "FROM cvmanager.user_organization uo "
+    "JOIN cvmanager.users ON uo.user_id = users.user_id "
+    "JOIN cvmanager.roles ON uo.role_id = roles.role_id"
     ") u ON u.organization_id = org.organization_id "
     "WHERE org.name = :org_name"
     ") as row"
@@ -147,11 +147,11 @@ get_org_data_rsu_sql = (
     "SELECT to_jsonb(row) "
     "FROM ("
     "SELECT r.ipv4_address, r.primary_route, r.milepost "
-    "FROM public.organizations AS org "
+    "FROM cvmanager.organizations AS org "
     "JOIN ("
     "SELECT ro.organization_id, rsus.ipv4_address, rsus.primary_route, rsus.milepost "
-    "FROM public.rsu_organization ro "
-    "JOIN public.rsus ON ro.rsu_id = rsus.rsu_id"
+    "FROM cvmanager.rsu_organization ro "
+    "JOIN cvmanager.rsus ON ro.rsu_id = rsus.rsu_id"
     ") r ON r.organization_id = org.organization_id "
     "WHERE org.name = :org_name"
     ") as row"
@@ -161,11 +161,11 @@ get_org_data_intersection_sql = (
     "SELECT to_jsonb(row) "
     "FROM ("
     "SELECT i.intersection_number, i.intersection_name, i.origin_ip "
-    "FROM public.organizations AS org "
+    "FROM cvmanager.organizations AS org "
     "JOIN ("
     "SELECT io.organization_id, intersections.intersection_number, intersections.intersection_name, intersections.origin_ip "
-    "FROM public.intersection_organization io "
-    "JOIN public.intersections ON io.intersection_id = intersections.intersection_id"
+    "FROM cvmanager.intersection_organization io "
+    "JOIN cvmanager.intersections ON io.intersection_id = intersections.intersection_id"
     ") i ON i.organization_id = org.organization_id "
     "WHERE org.name = :org_name"
     ") as row"
@@ -181,14 +181,14 @@ get_allowed_selections_return = [
 get_allowed_selections_result = {"user_roles": ["admin", "user"]}
 
 get_allowed_selections_sql = (
-    "SELECT to_jsonb(row) FROM (SELECT name FROM public.roles) as row"
+    "SELECT to_jsonb(row) FROM (SELECT name FROM cvmanager.roles) as row"
 )
 
 # modify_org
 
 modify_org_sql = (
     (
-        "UPDATE public.organizations SET "
+        "UPDATE cvmanager.organizations SET "
         "name = :name, "
         "email = :email "
         "WHERE name = :orig_name"
@@ -202,11 +202,11 @@ modify_org_sql = (
 
 modify_org_add_user_sql = (
     (
-        "INSERT INTO public.user_organization(user_id, organization_id, role_id) VALUES"
+        "INSERT INTO cvmanager.user_organization(user_id, organization_id, role_id) VALUES"
         " ("
-        "(SELECT user_id FROM public.users WHERE email = :user_email_0), "
-        "(SELECT organization_id FROM public.organizations WHERE name = :org_name), "
-        "(SELECT role_id FROM public.roles WHERE name = :user_role_0)"
+        "(SELECT user_id FROM cvmanager.users WHERE email = :user_email_0), "
+        "(SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name), "
+        "(SELECT role_id FROM cvmanager.roles WHERE name = :user_role_0)"
         ")"
     ),
     {"org_name": "Test Org", "user_email_0": "test1@email.com", "user_role_0": "admin"},
@@ -214,29 +214,29 @@ modify_org_add_user_sql = (
 
 modify_org_modify_user_sql = (
     (
-        "UPDATE public.user_organization "
-        "SET role_id = (SELECT role_id FROM public.roles WHERE name = :role) "
-        "WHERE user_id = (SELECT user_id FROM public.users WHERE email = :email) "
-        "AND organization_id = (SELECT organization_id FROM public.organizations WHERE name = :org_name)"
+        "UPDATE cvmanager.user_organization "
+        "SET role_id = (SELECT role_id FROM cvmanager.roles WHERE name = :role) "
+        "WHERE user_id = (SELECT user_id FROM cvmanager.users WHERE email = :email) "
+        "AND organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name)"
     ),
     {"role": "user", "email": "test2@email.com", "org_name": "Test Org"},
 )
 
 modify_org_remove_user_sql = (
     (
-        "DELETE FROM public.user_organization WHERE "
-        "user_id IN (SELECT user_id FROM public.users WHERE email IN (:email_0)) "
-        "AND organization_id = (SELECT organization_id FROM public.organizations WHERE name = :org_name)"
+        "DELETE FROM cvmanager.user_organization WHERE "
+        "user_id IN (SELECT user_id FROM cvmanager.users WHERE email IN (:email_0)) "
+        "AND organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name)"
     ),
     {"org_name": "Test Org", "email_0": "test3@email.com"},
 )
 
 modify_org_add_rsu_sql = (
     (
-        "INSERT INTO public.rsu_organization(rsu_id, organization_id) VALUES"
+        "INSERT INTO cvmanager.rsu_organization(rsu_id, organization_id) VALUES"
         " ("
-        "(SELECT rsu_id FROM public.rsus WHERE ipv4_address = :rsu_ip_0), "
-        "(SELECT organization_id FROM public.organizations WHERE name = :org_name)"
+        "(SELECT rsu_id FROM cvmanager.rsus WHERE ipv4_address = :rsu_ip_0), "
+        "(SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name)"
         ")"
     ),
     {"org_name": "Test Org", "rsu_ip_0": "10.0.0.2"},
@@ -244,18 +244,18 @@ modify_org_add_rsu_sql = (
 
 modify_org_remove_rsu_sql = (
     (
-        "DELETE FROM public.rsu_organization WHERE "
-        "rsu_id IN (SELECT rsu_id FROM public.rsus WHERE ipv4_address IN (:rsu_ip_0)) "
-        "AND organization_id = (SELECT organization_id FROM public.organizations WHERE name = :org_name)"
+        "DELETE FROM cvmanager.rsu_organization WHERE "
+        "rsu_id IN (SELECT rsu_id FROM cvmanager.rsus WHERE ipv4_address IN (:rsu_ip_0)) "
+        "AND organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name)"
     ),
     {"org_name": "Test Org", "rsu_ip_0": "10.0.0.1"},
 )
 
 modify_org_add_intersection_sql = (
     (
-        "INSERT INTO public.intersection_organization(intersection_id, organization_id) VALUES ("
-        "(SELECT intersection_id FROM public.intersections WHERE intersection_number = :intersection_id_0), "
-        "(SELECT organization_id FROM public.organizations WHERE name = :org_name)"
+        "INSERT INTO cvmanager.intersection_organization(intersection_id, organization_id) VALUES ("
+        "(SELECT intersection_id FROM cvmanager.intersections WHERE intersection_number = :intersection_id_0), "
+        "(SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name)"
         ")"
     ),
     {"org_name": "Test Org", "intersection_id_0": "1111"},
@@ -263,9 +263,9 @@ modify_org_add_intersection_sql = (
 
 modify_org_remove_intersection_sql = (
     (
-        "DELETE FROM public.intersection_organization WHERE "
-        "intersection_id IN (SELECT intersection_id FROM public.intersections WHERE intersection_number IN (:intersection_id_0)) "
-        "AND organization_id = (SELECT organization_id FROM public.organizations WHERE name = :org_name)"
+        "DELETE FROM cvmanager.intersection_organization WHERE "
+        "intersection_id IN (SELECT intersection_id FROM cvmanager.intersections WHERE intersection_number IN (:intersection_id_0)) "
+        "AND organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name)"
     ),
     {"org_name": "Test Org", "intersection_id_0": "1112"},
 )
@@ -274,19 +274,19 @@ modify_org_remove_intersection_sql = (
 
 delete_org_calls = [
     (
-        "DELETE FROM public.user_organization WHERE organization_id = (SELECT organization_id FROM public.organizations WHERE name = :org_name)",
+        "DELETE FROM cvmanager.user_organization WHERE organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name)",
         {"org_name": "Test Org"},
     ),
     (
-        "DELETE FROM public.rsu_organization WHERE organization_id = (SELECT organization_id FROM public.organizations WHERE name = :org_name)",
+        "DELETE FROM cvmanager.rsu_organization WHERE organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name)",
         {"org_name": "Test Org"},
     ),
     (
-        "DELETE FROM public.intersection_organization WHERE organization_id = (SELECT organization_id FROM public.organizations WHERE name = :org_name)",
+        "DELETE FROM cvmanager.intersection_organization WHERE organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name)",
         {"org_name": "Test Org"},
     ),
     (
-        "DELETE FROM public.organizations WHERE name = :org_name",
+        "DELETE FROM cvmanager.organizations WHERE name = :org_name",
         {"org_name": "Test Org"},
     ),
 ]

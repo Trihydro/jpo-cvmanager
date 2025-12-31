@@ -44,7 +44,7 @@ def get_rsu_data() -> RsuDataWrapper:
     result = {}
     query = (
         "SELECT jsonb_build_object('rsu_id', rsu_id, 'iss_scms_id', iss_scms_id) "
-        "FROM public.rsus "
+        "FROM cvmanager.rsus "
         "WHERE iss_scms_id IS NOT NULL "
         "ORDER BY rsu_id"
     )
@@ -121,7 +121,7 @@ def insert_scms_data(data):
     now_ts = datetime.strftime(datetime.now(), "%Y-%m-%dT%H:%M:%S.000Z")
 
     query = (
-        'INSERT INTO public.scms_health("timestamp", health, expiration, rsu_id) VALUES'
+        'INSERT INTO cvmanager.scms_health("timestamp", health, expiration, rsu_id) VALUES'
     )
     for value in data.values():
         if validate_scms_data(value) is False:

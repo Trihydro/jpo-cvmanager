@@ -25,10 +25,10 @@ def get_user_data(user_email: str, user: EnvironWithOrg, qualified_orgs: list[st
         "SELECT to_jsonb(row) "
         "FROM ("
         "SELECT u.email, u.first_name, u.last_name, u.super_user, org.name, roles.name AS role "
-        "FROM public.users u "
-        "LEFT JOIN public.user_organization AS uo ON uo.user_id = u.user_id "
-        "LEFT JOIN public.organizations AS org ON org.organization_id = uo.organization_id "
-        "LEFT JOIN public.roles ON roles.role_id = uo.role_id "
+        "FROM cvmanager.users u "
+        "LEFT JOIN cvmanager.user_organization AS uo ON uo.user_id = u.user_id "
+        "LEFT JOIN cvmanager.organizations AS org ON org.organization_id = uo.organization_id "
+        "LEFT JOIN cvmanager.roles ON roles.role_id = uo.role_id "
     )
 
     where_clauses = []
@@ -131,7 +131,7 @@ def modify_user(orig_email: str, user_spec: dict):
     try:
         # Modify the existing user data
         query = (
-            "UPDATE public.users SET "
+            "UPDATE cvmanager.users SET "
             "email=:email, "
             "first_name=:first_name, "
             "last_name=:last_name, "
@@ -156,9 +156,9 @@ def modify_user(orig_email: str, user_spec: dict):
                 query_rows.append(
                     (
                         "("
-                        "(SELECT user_id FROM public.users WHERE email = :email), "
-                        f"(SELECT organization_id FROM public.organizations WHERE name = :{org_name_placeholder}), "
-                        f"(SELECT role_id FROM public.roles WHERE name = :{org_role_placeholder})"
+                        "(SELECT user_id FROM cvmanager.users WHERE email = :email), "
+                        f"(SELECT organization_id FROM cvmanager.organizations WHERE name = :{org_name_placeholder}), "
+                        f"(SELECT role_id FROM cvmanager.roles WHERE name = :{org_role_placeholder})"
                         ")",
                         {
                             org_name_placeholder: organization["name"],
@@ -167,7 +167,7 @@ def modify_user(orig_email: str, user_spec: dict):
                     )
                 )
 
-            query_prefix = "INSERT INTO public.user_organization(user_id, organization_id, role_id) VALUES "
+            query_prefix = "INSERT INTO cvmanager.user_organization(user_id, organization_id, role_id) VALUES "
             pgquery.write_db_batched(
                 query_prefix,
                 query_rows,
@@ -177,10 +177,10 @@ def modify_user(orig_email: str, user_spec: dict):
         # Modify the user-to-organization relationships
         for organization in user_spec["organizations_to_modify"]:
             org_modify_query = (
-                "UPDATE public.user_organization "
-                "SET role_id = (SELECT role_id FROM public.roles WHERE name = :role) "
-                "WHERE user_id = (SELECT user_id FROM public.users WHERE email = :email) "
-                "AND organization_id = (SELECT organization_id FROM public.organizations WHERE name = :org_name)"
+                "UPDATE cvmanager.user_organization "
+                "SET role_id = (SELECT role_id FROM cvmanager.roles WHERE name = :role) "
+                "WHERE user_id = (SELECT user_id FROM cvmanager.users WHERE email = :email) "
+                "AND organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name)"
             )
             params = {
                 "role": organization["role"],
@@ -200,9 +200,9 @@ def modify_user(orig_email: str, user_spec: dict):
                 params[key] = org["name"]
 
             query = (
-                "DELETE FROM public.user_organization WHERE "
-                "user_id = (SELECT user_id FROM public.users WHERE email = :email) "
-                f"AND organization_id IN (SELECT organization_id FROM public.organizations WHERE name IN ({', '.join(org_placeholders)}))"
+                "DELETE FROM cvmanager.user_organization WHERE "
+                "user_id = (SELECT user_id FROM cvmanager.users WHERE email = :email) "
+                f"AND organization_id IN (SELECT organization_id FROM cvmanager.organizations WHERE name IN ({', '.join(org_placeholders)}))"
             )
             pgquery.write_db(query, params=params)
     except IntegrityError as e:
@@ -228,14 +228,14 @@ def modify_user(orig_email: str, user_spec: dict):
 def delete_user_authorized(user_email: str):
     # Delete user-to-organization relationships
     org_remove_query = (
-        "DELETE FROM public.user_organization WHERE "
-        "user_id = (SELECT user_id FROM public.users WHERE email = :email)"
+        "DELETE FROM cvmanager.user_organization WHERE "
+        "user_id = (SELECT user_id FROM cvmanager.users WHERE email = :email)"
     )
     params = {"email": user_email}
     pgquery.write_db(org_remove_query, params=params)
 
     # Delete user data
-    user_remove_query = "DELETE FROM public.users WHERE email = :email"
+    user_remove_query = "DELETE FROM cvmanager.users WHERE email = :email"
     params = {"email": user_email}
     pgquery.write_db(user_remove_query, params=params)
 

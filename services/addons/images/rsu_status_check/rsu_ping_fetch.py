@@ -8,7 +8,7 @@ def get_rsu_data():
     result = []
 
     # Execute the query and fetch all results
-    query = "SELECT rsu_id, ipv4_address FROM public.rsus ORDER BY rsu_id"
+    query = "SELECT rsu_id, ipv4_address FROM cvmanager.rsus ORDER BY rsu_id"
     data = pgquery.query_db(query)
 
     logging.debug("Parsing results...")
@@ -26,7 +26,7 @@ def insert_rsu_ping(request_json):
     logging.debug(f"Inserting {len(histories)} new Ping records for RsuData {rsu_id}")
     for history in histories:
         try:
-            query = f'INSERT INTO public.ping (timestamp, result, rsu_id) VALUES (to_timestamp({history["clock"]}), B\'{history["value"]}\', {rsu_id})'
+            query = f'INSERT INTO cvmanager.ping (timestamp, result, rsu_id) VALUES (to_timestamp({history["clock"]}), B\'{history["value"]}\', {rsu_id})'
             pgquery.write_db(query)
         except Exception as e:
             logging.exception(f"Error inserting Ping record: {e}")
