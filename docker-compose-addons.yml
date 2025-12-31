@@ -86,10 +86,6 @@ services:
       dockerfile: Dockerfile.iss_health_check
     image: iss_health_check:latest
     restart: on-failure:3
-    depends_on:
-      cvmanager_postgres:
-        condition: service_healthy
-        required: false
     environment:
       STORAGE_TYPE: ${STORAGE_TYPE:-POSTGRES}
 
