@@ -22,7 +22,7 @@ class UpdatePostgresRsuSecurity(UpdatePostgresSnmpAbstractClass):
             return
 
         query = (
-            "INSERT INTO public.scms_health("
+            "INSERT INTO cvmanager.scms_health("
             "timestamp, health, expiration, rsu_id) "
             "VALUES (:timestamp, :health, :expiration, :rsu_id)"
         )

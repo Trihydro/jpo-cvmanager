@@ -64,8 +64,8 @@ def test_get_allowed_selections(mock_query_and_return_list):
     expected_result = {"organizations": ["test"], "roles": ["test"]}
     actual_result = admin_new_user.get_allowed_selections(user_valid)
     calls = [
-        call("SELECT name FROM public.organizations ORDER BY name ASC"),
-        call("SELECT name FROM public.roles ORDER BY name"),
+        call("SELECT name FROM cvmanager.organizations ORDER BY name ASC"),
+        call("SELECT name FROM cvmanager.roles ORDER BY name"),
     ]
     mock_query_and_return_list.assert_has_calls(calls)
     assert actual_result == expected_result

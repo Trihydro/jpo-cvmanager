@@ -89,9 +89,9 @@ def prepare_org_rsu_dict():
         "SELECT to_jsonb(row) "
         "FROM ("
         "SELECT o.name org_name, r.ipv4_address, r.primary_route "
-        "FROM public.rsu_organization ro "
-        "JOIN public.organizations o ON ro.organization_id = o.organization_id "
-        "JOIN public.rsus r ON ro.rsu_id = r.rsu_id "
+        "FROM cvmanager.rsu_organization ro "
+        "JOIN cvmanager.organizations o ON ro.organization_id = o.organization_id "
+        "JOIN cvmanager.rsus r ON ro.rsu_id = r.rsu_id "
         "ORDER BY o.name, r.primary_route ASC, r.milepost ASC"
         ") as row"
     )

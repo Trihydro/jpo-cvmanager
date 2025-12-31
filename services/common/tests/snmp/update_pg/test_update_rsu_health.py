@@ -16,7 +16,7 @@ def test_insert_config_list(rsu_health_instance):
             {"timestamp": "2023-01-01 13:00", "health": 0, "rsu_id": 102},
         ]
         rsu_health_instance.insert_config_list(snmp_config_list)
-        expected_query = "INSERT INTO public.rsu_health (timestamp, health, rsu_id) VALUES (:timestamp, :health, :rsu_id)"
+        expected_query = "INSERT INTO cvmanager.rsu_health (timestamp, health, rsu_id) VALUES (:timestamp, :health, :rsu_id)"
         expected_values = [
             {"timestamp": "2023-01-01 12:00", "health": 1, "rsu_id": 101},
             {"timestamp": "2023-01-01 13:00", "health": 0, "rsu_id": 102},

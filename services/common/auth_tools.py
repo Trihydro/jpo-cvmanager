@@ -88,9 +88,9 @@ def get_rsu_set_for_org(organizations: list[str]) -> set[str]:
     allowed_orgs_placeholder, params = generate_sql_placeholders_for_list(organizations)
     query = (
         "SELECT rsu.ipv4_address::text AS ipv4_address "
-        "FROM public.rsus rsu "
-        "JOIN public.rsu_organization AS rsu_org ON rsu_org.rsu_id = rsu.rsu_id "
-        "JOIN public.organizations AS org ON org.organization_id = rsu_org.organization_id "
+        "FROM cvmanager.rsus rsu "
+        "JOIN cvmanager.rsu_organization AS rsu_org ON rsu_org.rsu_id = rsu.rsu_id "
+        "JOIN cvmanager.organizations AS org ON org.organization_id = rsu_org.organization_id "
         f"WHERE org.name IN ({allowed_orgs_placeholder})"
     )
 
@@ -110,9 +110,9 @@ def check_rsu_with_org(rsu_ip: str, organizations: list[str]) -> bool:
     )
     query = (
         "SELECT rsu.ipv4_address::text AS ipv4_address "
-        "FROM public.rsus rsu "
-        "JOIN public.rsu_organization AS rsu_org ON rsu_org.rsu_id = rsu.rsu_id "
-        "JOIN public.organizations AS org ON org.organization_id = rsu_org.organization_id "
+        "FROM cvmanager.rsus rsu "
+        "JOIN cvmanager.rsu_organization AS rsu_org ON rsu_org.rsu_id = rsu.rsu_id "
+        "JOIN cvmanager.organizations AS org ON org.organization_id = rsu_org.organization_id "
         f"WHERE org.name IN ({allowed_orgs_placeholder}) "
         "AND rsu.ipv4_address = :rsu_ip"
     )
@@ -133,9 +133,9 @@ def check_intersection_with_org(intersection_id: str, organizations: list[str]) 
     )
     query = (
         "SELECT intersection.intersection_number as intersection_number "
-        "FROM public.intersections intersection "
-        "JOIN public.intersection_organization AS intersection_org ON intersection_org.intersection_id = intersection.intersection_id "
-        "JOIN public.organizations AS org ON org.organization_id = intersection_org.organization_id "
+        "FROM cvmanager.intersections intersection "
+        "JOIN cvmanager.intersection_organization AS intersection_org ON intersection_org.intersection_id = intersection.intersection_id "
+        "JOIN cvmanager.organizations AS org ON org.organization_id = intersection_org.organization_id "
         f"WHERE org.name IN ({allowed_orgs_placeholder}) "
         "AND intersection.intersection_number = :intersection_id"
     )
@@ -156,9 +156,9 @@ def check_user_with_org(user_email: str, organizations: list[str]) -> bool:
     )
     query = (
         "SELECT u.email as email "
-        "FROM public.users u "
-        "JOIN public.user_organization AS user_org ON user_org.user_id = u.user_id "
-        "JOIN public.organizations AS org ON org.organization_id = user_org.organization_id "
+        "FROM cvmanager.users u "
+        "JOIN cvmanager.user_organization AS user_org ON user_org.user_id = u.user_id "
+        "JOIN cvmanager.organizations AS org ON org.organization_id = user_org.organization_id "
         f"WHERE org.name IN ({allowed_orgs_placeholder}) "
         "AND u.email = :user_email"
     )
@@ -173,7 +173,7 @@ def get_user_info(email: str) -> Optional[UserInfo]:
     # Get User Info
     user_info_query = (
         "SELECT jsonb_build_object('email', email, 'given_name', first_name, 'family_name', last_name, 'super_user', super_user) "
-        "FROM public.users "
+        "FROM cvmanager.users "
         "WHERE email = :email"
     )
     user_info_rows = pgquery.query_db(user_info_query, params={"email": email})
@@ -184,10 +184,10 @@ def get_user_info(email: str) -> Optional[UserInfo]:
     # Get Organization and Role Info
     org_query = (
         "SELECT jsonb_build_object('org', org.name, 'role', roles.name) "
-        "FROM public.users u "
-        "JOIN public.user_organization uo on u.user_id = uo.user_id "
-        "JOIN public.organizations org on uo.organization_id = org.organization_id "
-        "JOIN public.roles on uo.role_id = roles.role_id "
+        "FROM cvmanager.users u "
+        "JOIN cvmanager.user_organization uo on u.user_id = uo.user_id "
+        "JOIN cvmanager.organizations org on uo.organization_id = org.organization_id "
+        "JOIN cvmanager.roles on uo.role_id = roles.role_id "
         "WHERE u.email = :email"
     )
     org_rows = pgquery.query_db(org_query, params={"email": email})
@@ -251,7 +251,7 @@ def get_qualified_org_list(
 ) -> list[str]:
     if include_super_user and user.user_info.super_user:
         return pgquery.query_and_return_list(
-            "SELECT name FROM public.organizations ORDER BY name ASC"
+            "SELECT name FROM cvmanager.organizations ORDER BY name ASC"
         )
     allowed_orgs = []
     for org_name, org_role in user.user_info.organizations.items():

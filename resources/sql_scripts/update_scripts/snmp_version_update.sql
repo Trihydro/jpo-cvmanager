@@ -2,14 +2,14 @@
 -- This file will create the 'snmp_protocols' table and add NTCIP 1218 and RSU 4.1 as SNMP protocol versions
 -- All RSUs are given the default of RSU 4.1 as their SNMP protocol version using this script
 
-CREATE SEQUENCE public.snmp_protocols_snmp_protocol_id_seq
+CREATE SEQUENCE cvmanager.snmp_protocols_snmp_protocol_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.snmp_protocols
+CREATE TABLE IF NOT EXISTS cvmanager.snmp_protocols
 (
    snmp_protocol_id integer NOT NULL DEFAULT nextval('snmp_protocols_snmp_protocol_id_seq'::regclass),
    protocol_code character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -18,19 +18,19 @@ CREATE TABLE IF NOT EXISTS public.snmp_protocols
    CONSTRAINT snmp_protocols_nickname UNIQUE (nickname)
 );
 
-INSERT INTO public.snmp_protocols(
+INSERT INTO cvmanager.snmp_protocols(
 	protocol_code, nickname)
 	VALUES ('41', 'RSU 4.1');
-INSERT INTO public.snmp_protocols(
+INSERT INTO cvmanager.snmp_protocols(
 	protocol_code, nickname)
 	VALUES ('1218', 'NTCIP 1218');
 
-ALTER TABLE public.rsus
+ALTER TABLE cvmanager.rsus
         ADD snmp_protocol_id integer NOT NULL
     DEFAULT (1);
 
-ALTER TABLE public.rsus     
+ALTER TABLE cvmanager.rsus
     ADD CONSTRAINT fk_snmp_protocol_id FOREIGN KEY (snmp_protocol_id)
-      REFERENCES public.snmp_protocols (snmp_protocol_id) MATCH SIMPLE
+      REFERENCES cvmanager.snmp_protocols (snmp_protocol_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION

@@ -33,7 +33,7 @@ def add_organization(org_spec):
 
     try:
         org_insert_query = (
-            "INSERT INTO public.organizations(name, email) "
+            "INSERT INTO cvmanager.organizations(name, email) "
             f"VALUES ('{org_spec['name']}', '{org_spec['email']}')"
         )
         pgquery.write_db(org_insert_query)

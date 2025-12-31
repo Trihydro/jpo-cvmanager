@@ -69,10 +69,10 @@ expected_get_user_query = (
     "SELECT to_jsonb(row) "
     "FROM ("
     "SELECT u.email, u.first_name, u.last_name, u.super_user, org.name, roles.name AS role "
-    "FROM public.users u "
-    "LEFT JOIN public.user_organization AS uo ON uo.user_id = u.user_id "
-    "LEFT JOIN public.organizations AS org ON org.organization_id = uo.organization_id "
-    "LEFT JOIN public.roles ON roles.role_id = uo.role_id "
+    "FROM cvmanager.users u "
+    "LEFT JOIN cvmanager.user_organization AS uo ON uo.user_id = u.user_id "
+    "LEFT JOIN cvmanager.organizations AS org ON org.organization_id = uo.organization_id "
+    "LEFT JOIN cvmanager.roles ON roles.role_id = uo.role_id "
     ") as row"
 )
 
@@ -80,17 +80,17 @@ expected_get_user_query_one = (
     "SELECT to_jsonb(row) "
     "FROM ("
     "SELECT u.email, u.first_name, u.last_name, u.super_user, org.name, roles.name AS role "
-    "FROM public.users u "
-    "LEFT JOIN public.user_organization AS uo ON uo.user_id = u.user_id "
-    "LEFT JOIN public.organizations AS org ON org.organization_id = uo.organization_id "
-    "LEFT JOIN public.roles ON roles.role_id = uo.role_id"
+    "FROM cvmanager.users u "
+    "LEFT JOIN cvmanager.user_organization AS uo ON uo.user_id = u.user_id "
+    "LEFT JOIN cvmanager.organizations AS org ON org.organization_id = uo.organization_id "
+    "LEFT JOIN cvmanager.roles ON roles.role_id = uo.role_id"
     " WHERE u.email = :user_email"
     ") as row"
 )
 expected_get_user_query_one_params = {"user_email": "test@gmail.com"}
 
 modify_user_sql = (
-    "UPDATE public.users SET "
+    "UPDATE cvmanager.users SET "
     "email=:email, "
     "first_name=:first_name, "
     "last_name=:last_name, "
@@ -106,11 +106,11 @@ modify_user_params = {
 }
 
 add_org_sql = (
-    "INSERT INTO public.user_organization(user_id, organization_id, role_id) VALUES"
+    "INSERT INTO cvmanager.user_organization(user_id, organization_id, role_id) VALUES"
     " ("
-    "(SELECT user_id FROM public.users WHERE email = :email), "
-    "(SELECT organization_id FROM public.organizations WHERE name = :org_name_0), "
-    "(SELECT role_id FROM public.roles WHERE name = :org_role_0)"
+    "(SELECT user_id FROM cvmanager.users WHERE email = :email), "
+    "(SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name_0), "
+    "(SELECT role_id FROM cvmanager.roles WHERE name = :org_role_0)"
     ")"
 )
 add_org_params = {
@@ -120,10 +120,10 @@ add_org_params = {
 }
 
 modify_org_sql = (
-    "UPDATE public.user_organization "
-    "SET role_id = (SELECT role_id FROM public.roles WHERE name = :role) "
-    "WHERE user_id = (SELECT user_id FROM public.users WHERE email = :email) "
-    "AND organization_id = (SELECT organization_id FROM public.organizations WHERE name = :org_name)"
+    "UPDATE cvmanager.user_organization "
+    "SET role_id = (SELECT role_id FROM cvmanager.roles WHERE name = :role) "
+    "WHERE user_id = (SELECT user_id FROM cvmanager.users WHERE email = :email) "
+    "AND organization_id = (SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name)"
 )
 modify_org_params = {
     "email": "test@gmail.com",
@@ -132,9 +132,9 @@ modify_org_params = {
 }
 
 remove_org_sql = (
-    "DELETE FROM public.user_organization WHERE "
-    "user_id = (SELECT user_id FROM public.users WHERE email = :email) "
-    "AND organization_id IN (SELECT organization_id FROM public.organizations WHERE name IN (:org_name_0))"
+    "DELETE FROM cvmanager.user_organization WHERE "
+    "user_id = (SELECT user_id FROM cvmanager.users WHERE email = :email) "
+    "AND organization_id IN (SELECT organization_id FROM cvmanager.organizations WHERE name IN (:org_name_0))"
 )
 remove_org_params = {
     "email": "test@gmail.com",
@@ -142,6 +142,6 @@ remove_org_params = {
 }
 
 delete_user_calls = [
-    "DELETE FROM public.user_organization WHERE user_id = (SELECT user_id FROM public.users WHERE email = :email)",
-    "DELETE FROM public.users WHERE email = :email",
+    "DELETE FROM cvmanager.user_organization WHERE user_id = (SELECT user_id FROM cvmanager.users WHERE email = :email)",
+    "DELETE FROM cvmanager.users WHERE email = :email",
 ]
