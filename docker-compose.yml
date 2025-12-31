@@ -146,24 +146,24 @@ services:
       options:
         max-size: '10m'
 
-  cvmanager_postgres:
-    profiles:
-      - basic
-      - cvmanager_postgres
-      - intersection_no_api
-    image: postgis/postgis:15-master
-    restart: always
-    ports:
-      - '5432:5432'
-    environment:
-      POSTGRES_USER: ${PG_DB_USER}
-      POSTGRES_PASSWORD: ${PG_DB_PASS}
-    volumes:
-      - pgdb:/var/lib/postgresql/data
-      - ./resources/sql_scripts:/docker-entrypoint-initdb.d
-    logging:
-      options:
-        max-size: '10m'
+#  cvmanager_postgres:
+#    profiles:
+#      - basic
+#      - cvmanager_postgres
+#      - intersection_no_api
+#    image: postgis/postgis:15-master
+#    restart: always
+#    ports:
+#      - '5432:5432'
+#    environment:
+#      POSTGRES_USER: ${PG_DB_USER}
+#      POSTGRES_PASSWORD: ${PG_DB_PASS}
+#    volumes:
+#      - pgdb:/var/lib/postgresql/data
+#      - ./resources/sql_scripts:/docker-entrypoint-initdb.d
+#    logging:
+#      options:
+#        max-size: '10m'
 
   cvmanager_keycloak:
     profiles:
@@ -178,10 +178,10 @@ services:
         KEYCLOAK_LOGIN_THEME_NAME: ${KEYCLOAK_LOGIN_THEME_NAME}.jar
     image: jpo_cvmanager_keycloak:latest
     restart: always
-    depends_on:
-      cvmanager_postgres:
-        required: false
-        condition: service_started
+#    depends_on:
+#      cvmanager_postgres:
+#        required: false
+#        condition: service_started
 
     extra_hosts:
       ${WEBAPP_DOMAIN}: ${WEBAPP_HOST_IP}
