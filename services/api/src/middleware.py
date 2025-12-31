@@ -38,11 +38,18 @@ ENABLE_MOOVE_AI_FEATURES = (
 
 def get_user_role(token) -> UserInfo | None:
     # TODO: Consider using pythjon-jose or PyJWT to locally validate the token, instead of calling the Keycloak server
+    keycloak_verify = os.getenv("KEYCLOAK_VERIFY", "True")
+    if keycloak_verify.lower() == "true":
+        keycloak_verify = True
+    elif keycloak_verify.lower() == "false":
+        keycloak_verify = False
+
     keycloak_openid = KeycloakOpenID(
         server_url=os.getenv("KEYCLOAK_ENDPOINT"),
         realm_name=os.getenv("KEYCLOAK_REALM"),
         client_id=os.getenv("KEYCLOAK_API_CLIENT_ID"),
         client_secret_key=os.getenv("KEYCLOAK_API_CLIENT_SECRET_KEY"),
+        verify=keycloak_verify,
     )
     introspect = keycloak_openid.introspect(token)
     data = None
