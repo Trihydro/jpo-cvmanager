@@ -24,8 +24,25 @@ db = None
 def init_tcp_connection_engine(db_user, db_pass, db_name, db_hostname, db_port):
     logging.info("Creating DB pool")
     logging.debug(f"{db_user},{db_name},{db_hostname},{db_port}")
-    ssl_context = ssl.create_default_context()
-    ssl_context.load_verify_locations("/etc/ssl/ca/ca.crt")
+
+    pg_ssl_required = os.getenv("PG_SSL_REQUIRED", "True").lower() == "true"
+    connect_args = {}
+
+    if pg_ssl_required:
+        ssl_context = ssl.create_default_context()
+        ca_cert_path = "/etc/ssl/ca/ca.crt"
+        if os.path.exists(ca_cert_path):
+            ssl_context.load_verify_locations(ca_cert_path)
+        else:
+            logging.warning(
+                f"CA certificate not found at {ca_cert_path}. Skipping SSL verification for Postgres."
+            )
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+        connect_args["ssl_context"] = ssl_context
+    else:
+        logging.info("PG_SSL_REQUIRED is False. Connecting to Postgres without SSL.")
+
     pool = sqlalchemy.create_engine(
         # Equivalent URL:
         # postgresql+pg8000://<db_user>:<db_pass>@<db_host>:<db_port>/<db_name>
@@ -37,7 +54,7 @@ def init_tcp_connection_engine(db_user, db_pass, db_name, db_hostname, db_port):
             port=db_port,  # e.g. 5432
             database=db_name,  # e.g. "my-database-name"
         ),
-        connect_args={"ssl_context": ssl_context},
+        connect_args=connect_args,
         **db_config,
     )
     # pool.dialect.description_encoding = None
