@@ -1,3 +1,6 @@
+CREATE SCHEMA IF NOT EXISTS cvmanager;
+CREATE SCHEMA IF NOT EXISTS keycloak;
+
 -- RSU Manager Cloud Run Tables
 CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -450,8 +453,6 @@ CREATE TABLE IF NOT EXISTS cvmanager.obu_ota_requests (
    manufacturer int4 NOT NULL,
 	CONSTRAINT fk_manufacturer FOREIGN KEY (manufacturer) REFERENCES cvmanager.manufacturers(manufacturer_id)
 );
-
-CREATE SCHEMA IF NOT EXISTS keycloak;
 
 -- Intersections
 CREATE SEQUENCE cvmanager.intersections_intersection_id_seq
