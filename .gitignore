@@ -9,3 +9,7 @@ htmlcov
 .pytest_cache
 local_blob_storage
 services/coverage.xml
+
+resources/nginx/ssl/*.crt
+resources/nginx/ssl/*.key
+resources/nginx/ssl/*.pem
