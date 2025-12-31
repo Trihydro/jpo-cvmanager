@@ -21,7 +21,6 @@ services:
       SERVER_HOST: ${WEBAPP_DOMAIN}
     volumes:
       - ${NGINX_PROXY_RESOURCES:-./resources/nginx}/nginx-ssl.conf:/etc/nginx/templates/nginx.conf.template
-      - ${NGINX_PROXY_RESOURCES:-./resources/nginx}/gen_dhparam.sh:/docker-entrypoint.d/gen_dhparam.sh
       - ${NGINX_PROXY_RESOURCES:-./resources/nginx}/ssl/server.crt:/etc/ssl/certs/server.crt
       - ${NGINX_PROXY_RESOURCES:-./resources/nginx}/ssl/server.key:/etc/ssl/private/server.key
     depends_on:
@@ -210,10 +209,12 @@ services:
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       KC_HOSTNAME_STRICT_HTTPS: 'false'
       KC_HTTP_ENABLED: 'true'
+      KC_PROXY_HEADERS: xforwarded
     command:
       - start-dev
       - --import-realm
-      - --proxy edge
+      - --http-relative-path
+      - /auth
     logging:
       options:
         max-size: '10m'
