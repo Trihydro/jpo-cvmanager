@@ -27,6 +27,8 @@ services:
 
       DESTINATION_DB: ${COUNT_DESTINATION_DB}
 
+      PG_SSL_REQUIRED: ${PG_SSL_REQUIRED:-True}
+
       MONGO_DB_URI: ${MONGO_DB_URI}
       MONGO_DB_NAME: ${CM_DATABASE_NAME}
       INPUT_COUNTS_MONGO_COLLECTION_NAME: ${INPUT_COUNTS_MONGO_COLLECTION_NAME}
@@ -67,6 +69,8 @@ services:
       PG_DB_USER: ${PG_DB_USER}
       PG_DB_PASS: ${PG_DB_PASS}
 
+      PG_SSL_REQUIRED: ${PG_SSL_REQUIRED:-True}
+
       LOGGING_LEVEL: ${RSU_STATUS_LOGGING_LEVEL}
     logging:
       options:
@@ -100,6 +104,8 @@ services:
       PG_DB_NAME: ${PG_DB_NAME}
       PG_DB_USER: ${PG_DB_USER}
       PG_DB_PASS: ${PG_DB_PASS}
+
+      PG_SSL_REQUIRED: ${PG_SSL_REQUIRED:-True}
 
       PROJECT_ID: ${GCP_PROJECT_ID}
       GOOGLE_APPLICATION_CREDENTIALS: /home/gcp_key.json
@@ -172,7 +178,7 @@ services:
 #    volumes:
 #      - ./resources/google/${GOOGLE_ACCESS_KEY_NAME}:/home/gcp_key.json
 #      - ${HOST_BLOB_STORAGE_DIRECTORY}:/mnt/blob_storage
-#      - ${CA_CERT_PATH:-./resources/certs/ca.crt}:/etc/ssl/ca/ca.crt
+#      - ${NGINX_PROXY_RESOURCES:-./resources/nginx}/ssl/server.crt:/etc/ssl/certs/server.crt
 #    logging:
 #      options:
 #        max-size: '10m'
