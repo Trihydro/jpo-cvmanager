@@ -97,8 +97,7 @@ services:
       LOGGING_LEVEL: ${API_LOGGING_LEVEL}
     volumes:
       - ./resources/google/${GOOGLE_ACCESS_KEY_NAME}:/home/gcp_key.json
-      - <nginx-proxy-resources>/ssl/server.crt:/etc/ssl/certs/server.crt
-      - <nginx-proxy-resources>/ssl/server.key:/etc/ssl/private/server.key
+      - <certname>.crt:/etc/ssl/ca/ca.crt
     logging:
       options:
         max-size: '10m'
