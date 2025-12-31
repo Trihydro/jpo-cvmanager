@@ -7,7 +7,7 @@ include:
 services:
   cvmanager_nginx_proxy:
     build:
-      context: <nginx-proxy-resources>
+      context: ${NGINX_PROXY_RESOURCES:-./resources/nginx}
     image: cvmanager_nginx_proxy:latest
     restart: unless-stopped
     ports:
@@ -17,10 +17,10 @@ services:
       NGINX_ENVSUBST_OUTPUT_DIR: /etc/nginx
       SERVER_HOST: ${WEBAPP_DOMAIN}
     volumes:
-      - <nginx-proxy-resources>/nginx-ssl.conf:/etc/nginx/templates/nginx.conf.template
-      - <nginx-proxy-resources>/gen_dhparam.sh:/docker-entrypoint.d/gen_dhparam.sh
-      - <nginx-proxy-resources>/ssl/server.crt:/etc/ssl/certs/server.crt
-      - <nginx-proxy-resources>/ssl/server.key:/etc/ssl/private/server.key
+      - ${NGINX_PROXY_RESOURCES:-./resources/nginx}/nginx-ssl.conf:/etc/nginx/templates/nginx.conf.template
+      - ${NGINX_PROXY_RESOURCES:-./resources/nginx}/gen_dhparam.sh:/docker-entrypoint.d/gen_dhparam.sh
+      - ${NGINX_PROXY_RESOURCES:-./resources/nginx}/ssl/server.crt:/etc/ssl/certs/server.crt
+      - ${NGINX_PROXY_RESOURCES:-./resources/nginx}/ssl/server.key:/etc/ssl/private/server.key
     depends_on:
       - cvmanager_webapp
       - cvmanager_keycloak
@@ -40,7 +40,7 @@ services:
     image: jpo_cvmanager_api:latest
     restart: always
     extra_hosts:
-      <dnsnamehere>: ${WEBAPP_HOST_IP}
+      ${WEBAPP_DOMAIN}: ${WEBAPP_HOST_IP}
     environment:
       PG_DB_HOST: ${PG_DB_HOST}
       PG_DB_USER: ${PG_DB_USER}
@@ -97,7 +97,7 @@ services:
       LOGGING_LEVEL: ${API_LOGGING_LEVEL}
     volumes:
       - ./resources/google/${GOOGLE_ACCESS_KEY_NAME}:/home/gcp_key.json
-      - <certname>.crt:/etc/ssl/ca/ca.crt
+      - ${CA_CERT_PATH:-./resources/certs/ca.crt}:/etc/ssl/ca/ca.crt
     logging:
       options:
         max-size: '10m'
@@ -141,7 +141,7 @@ services:
         condition: service_healthy
         required: false
     extra_hosts:
-      <dnsnamehere>: ${WEBAPP_HOST_IP}
+      ${WEBAPP_DOMAIN}: ${WEBAPP_HOST_IP}
     logging:
       options:
         max-size: '10m'
