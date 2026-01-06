@@ -81,6 +81,8 @@ The `cvmanager_nginx_proxy` service will:
 2. Substitute environment variables in the `nginx-ssl.conf` template.
 3. Start NGINX on ports 80 and 443.
 
+The `cvmanager_api` service is also configured to trust the generated `server.crt` certificate. This is necessary because the API communicates with Keycloak over HTTPS using the local domain name. Since the certificate is self-signed, it must be added to the API's truststore to avoid SSL verification errors.
+
 #### 5. Verification
 
 Once the services are up and running, you can verify the setup:

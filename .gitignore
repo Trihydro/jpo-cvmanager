@@ -13,3 +13,6 @@ services/coverage.xml
 resources/nginx/ssl/*.crt
 resources/nginx/ssl/*.key
 resources/nginx/ssl/*.pem
+services/resources/ca/*.crt
+services/resources/ca/*.key
+services/resources/ca/*.pem

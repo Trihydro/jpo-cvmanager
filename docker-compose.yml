@@ -98,13 +98,14 @@ services:
 
       TIMEZONE: ${TIMEZONE}
       LOGGING_LEVEL: ${API_LOGGING_LEVEL}
-      KEYCLOAK_VERIFY: /etc/ssl/certs/server.crt
+      KEYCLOAK_VERIFY: ${KEYCLOAK_VERIFY:-/usr/local/share/ca-certificates/server.crt}
       PG_SSL_REQUIRED: ${PG_SSL_REQUIRED:-True}
+      REQUESTS_CA_BUNDLE: ${REQUESTS_CA_BUNDLE:-/etc/ssl/certs/ca-certificates.crt}
     depends_on:
       - cvmanager_postgres
     volumes:
       - ./resources/google/${GOOGLE_ACCESS_KEY_NAME}:/home/gcp_key.json
-      - ${NGINX_PROXY_RESOURCES:-./resources/nginx}/ssl/server.crt:/etc/ssl/certs/server.crt
+      - ${NGINX_PROXY_RESOURCES:-./resources/nginx}/ssl/server.crt:/usr/local/share/ca-certificates/server.crt
     logging:
       options:
         max-size: '10m'
