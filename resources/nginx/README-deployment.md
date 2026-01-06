@@ -9,7 +9,7 @@ This documentation provides instructions for deploying the JPO CV Manager to a V
 - **SSL Certificates**: You must provide valid SSL certificates for your domain (e.g., from a corporate CA or other provider).
 - **DNS Record**: A DNS A record or CNAME pointing your domain name to the VM's public IP address.
 
-#### 1. Configure SSL Certificates
+#### 2. Configure SSL and CA Certificates
 
 The NGINX configuration expects the provided SSL certificates in the `resources/nginx/ssl` directory. 
 
@@ -22,7 +22,29 @@ The NGINX configuration expects the provided SSL certificates in the `resources/
     - `resources/nginx/ssl/server.crt`
     - `resources/nginx/ssl/server.key`
 
-#### 2. Environment Configuration
+##### Adding a Custom CA Certificate (Optional)
+
+If your SSL certificate is issued by a private or corporate CA that is not in the standard trusted root list, you may need to add the CA certificate to the API service's truststore. This ensures the API can securely communicate with Keycloak.
+
+1.  Create the CA resources directory:
+    ```bash
+    mkdir -p services/resources/ca
+    ```
+2.  Place your CA certificate (in `.crt` format) in this directory:
+    - `services/resources/ca/your-corporate-ca.crt`
+3.  Rebuild the API service:
+    ```bash
+    docker compose build cvmanager_api
+    ```
+
+Alternatively, you can mount the CA certificate at runtime by updating the `volumes` section of the `cvmanager_api` service in `docker-compose.yml`:
+
+```yaml
+    volumes:
+      - ./path/to/your-ca.crt:/usr/local/share/ca-certificates/your-ca.crt
+```
+
+#### 3. Environment Configuration
 
 Create or update your `.env` file in the project root. You can use `sample.env` as a template. Configure the following key variables for deployment:
 
