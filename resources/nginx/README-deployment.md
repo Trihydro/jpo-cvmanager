@@ -78,9 +78,9 @@ PG_SSL_REQUIRED=True
 ##### Service Endpoints
 Ensure the endpoints use the configured domain:
 ```env
-KEYCLOAK_ENDPOINT=https://${WEBAPP_DOMAIN}/auth/
+KEYCLOAK_ENDPOINT=https://${WEBAPP_DOMAIN}
 WEBAPP_ENDPOINT=https://${WEBAPP_DOMAIN}
-API_ENDPOINT=https://${WEBAPP_DOMAIN}/api
+API_ENDPOINT=https://${WEBAPP_DOMAIN}
 ```
 
 #### 3. Update Docker Profiles

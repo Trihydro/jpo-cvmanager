@@ -89,17 +89,17 @@ Once the services are up and running, you can verify the setup:
 
 - **HTTP Redirection**: Navigate to `http://cvmanager.local.com`. It should automatically redirect you to `https://cvmanager.local.com`.
 - **HTTPS Access**: Navigate to `https://cvmanager.local.com`. Since you are using a self-signed certificate, your browser will show a security warning. You can proceed past this warning to access the webapp.
-- **API Routes**: Verify that `https://cvmanager.local.com/api/` routes to the CV Manager API.
-- **Auth Routes**: Verify that `https://cvmanager.local.com/auth/` routes to the Keycloak instance.
+- **API Routes**: Verify that API endpoints like `https://cvmanager.local.com/user-auth` route to the CV Manager API.
+- **Auth Routes**: Verify that Keycloak endpoints like `https://cvmanager.local.com/realms/cvmanager/.well-known/openid-configuration` route to the Keycloak instance.
 
 #### Important Note on Service Endpoints
 
-When using the NGINX proxy, all services are accessed through the same domain and port (443). Ensure your `.env` file reflects this. Specifically, the `KEYCLOAK_ENDPOINT` **must include a trailing slash** to ensure correct routing by the proxy and proper URL construction by the API:
+When using the NGINX proxy, all services are accessed through the same domain and port (443). Ensure your `.env` file reflects this. Specifically, the `KEYCLOAK_ENDPOINT` should point to the base domain:
 
 ```env
-KEYCLOAK_ENDPOINT=https://cvmanager.local.com/auth/
+KEYCLOAK_ENDPOINT=https://cvmanager.local.com
 WEBAPP_ENDPOINT=https://cvmanager.local.com
-API_ENDPOINT=https://cvmanager.local.com/api
+API_ENDPOINT=https://cvmanager.local.com
 ```
 
 #### Troubleshooting
