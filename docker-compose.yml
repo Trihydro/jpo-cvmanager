@@ -219,13 +219,11 @@ services:
     command:
       - start-dev
       - --import-realm
-      - --http-relative-path
-      - /auth
     logging:
       options:
         max-size: '10m'
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:8080/auth/realms/master']
+      test: ['CMD', 'curl', '-f', 'http://localhost:8080/realms/master']
       interval: 30s
       timeout: 10s
       retries: 3
