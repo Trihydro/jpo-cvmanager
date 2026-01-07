@@ -1,12 +1,12 @@
 -- Intersections
-CREATE SEQUENCE public.intersections_intersection_id_seq
+CREATE SEQUENCE cvmanager.intersections_intersection_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.intersections
+CREATE TABLE IF NOT EXISTS cvmanager.intersections
 (
    intersection_id integer NOT NULL DEFAULT nextval('intersections_intersection_id_seq'::regclass),
    intersection_number character varying(128) NOT NULL,
@@ -18,48 +18,48 @@ CREATE TABLE IF NOT EXISTS public.intersections
    CONSTRAINT intersection_intersection_number UNIQUE (intersection_number)
 );
 
-CREATE SEQUENCE public.intersection_organization_intersection_organization_id_seq
+CREATE SEQUENCE cvmanager.intersection_organization_intersection_organization_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.intersection_organization
+CREATE TABLE IF NOT EXISTS cvmanager.intersection_organization
 (
    intersection_organization_id integer NOT NULL DEFAULT nextval('intersection_organization_intersection_organization_id_seq'::regclass),
    intersection_id integer NOT NULL,
    organization_id integer NOT NULL,
    CONSTRAINT intersection_organization_pkey PRIMARY KEY (intersection_organization_id),
    CONSTRAINT fk_intersection_id FOREIGN KEY (intersection_id)
-      REFERENCES public.intersections (intersection_id) MATCH SIMPLE
+      REFERENCES cvmanager.intersections (intersection_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_organization_id FOREIGN KEY (organization_id)
-      REFERENCES public.organizations (organization_id) MATCH SIMPLE
+      REFERENCES cvmanager.organizations (organization_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE SEQUENCE public.rsu_intersection_rsu_intersection_id_seq
+CREATE SEQUENCE cvmanager.rsu_intersection_rsu_intersection_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.rsu_intersection
+CREATE TABLE IF NOT EXISTS cvmanager.rsu_intersection
 (
    rsu_intersection_id integer NOT NULL DEFAULT nextval('rsu_intersection_rsu_intersection_id_seq'::regclass),
    rsu_id integer NOT NULL,
    intersection_id integer NOT NULL,
    CONSTRAINT rsu_intersection_pkey PRIMARY KEY (rsu_intersection_id),
    CONSTRAINT fk_rsu_id FOREIGN KEY (rsu_id)
-      REFERENCES public.rsus (rsu_id) MATCH SIMPLE
+      REFERENCES cvmanager.rsus (rsu_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_intersection_id FOREIGN KEY (intersection_id)
-      REFERENCES public.intersections (intersection_id) MATCH SIMPLE
+      REFERENCES cvmanager.intersections (intersection_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );

@@ -22,9 +22,9 @@ def get_allowed_types_authorized(user_email: str):
     allowed = {}
 
     email_types_query = (
-        "SELECT email_type FROM public.email_type WHERE email_type_id NOT IN ("
-        "SELECT email_type_id FROM public.user_email_notification WHERE user_id ="
-        f"(SELECT user_id FROM public.users WHERE email = '{user_email}'))"
+        "SELECT email_type FROM cvmanager.email_type WHERE email_type_id NOT IN ("
+        "SELECT email_type_id FROM cvmanager.user_email_notification WHERE user_id ="
+        f"(SELECT user_id FROM cvmanager.users WHERE email = '{user_email}'))"
     )
 
     allowed["email_types"] = pgquery.query_and_return_list(email_types_query)
@@ -62,9 +62,9 @@ def add_notification_authorized(email: str, notification_spec: dict):
         )
     try:
         notification_insert_query = (
-            "INSERT into public.user_email_notification(user_id, email_type_id) VALUES ("
-            f"(SELECT user_id FROM public.users WHERE email='{email}'), "
-            f"(SELECT email_type_id FROM public.email_type WHERE email_type='{notification_spec['email_type']}'))"
+            "INSERT into cvmanager.user_email_notification(user_id, email_type_id) VALUES ("
+            f"(SELECT user_id FROM cvmanager.users WHERE email='{email}'), "
+            f"(SELECT email_type_id FROM cvmanager.email_type WHERE email_type='{notification_spec['email_type']}'))"
         )
         pgquery.write_db(notification_insert_query)
 

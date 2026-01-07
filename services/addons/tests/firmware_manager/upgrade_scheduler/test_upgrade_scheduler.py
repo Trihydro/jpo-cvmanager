@@ -685,7 +685,7 @@ def test_firmware_upgrade_completed_fail_status_reached_max_retries(
             mock_writedb.assert_has_calls(
                 [
                     call(
-                        "UPDATE public.rsus SET target_firmware_version=firmware_version WHERE ipv4_address='8.8.8.8'"
+                        "UPDATE cvmanager.rsus SET target_firmware_version=firmware_version WHERE ipv4_address='8.8.8.8'"
                     ),
                     call(
                         "insert into max_retry_limit_reached_instances (rsu_id, reached_at, target_firmware_version) values ((select rsu_id from rsus where ipv4_address='8.8.8.8'), now(), (select firmware_id from firmware_images where name='y20.39.0'))"
@@ -737,7 +737,7 @@ def test_firmware_upgrade_completed_success_status(
             message, code = upgrade_scheduler.firmware_upgrade_completed()
 
             mock_writedb.assert_called_with(
-                "UPDATE public.rsus SET firmware_version=2 WHERE ipv4_address='8.8.8.8'"
+                "UPDATE cvmanager.rsus SET firmware_version=2 WHERE ipv4_address='8.8.8.8'"
             )
             assert "8.8.8.8" not in upgrade_scheduler.active_upgrades
             mock_flask_jsonify.assert_called_with(
@@ -786,7 +786,7 @@ def test_firmware_upgrade_completed_success_status_exception(
             message, code = upgrade_scheduler.firmware_upgrade_completed()
 
             mock_writedb.assert_called_with(
-                "UPDATE public.rsus SET firmware_version=2 WHERE ipv4_address='8.8.8.8'"
+                "UPDATE cvmanager.rsus SET firmware_version=2 WHERE ipv4_address='8.8.8.8'"
             )
             mock_flask_jsonify.assert_called_with(
                 {

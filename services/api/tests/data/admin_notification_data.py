@@ -54,10 +54,10 @@ get_notification_data_result = [
 
 get_notification_data_sql = (
     "SELECT to_jsonb(row) FROM (SELECT u.email, u.first_name, u.last_name, "
-    "e.email_type FROM public.user_email_notification JOIN public.users AS u "
-    "ON u.user_id = user_email_notification.user_id JOIN public.email_type "
+    "e.email_type FROM cvmanager.user_email_notification JOIN cvmanager.users AS u "
+    "ON u.user_id = user_email_notification.user_id JOIN cvmanager.email_type "
     "AS e ON e.email_type_id = user_email_notification.email_type_id WHERE"
-    " user_email_notification.user_id IN (SELECT user_id FROM public.users"
+    " user_email_notification.user_id IN (SELECT user_id FROM cvmanager.users"
     " WHERE email = :user_email)) as row"
 )
 get_notification_data_sql_params = {"user_email": "test@gmail.com"}
@@ -65,11 +65,11 @@ get_notification_data_sql_params = {"user_email": "test@gmail.com"}
 # modify_notification
 
 modify_notification_sql = (
-    "UPDATE public.user_email_notification SET email_type_id = "
-    "(SELECT email_type_id FROM public.email_type WHERE email_type = :new_email_type) "
-    "WHERE user_id = (SELECT user_id FROM public.users WHERE email = "
+    "UPDATE cvmanager.user_email_notification SET email_type_id = "
+    "(SELECT email_type_id FROM cvmanager.email_type WHERE email_type = :new_email_type) "
+    "WHERE user_id = (SELECT user_id FROM cvmanager.users WHERE email = "
     ":user_email)  AND email_type_id = (SELECT email_type_id "
-    "FROM public.email_type WHERE email_type = :old_email_type)"
+    "FROM cvmanager.email_type WHERE email_type = :old_email_type)"
 )
 modify_notification_params = {
     "new_email_type": "new",
@@ -79,5 +79,5 @@ modify_notification_params = {
 
 # delete_notification
 
-delete_notification_call = "DELETE FROM public.user_email_notification WHERE user_id IN (SELECT user_id FROM public.users WHERE email = :user_email) AND email_type_id IN (SELECT email_type_id FROM public.email_type WHERE email_type = :email_type)"
+delete_notification_call = "DELETE FROM cvmanager.user_email_notification WHERE user_id IN (SELECT user_id FROM cvmanager.users WHERE email = :user_email) AND email_type_id IN (SELECT email_type_id FROM cvmanager.email_type WHERE email_type = :email_type)"
 delete_notification_params = {"user_email": "test@gmail.com", "email_type": "test type"}

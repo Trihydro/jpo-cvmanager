@@ -278,7 +278,7 @@ async def test_log_request(mock_removed_old_logs, mock_datetime, mock_pgquery):
 
     # Verify the query passed to write_db
     expected_query = (
-        f"INSERT INTO public.obu_ota_requests (obu_sn, manufacturer, request_datetime, origin_ip, obu_firmware_version, requested_firmware_version, error_status, error_message) VALUES"
+        f"INSERT INTO cvmanager.obu_ota_requests (obu_sn, manufacturer, request_datetime, origin_ip, obu_firmware_version, requested_firmware_version, error_status, error_message) VALUES"
         f"('{mock_request.query_params['serialnum']}', {manufacturer}, '{fixed_datetime.strftime('%Y-%m-%d %H:%M:%S')}', '{mock_request.client.host}', '{mock_request.query_params['version']}', '{firmware_id}', B'{error_status}', '{error_message}')"
     ).replace(" ", "")
 
@@ -302,7 +302,7 @@ def test_removed_old_logs_no_removal(mock_pgquery):
     removed_old_logs(serialnum)
 
     mock_pgquery.query_db.assert_called_once_with(
-        f"SELECT COUNT(*) FROM public.obu_ota_requests WHERE obu_sn = '{serialnum}' AND error_status = B'0'"
+        f"SELECT COUNT(*) FROM cvmanager.obu_ota_requests WHERE obu_sn = '{serialnum}' AND error_status = B'0'"
     )
     mock_pgquery.write_db.assert_not_called()
 
@@ -320,13 +320,13 @@ def test_removed_old_logs_with_removal(mock_pgquery):
 
     assert mock_pgquery.query_db.call_count == 2
     mock_pgquery.query_db.assert_any_call(
-        f"SELECT COUNT(*) FROM public.obu_ota_requests WHERE obu_sn = '{serialnum}' AND error_status = B'0'"
+        f"SELECT COUNT(*) FROM cvmanager.obu_ota_requests WHERE obu_sn = '{serialnum}' AND error_status = B'0'"
     )
     mock_pgquery.query_db.assert_any_call(
-        f"SELECT request_id FROM public.obu_ota_requests WHERE obu_sn = '{serialnum}' AND error_status = B'0' ORDER BY request_datetime ASC LIMIT 5"
+        f"SELECT request_id FROM cvmanager.obu_ota_requests WHERE obu_sn = '{serialnum}' AND error_status = B'0' ORDER BY request_datetime ASC LIMIT 5"
     )
     mock_pgquery.write_db.assert_called_once_with(
-        "DELETE FROM public.obu_ota_requests WHERE request_id IN (1,2,3,4,5)"
+        "DELETE FROM cvmanager.obu_ota_requests WHERE request_id IN (1,2,3,4,5)"
     )
 
 

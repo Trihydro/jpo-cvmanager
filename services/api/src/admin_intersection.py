@@ -48,11 +48,11 @@ def get_intersection_data(
         "ST_XMax(bbox::geometry) AS bbox_longitude_2, ST_YMax(bbox::geometry) AS bbox_latitude_2, "
         "intersection_name, origin_ip, "
         "org.name AS org_name, rsu.ipv4_address AS rsu_ip  "
-        "FROM public.intersections "
-        "JOIN public.intersection_organization AS ro ON ro.intersection_id = intersections.intersection_id  "
-        "JOIN public.organizations AS org ON org.organization_id = ro.organization_id  "
-        "LEFT JOIN public.rsu_intersection AS ri ON ri.intersection_id = intersections.intersection_id  "
-        "LEFT JOIN public.rsus AS rsu ON rsu.rsu_id = ri.rsu_id "
+        "FROM cvmanager.intersections "
+        "JOIN cvmanager.intersection_organization AS ro ON ro.intersection_id = intersections.intersection_id  "
+        "JOIN cvmanager.organizations AS org ON org.organization_id = ro.organization_id  "
+        "LEFT JOIN cvmanager.rsu_intersection AS ri ON ri.intersection_id = intersections.intersection_id  "
+        "LEFT JOIN cvmanager.rsus AS rsu ON rsu.rsu_id = ri.rsu_id "
     )
 
     where_clauses = []
@@ -160,7 +160,7 @@ def modify_intersection_authorized(
     try:
         # Modify the existing Intersection data
         query = (
-            "UPDATE public.intersections SET "
+            "UPDATE cvmanager.intersections SET "
             "intersection_number=:intersection_id, "
             "ref_pt=ST_GeomFromText('POINT(' || :ref_pt_longitude || ' ' || :ref_pt_latitude || ')')"
         )
@@ -195,14 +195,14 @@ def modify_intersection_authorized(
                 query_rows.append(
                     (
                         "("
-                        "(SELECT intersection_id FROM public.intersections WHERE intersection_number = :intersection_id), "
-                        f"(SELECT organization_id FROM public.organizations WHERE name = :{org_placeholder})"
+                        "(SELECT intersection_id FROM cvmanager.intersections WHERE intersection_number = :intersection_id), "
+                        f"(SELECT organization_id FROM cvmanager.organizations WHERE name = :{org_placeholder})"
                         ")",
                         {org_placeholder: organization},
                     )
                 )
 
-            query_prefix = "INSERT INTO public.intersection_organization(intersection_id, organization_id) VALUES "
+            query_prefix = "INSERT INTO cvmanager.intersection_organization(intersection_id, organization_id) VALUES "
             pgquery.write_db_batched(
                 query_prefix,
                 query_rows,
@@ -220,9 +220,9 @@ def modify_intersection_authorized(
                 params[key] = org
 
             org_remove_query = (
-                "DELETE FROM public.intersection_organization WHERE "
-                "intersection_id = (SELECT intersection_id FROM public.intersections WHERE intersection_number = :intersection_id) "
-                f"AND organization_id IN (SELECT organization_id FROM public.organizations WHERE name IN ({', '.join(org_placeholders)}))"
+                "DELETE FROM cvmanager.intersection_organization WHERE "
+                "intersection_id = (SELECT intersection_id FROM cvmanager.intersections WHERE intersection_number = :intersection_id) "
+                f"AND organization_id IN (SELECT organization_id FROM cvmanager.organizations WHERE name IN ({', '.join(org_placeholders)}))"
             )
             pgquery.write_db(org_remove_query, params=params)
 
@@ -234,15 +234,15 @@ def modify_intersection_authorized(
                 query_rows.append(
                     (
                         "("
-                        f"(SELECT rsu_id FROM public.rsus WHERE ipv4_address = :{ip_placeholder}), "
-                        "(SELECT intersection_id FROM public.intersections WHERE intersection_number = :intersection_id)"
+                        f"(SELECT rsu_id FROM cvmanager.rsus WHERE ipv4_address = :{ip_placeholder}), "
+                        "(SELECT intersection_id FROM cvmanager.intersections WHERE intersection_number = :intersection_id)"
                         ")",
                         {ip_placeholder: rsu_ip},
                     )
                 )
 
             query_prefix = (
-                "INSERT INTO public.rsu_intersection(rsu_id, intersection_id) VALUES "
+                "INSERT INTO cvmanager.rsu_intersection(rsu_id, intersection_id) VALUES "
             )
             pgquery.write_db_batched(
                 query_prefix,
@@ -261,9 +261,9 @@ def modify_intersection_authorized(
                 params[key] = rsu_ip
 
             rsu_remove_query = (
-                "DELETE FROM public.rsu_intersection WHERE "
-                "intersection_id = (SELECT intersection_id FROM public.intersections WHERE intersection_number = :intersection_id) "
-                f"AND rsu_id IN (SELECT rsu_id FROM public.rsus WHERE ipv4_address IN ({', '.join(ip_placeholders)}))"
+                "DELETE FROM cvmanager.rsu_intersection WHERE "
+                "intersection_id = (SELECT intersection_id FROM cvmanager.intersections WHERE intersection_number = :intersection_id) "
+                f"AND rsu_id IN (SELECT rsu_id FROM cvmanager.rsus WHERE ipv4_address IN ({', '.join(ip_placeholders)}))"
             )
             pgquery.write_db(rsu_remove_query, params=params)
     except IntegrityError as e:
@@ -290,14 +290,14 @@ def delete_intersection_authorized(intersection_id: str):
 
     # Delete Intersection to Organization relationships
     org_remove_query = (
-        "DELETE FROM public.intersection_organization WHERE "
-        "intersection_id=(SELECT intersection_id FROM public.intersections WHERE intersection_number = :intersection_id)"
+        "DELETE FROM cvmanager.intersection_organization WHERE "
+        "intersection_id=(SELECT intersection_id FROM cvmanager.intersections WHERE intersection_number = :intersection_id)"
     )
     pgquery.write_db(org_remove_query, params={"intersection_id": intersection_id})
 
     rsu_intersection_remove_query = (
-        "DELETE FROM public.rsu_intersection WHERE "
-        "intersection_id=(SELECT intersection_id FROM public.intersections WHERE intersection_number = :intersection_id)"
+        "DELETE FROM cvmanager.rsu_intersection WHERE "
+        "intersection_id=(SELECT intersection_id FROM cvmanager.intersections WHERE intersection_number = :intersection_id)"
     )
     pgquery.write_db(
         rsu_intersection_remove_query, params={"intersection_id": intersection_id}
@@ -305,7 +305,7 @@ def delete_intersection_authorized(intersection_id: str):
 
     # Delete Intersection data
     intersection_remove_query = (
-        "DELETE FROM public.intersections WHERE intersection_number = :intersection_id"
+        "DELETE FROM cvmanager.intersections WHERE intersection_number = :intersection_id"
     )
     pgquery.write_db(
         intersection_remove_query, params={"intersection_id": intersection_id}
