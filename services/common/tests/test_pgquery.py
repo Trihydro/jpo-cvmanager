@@ -5,6 +5,7 @@ import os
 
 
 # test that init_tcp_connection_engine is calling sqlalchemy.create_engine with expected arguments
+@patch.dict(os.environ, {"PG_SSL_REQUIRED": "False"})
 @patch(
     "common.pgquery.db_config",
     new={"pool_size": 5, "max_overflow": 2, "pool_timeout": 30, "pool_recycle": 1800},
@@ -44,8 +45,9 @@ def test_init_tcp_connection_engine():
         "pool_timeout": 30,
         "pool_recycle": 1800,
     }
-    sqlalchemy.create_engine.assert_called_once_with("my_url", **my_db_config)
-
+    sqlalchemy.create_engine.assert_called_once_with(
+        "my_url", connect_args={}, **my_db_config
+    )
 
 # test that init_socket_connection_engine is calling sqlalchemy.create_engine with expected arguments
 @patch(

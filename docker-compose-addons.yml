@@ -27,6 +27,8 @@ services:
 
       DESTINATION_DB: ${COUNT_DESTINATION_DB}
 
+      PG_SSL_REQUIRED: ${PG_SSL_REQUIRED:-True}
+
       MONGO_DB_URI: ${MONGO_DB_URI}
       MONGO_DB_NAME: ${CM_DATABASE_NAME}
       INPUT_COUNTS_MONGO_COLLECTION_NAME: ${INPUT_COUNTS_MONGO_COLLECTION_NAME}
@@ -67,6 +69,8 @@ services:
       PG_DB_USER: ${PG_DB_USER}
       PG_DB_PASS: ${PG_DB_PASS}
 
+      PG_SSL_REQUIRED: ${PG_SSL_REQUIRED:-True}
+
       LOGGING_LEVEL: ${RSU_STATUS_LOGGING_LEVEL}
     logging:
       options:
@@ -82,24 +86,22 @@ services:
       dockerfile: Dockerfile.iss_health_check
     image: iss_health_check:latest
     restart: on-failure:3
-    depends_on:
-      cvmanager_postgres:
-        condition: service_healthy
-        required: false
     environment:
-      STORAGE_TYPE: ${STORAGE_TYPE}
+      STORAGE_TYPE: ${STORAGE_TYPE:-POSTGRES}
 
       ISS_API_KEY: ${ISS_API_KEY}
       ISS_API_KEY_NAME: ${ISS_API_KEY_NAME}
       ISS_PROJECT_ID: ${ISS_PROJECT_ID}
       ISS_SCMS_TOKEN_REST_ENDPOINT: ${ISS_SCMS_TOKEN_REST_ENDPOINT}
       ISS_SCMS_VEHICLE_REST_ENDPOINT: ${ISS_SCMS_VEHICLE_REST_ENDPOINT}
-      ISS_KEY_TABLE_NAME: ${ISS_KEY_TABLE_NAME}
+      ISS_KEY_TABLE_NAME: ${ISS_KEY_TABLE_NAME:-iss_keys}
 
       PG_DB_HOST: ${PG_DB_HOST}
       PG_DB_NAME: ${PG_DB_NAME}
       PG_DB_USER: ${PG_DB_USER}
       PG_DB_PASS: ${PG_DB_PASS}
+
+      PG_SSL_REQUIRED: ${PG_SSL_REQUIRED:-True}
 
       PROJECT_ID: ${GCP_PROJECT_ID}
       GOOGLE_APPLICATION_CREDENTIALS: /home/gcp_key.json
@@ -112,67 +114,68 @@ services:
         max-size: '10m'
         max-file: '5'
 
-  firmware_manager_upgrade_scheduler:
-    profiles:
-      - addons
-      - firmware_manager_upgrade_scheduler
-    build:
-      context: services
-      dockerfile: Dockerfile.fmus
-    image: jpo_firmware_manager_upgrade_scheduler:latest
-    restart: on-failure:3
-
-    ports:
-      - '8089:8080'
-    environment:
-      PG_DB_HOST: ${PG_DB_HOST}
-      PG_DB_NAME: postgres
-      PG_DB_USER: ${PG_DB_USER}
-      PG_DB_PASS: ${PG_DB_PASS}
-
-      UPGRADE_RUNNER_ENDPOINT: ${FIRMWARE_MANAGER_UPGRADE_RUNNER_ENDPOINT}
-
-      LOGGING_LEVEL: ${FIRMWARE_MANAGER_LOGGING_LEVEL}
-    volumes:
-      - ${HOST_BLOB_STORAGE_DIRECTORY}:/mnt/blob_storage
-    logging:
-      options:
-        max-size: '10m'
-        max-file: '5'
-
-  firmware_manager_upgrade_runner:
-    profiles:
-      - addons
-      - firmware_manager_upgrade_runner
-    build:
-      context: services
-      dockerfile: Dockerfile.fmur
-    image: jpo_firmware_manager_upgrade_runner:latest
-    restart: on-failure:3
-
-    ports:
-      - '8090:8080'
-    environment:
-      BLOB_STORAGE_PROVIDER: ${BLOB_STORAGE_PROVIDER}
-      BLOB_STORAGE_BUCKET: ${BLOB_STORAGE_BUCKET}
-
-      FW_UPGRADE_MAX_RETRY_LIMIT: ${FW_UPGRADE_MAX_RETRY_LIMIT}
-
-      GCP_PROJECT: ${GCP_PROJECT_ID}
-      GOOGLE_APPLICATION_CREDENTIALS: /home/gcp_key.json
-
-      SMTP_SERVER_IP: ${SMTP_SERVER_IP}
-      SMTP_EMAIL: ${SMTP_EMAIL}
-      SMTP_USERNAME: ${SMTP_USERNAME}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-
-      UPGRADE_SCHEDULER_ENDPOINT: ${FIRMWARE_MANAGER_UPGRADE_SCHEDULER_ENDPOINT}
-
-      LOGGING_LEVEL: ${FIRMWARE_MANAGER_LOGGING_LEVEL}
-    volumes:
-      - ./resources/google/${GOOGLE_ACCESS_KEY_NAME}:/home/gcp_key.json
-      - ${HOST_BLOB_STORAGE_DIRECTORY}:/mnt/blob_storage
-    logging:
-      options:
-        max-size: '10m'
-        max-file: '5'
+#  firmware_manager_upgrade_scheduler:
+#    profiles:
+#      - addons
+#      - firmware_manager_upgrade_scheduler
+#    build:
+#      context: services
+#      dockerfile: Dockerfile.fmus
+#    image: jpo_firmware_manager_upgrade_scheduler:latest
+#    restart: on-failure:3
+#
+#    ports:
+#      - '8089:8080'
+#    environment:
+#      PG_DB_HOST: ${PG_DB_HOST}
+#      PG_DB_NAME: postgres
+#      PG_DB_USER: ${PG_DB_USER}
+#      PG_DB_PASS: ${PG_DB_PASS}
+#
+#      UPGRADE_RUNNER_ENDPOINT: ${FIRMWARE_MANAGER_UPGRADE_RUNNER_ENDPOINT}
+#
+#      LOGGING_LEVEL: ${FIRMWARE_MANAGER_LOGGING_LEVEL}
+#    volumes:
+#      - ${HOST_BLOB_STORAGE_DIRECTORY}:/mnt/blob_storage
+#    logging:
+#      options:
+#        max-size: '10m'
+#        max-file: '5'
+#
+#  firmware_manager_upgrade_runner:
+#    profiles:
+#      - addons
+#      - firmware_manager_upgrade_runner
+#    build:
+#      context: services
+#      dockerfile: Dockerfile.fmur
+#    image: jpo_firmware_manager_upgrade_runner:latest
+#    restart: on-failure:3
+#
+#    ports:
+#      - '8090:8080'
+#    environment:
+#      BLOB_STORAGE_PROVIDER: ${BLOB_STORAGE_PROVIDER}
+#      BLOB_STORAGE_BUCKET: ${BLOB_STORAGE_BUCKET}
+#
+#      FW_UPGRADE_MAX_RETRY_LIMIT: ${FW_UPGRADE_MAX_RETRY_LIMIT}
+#
+#      GCP_PROJECT: ${GCP_PROJECT_ID}
+#      GOOGLE_APPLICATION_CREDENTIALS: /home/gcp_key.json
+#
+#      SMTP_SERVER_IP: ${SMTP_SERVER_IP}
+#      SMTP_EMAIL: ${SMTP_EMAIL}
+#      SMTP_USERNAME: ${SMTP_USERNAME}
+#      SMTP_PASSWORD: ${SMTP_PASSWORD}
+#
+#      UPGRADE_SCHEDULER_ENDPOINT: ${FIRMWARE_MANAGER_UPGRADE_SCHEDULER_ENDPOINT}
+#
+#      LOGGING_LEVEL: ${FIRMWARE_MANAGER_LOGGING_LEVEL}
+#    volumes:
+#      - ./resources/google/${GOOGLE_ACCESS_KEY_NAME}:/home/gcp_key.json
+#      - ${HOST_BLOB_STORAGE_DIRECTORY}:/mnt/blob_storage
+#      - ${NGINX_PROXY_RESOURCES:-./resources/nginx}/ssl/server.crt:/etc/ssl/certs/server.crt
+#    logging:
+#      options:
+#        max-size: '10m'
+#        max-file: '5'

@@ -1101,7 +1101,7 @@ def test_init_background_task(mock_bgscheduler):
 
 def test_get_upgrade_limit_no_env():
     limit = upgrade_scheduler.get_upgrade_limit()
-    assert limit == 1
+    assert limit == 4
 
 
 @patch.dict("os.environ", {"ACTIVE_UPGRADE_LIMIT": "5"})

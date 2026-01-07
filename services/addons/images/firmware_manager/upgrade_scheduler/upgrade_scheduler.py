@@ -33,7 +33,7 @@ active_upgrades_lock = Lock()
 # Changed from a constant to a function to help with unit testing
 def get_upgrade_limit() -> int:
     try:
-        upgrade_limit = int(os.environ.get("ACTIVE_UPGRADE_LIMIT", "1"))
+        upgrade_limit = int(os.environ.get("ACTIVE_UPGRADE_LIMIT", "4"))
         return upgrade_limit
     except ValueError:
         raise ValueError(

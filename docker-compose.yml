@@ -5,6 +5,34 @@ include:
   - docker-compose-obu-ota-server.yml
 
 services:
+  cvmanager_nginx_proxy:
+    profiles:
+      - nginx_proxy
+    build:
+      context: ${NGINX_PROXY_RESOURCES:-./resources/nginx}
+      dockerfile: Dockerfile
+    image: cvmanager_nginx_proxy:latest
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    environment:
+      NGINX_ENVSUBST_OUTPUT_DIR: /etc/nginx
+      SERVER_HOST: ${WEBAPP_DOMAIN}
+    volumes:
+      - ${NGINX_PROXY_RESOURCES:-./resources/nginx}/nginx-ssl.conf:/etc/nginx/templates/nginx.conf.template
+      - ${NGINX_PROXY_RESOURCES:-./resources/nginx}/ssl/server.crt:/etc/ssl/certs/server.crt
+      - ${NGINX_PROXY_RESOURCES:-./resources/nginx}/ssl/server.key:/etc/ssl/private/server.key
+    depends_on:
+      - cvmanager_webapp
+      - cvmanager_keycloak
+      - cvmanager_api
+      - cvmanager_postgres
+    logging:
+      options:
+        max-size: '10m'
+        max-file: '5'
+
   cvmanager_api:
     profiles:
       - basic
@@ -16,9 +44,6 @@ services:
     restart: always
     extra_hosts:
       ${WEBAPP_DOMAIN}: ${WEBAPP_HOST_IP}
-      ${KEYCLOAK_DOMAIN}: ${KC_HOST_IP}
-    ports:
-      - '8081:5000'
     environment:
       PG_DB_HOST: ${PG_DB_HOST}
       PG_DB_USER: ${PG_DB_USER}
@@ -73,8 +98,14 @@ services:
 
       TIMEZONE: ${TIMEZONE}
       LOGGING_LEVEL: ${API_LOGGING_LEVEL}
+      KEYCLOAK_VERIFY: ${KEYCLOAK_VERIFY:-/usr/local/share/ca-certificates/server.crt}
+      PG_SSL_REQUIRED: ${PG_SSL_REQUIRED:-True}
+      REQUESTS_CA_BUNDLE: ${REQUESTS_CA_BUNDLE:-/etc/ssl/certs/ca-certificates.crt}
+    depends_on:
+      - cvmanager_postgres
     volumes:
       - ./resources/google/${GOOGLE_ACCESS_KEY_NAME}:/home/gcp_key.json
+      - ${NGINX_PROXY_RESOURCES:-./resources/nginx}/ssl/server.crt:/usr/local/share/ca-certificates/server.crt
     logging:
       options:
         max-size: '10m'
@@ -119,9 +150,6 @@ services:
         required: false
     extra_hosts:
       ${WEBAPP_DOMAIN}: ${WEBAPP_HOST_IP}
-      ${KEYCLOAK_DOMAIN}: ${KC_HOST_IP}
-    ports:
-      - '80:80'
     logging:
       options:
         max-size: '10m'
@@ -166,9 +194,6 @@ services:
     extra_hosts:
       ${WEBAPP_DOMAIN}: ${WEBAPP_HOST_IP}
       ${KEYCLOAK_DOMAIN}: ${KC_HOST_IP}
-    ports:
-      - '8084:8080'
-      - '9000:9000'
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
@@ -176,17 +201,21 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       KC_HEALTH_ENABLED: 'true'
-      KC_LOG_LEVEL: ${KC_LOGGING_LEVEL}
+      KC_LOG_LEVEL: ${KC_LOGGING_LEVEL:-INFO}
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://${PG_DB_HOST}/postgres?currentSchema=keycloak
       KC_DB_USERNAME: ${PG_DB_USER}
       KC_DB_PASSWORD: ${PG_DB_PASS}
       KC_HOSTNAME: ${KEYCLOAK_DOMAIN}
+      KC_HOSTNAME_PORT: 443
+      KC_HOSTNAME_STRICT_HTTPS: 'true'
+      KC_HOSTNAME_STRICT: 'false'
       KEYCLOAK_API_CLIENT_SECRET_KEY: ${KEYCLOAK_API_CLIENT_SECRET_KEY}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      KC_HOSTNAME_STRICT_HTTPS: 'false'
       KC_HTTP_ENABLED: 'true'
+      KC_PROXY_HEADERS: xforwarded
+      KC_HOSTNAME_STRICT_BACKCHANNEL: 'false'
     command:
       - start-dev
       - --import-realm
@@ -194,7 +223,7 @@ services:
       options:
         max-size: '10m'
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:9000/health']
+      test: ['CMD', 'curl', '-f', 'http://localhost:8080/realms/master']
       interval: 30s
       timeout: 10s
       retries: 3
