@@ -19,11 +19,20 @@ cd resources/nginx
 # Create the ssl directory if it doesn't exist
 mkdir -p ssl
 
-# Generate a self-signed certificate and private key with SAN
+# Generate a self-signed certificate and private key with SAN for the web domain
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
   -keyout ssl/server.key -out ssl/server.crt \
   -subj "/C=US/ST=State/L=City/O=Organization/OU=Unit/CN=cvmanager.local.com" \
   -addext "subjectAltName = DNS:cvmanager.local.com"
+  
+# Move certificate and key files to correct locations
+mkdir -p ssl/certs ssl/private
+mv ssl/server.crt ssl/certs/server.crt
+mv ssl/server.key ssl/private/server.key
+
+# Copy the server certificate to the API resources CA directory to be trusted by the API
+mkdir -p ../../services/resources/ca
+cp ssl/server.crt ../../services/resources/ca/ca.crt
 ```
 
 *Note: Ensure the `CN` (Common Name) and `subjectAltName` match the `WEBAPP_DOMAIN` defined in your `.env` file. Modern browsers and libraries (like Python's `requests`) require the `subjectAltName` extension for proper hostname verification.*
@@ -57,8 +66,6 @@ WEBAPP_HOST_IP=${DOCKER_HOST_IP}
 NGINX_PROXY_RESOURCES=./resources/nginx
 PG_SSL_REQUIRED=False
 ```
-
-*Note: `PG_SSL_REQUIRED=False` is required when connecting to the local Postgres container, as it does not have SSL enabled.*
 
 #### 4. Run the Setup
 
