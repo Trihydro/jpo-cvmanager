@@ -1,7 +1,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Update public.users table definition
-ALTER TABLE public.users
+-- Update cvmanager.users table definition
+ALTER TABLE cvmanager.users
 ADD COLUMN IF NOT EXISTS keycloak_id UUID NOT NULL DEFAULT uuid_generate_v4(),
 ADD COLUMN IF NOT EXISTS created_timestamp BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())*1000::BIGINT,
 ALTER COLUMN first_name DROP NOT NULL,

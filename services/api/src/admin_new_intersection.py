@@ -40,10 +40,10 @@ def get_allowed_selections(user: EnvironWithOrg):
     allowed = {}
 
     if user.user_info.super_user:
-        organizations_query = "SELECT name FROM public.organizations ORDER BY name ASC"
+        organizations_query = "SELECT name FROM cvmanager.organizations ORDER BY name ASC"
         allowed["organizations"] = pgquery.query_and_return_list(organizations_query)
 
-        rsus_query = "SELECT CAST(ipv4_address AS TEXT) FROM public.rsus ORDER BY ipv4_address ASC"
+        rsus_query = "SELECT CAST(ipv4_address AS TEXT) FROM cvmanager.rsus ORDER BY ipv4_address ASC"
         allowed["rsus"] = pgquery.query_and_return_list(rsus_query)
     else:
         allowed["organizations"] = get_qualified_org_list(
@@ -140,7 +140,7 @@ def add_intersection(intersection_spec: dict):
         )
 
     try:
-        query = "INSERT INTO public.intersections(intersection_number, ref_pt"
+        query = "INSERT INTO cvmanager.intersections(intersection_number, ref_pt"
 
         # Add optional fields if they are present
         if "bbox" in intersection_spec:
@@ -176,25 +176,25 @@ def add_intersection(intersection_spec: dict):
         query += ")"
         pgquery.write_db(query)
 
-        org_query = "INSERT INTO public.intersection_organization(intersection_id, organization_id) VALUES"
+        org_query = "INSERT INTO cvmanager.intersection_organization(intersection_id, organization_id) VALUES"
         for organization in intersection_spec["organizations"]:
             org_query += (
                 " ("
-                f"(SELECT intersection_id FROM public.intersections WHERE intersection_number = '{intersection_spec['intersection_id']}'), "
-                f"(SELECT organization_id FROM public.organizations WHERE name = '{organization}')"
+                f"(SELECT intersection_id FROM cvmanager.intersections WHERE intersection_number = '{intersection_spec['intersection_id']}'), "
+                f"(SELECT organization_id FROM cvmanager.organizations WHERE name = '{organization}')"
                 "),"
             )
         org_query = org_query[:-1]
         pgquery.write_db(org_query)
         if intersection_spec["rsus"]:
             rsu_intersection_query = (
-                "INSERT INTO public.rsu_intersection(rsu_id, intersection_id) VALUES"
+                "INSERT INTO cvmanager.rsu_intersection(rsu_id, intersection_id) VALUES"
             )
             for rsu_ip in intersection_spec["rsus"]:
                 rsu_intersection_query += (
                     " ("
-                    f"(SELECT rsu_id FROM public.rsus WHERE ipv4_address = '{rsu_ip}'), "
-                    f"(SELECT intersection_id FROM public.intersections WHERE intersection_number = '{intersection_spec['intersection_id']}')"
+                    f"(SELECT rsu_id FROM cvmanager.rsus WHERE ipv4_address = '{rsu_ip}'), "
+                    f"(SELECT intersection_id FROM cvmanager.intersections WHERE intersection_number = '{intersection_spec['intersection_id']}')"
                     "),"
                 )
             rsu_intersection_query = rsu_intersection_query[:-1]

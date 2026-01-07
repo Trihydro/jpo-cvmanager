@@ -20,10 +20,10 @@ def get_notification_data(user_email):
         "SELECT to_jsonb(row) "
         "FROM ("
         "SELECT u.email, u.first_name, u.last_name, e.email_type "
-        "FROM public.user_email_notification "
-        "JOIN public.users AS u ON u.user_id = user_email_notification.user_id "
-        "JOIN public.email_type AS e ON e.email_type_id = user_email_notification.email_type_id "
-        "WHERE user_email_notification.user_id IN (SELECT user_id FROM public.users WHERE email = :user_email)"
+        "FROM cvmanager.user_email_notification "
+        "JOIN cvmanager.users AS u ON u.user_id = user_email_notification.user_id "
+        "JOIN cvmanager.email_type AS e ON e.email_type_id = user_email_notification.email_type_id "
+        "WHERE user_email_notification.user_id IN (SELECT user_id FROM cvmanager.users WHERE email = :user_email)"
         ") as row"
     )
     params = {"user_email": user_email}
@@ -92,10 +92,10 @@ def modify_notification_authorized(email, notification_spec):
     try:
         # Modify the existing user data
         query = (
-            "UPDATE public.user_email_notification SET "
-            "email_type_id = (SELECT email_type_id FROM public.email_type WHERE email_type = :new_email_type) "
-            "WHERE user_id = (SELECT user_id FROM public.users WHERE email = :user_email)  "
-            "AND email_type_id = (SELECT email_type_id FROM public.email_type WHERE email_type = :old_email_type)"
+            "UPDATE cvmanager.user_email_notification SET "
+            "email_type_id = (SELECT email_type_id FROM cvmanager.email_type WHERE email_type = :new_email_type) "
+            "WHERE user_id = (SELECT user_id FROM cvmanager.users WHERE email = :user_email)  "
+            "AND email_type_id = (SELECT email_type_id FROM cvmanager.email_type WHERE email_type = :old_email_type)"
         )
         params = {
             "new_email_type": notification_spec["new_email_type"],
@@ -126,9 +126,9 @@ def modify_notification_authorized(email, notification_spec):
 )
 def delete_notification_authorized(user_email, email_type):
     notification_remove_query = (
-        "DELETE FROM public.user_email_notification WHERE "
-        "user_id IN (SELECT user_id FROM public.users WHERE email = :user_email) "
-        "AND email_type_id IN (SELECT email_type_id FROM public.email_type WHERE email_type = :email_type)"
+        "DELETE FROM cvmanager.user_email_notification WHERE "
+        "user_id IN (SELECT user_id FROM cvmanager.users WHERE email = :user_email) "
+        "AND email_type_id IN (SELECT email_type_id FROM cvmanager.email_type WHERE email_type = :email_type)"
     )
     params = {
         "user_email": user_email,

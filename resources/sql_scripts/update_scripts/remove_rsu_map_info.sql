@@ -1,3 +1,3 @@
--- Remove public.map_info table if exists
+-- Remove cvmanager.map_info table if exists
 
-DROP TABLE IF EXISTS public.map_info;
+DROP TABLE IF EXISTS cvmanager.map_info;

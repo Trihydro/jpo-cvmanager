@@ -93,11 +93,11 @@ expected_get_intersection_query_all = (
     "ST_XMax(bbox::geometry) AS bbox_longitude_2, ST_YMax(bbox::geometry) AS bbox_latitude_2, "
     "intersection_name, origin_ip, "
     "org.name AS org_name, rsu.ipv4_address AS rsu_ip  "
-    "FROM public.intersections "
-    "JOIN public.intersection_organization AS ro ON ro.intersection_id = intersections.intersection_id  "
-    "JOIN public.organizations AS org ON org.organization_id = ro.organization_id  "
-    "LEFT JOIN public.rsu_intersection AS ri ON ri.intersection_id = intersections.intersection_id  "
-    "LEFT JOIN public.rsus AS rsu ON rsu.rsu_id = ri.rsu_id "
+    "FROM cvmanager.intersections "
+    "JOIN cvmanager.intersection_organization AS ro ON ro.intersection_id = intersections.intersection_id  "
+    "JOIN cvmanager.organizations AS org ON org.organization_id = ro.organization_id  "
+    "LEFT JOIN cvmanager.rsu_intersection AS ri ON ri.intersection_id = intersections.intersection_id  "
+    "LEFT JOIN cvmanager.rsus AS rsu ON rsu.rsu_id = ri.rsu_id "
     ") as row"
 )
 
@@ -109,11 +109,11 @@ expected_get_intersection_query_one = (
     "ST_XMax(bbox::geometry) AS bbox_longitude_2, ST_YMax(bbox::geometry) AS bbox_latitude_2, "
     "intersection_name, origin_ip, "
     "org.name AS org_name, rsu.ipv4_address AS rsu_ip  "
-    "FROM public.intersections "
-    "JOIN public.intersection_organization AS ro ON ro.intersection_id = intersections.intersection_id  "
-    "JOIN public.organizations AS org ON org.organization_id = ro.organization_id  "
-    "LEFT JOIN public.rsu_intersection AS ri ON ri.intersection_id = intersections.intersection_id  "
-    "LEFT JOIN public.rsus AS rsu ON rsu.rsu_id = ri.rsu_id"
+    "FROM cvmanager.intersections "
+    "JOIN cvmanager.intersection_organization AS ro ON ro.intersection_id = intersections.intersection_id  "
+    "JOIN cvmanager.organizations AS org ON org.organization_id = ro.organization_id  "
+    "LEFT JOIN cvmanager.rsu_intersection AS ri ON ri.intersection_id = intersections.intersection_id  "
+    "LEFT JOIN cvmanager.rsus AS rsu ON rsu.rsu_id = ri.rsu_id"
     " WHERE intersection_number = :intersection_id"
     ") as row"
 )
@@ -121,7 +121,7 @@ expected_get_intersection_query_one_params = {"intersection_id": "1123"}
 
 modify_intersection_sql = (
     (
-        "UPDATE public.intersections SET "
+        "UPDATE cvmanager.intersections SET "
         "intersection_number=:intersection_id, "
         "ref_pt=ST_GeomFromText('POINT(' || :ref_pt_longitude || ' ' || :ref_pt_latitude || ')')"
         ", bbox=ST_MakeEnvelope(:bbox_longitude1,:bbox_latitude1,:bbox_longitude2,:bbox_latitude2)"
@@ -145,13 +145,13 @@ modify_intersection_sql = (
 
 add_org_sql = (
     (
-        "INSERT INTO public.intersection_organization(intersection_id, organization_id) VALUES"
+        "INSERT INTO cvmanager.intersection_organization(intersection_id, organization_id) VALUES"
         " ("
-        "(SELECT intersection_id FROM public.intersections WHERE intersection_number = :intersection_id), "
-        "(SELECT organization_id FROM public.organizations WHERE name = :org_name_0)"
+        "(SELECT intersection_id FROM cvmanager.intersections WHERE intersection_number = :intersection_id), "
+        "(SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name_0)"
         "),("
-        "(SELECT intersection_id FROM public.intersections WHERE intersection_number = :intersection_id), "
-        "(SELECT organization_id FROM public.organizations WHERE name = :org_name_1)"
+        "(SELECT intersection_id FROM cvmanager.intersections WHERE intersection_number = :intersection_id), "
+        "(SELECT organization_id FROM cvmanager.organizations WHERE name = :org_name_1)"
         ")"
     ),
     {"intersection_id": "1121", "org_name_0": "Test Org1", "org_name_1": "Test Org2"},
@@ -159,22 +159,22 @@ add_org_sql = (
 
 remove_org_sql = (
     (
-        "DELETE FROM public.intersection_organization WHERE "
-        "intersection_id = (SELECT intersection_id FROM public.intersections WHERE intersection_number = :intersection_id) "
-        "AND organization_id IN (SELECT organization_id FROM public.organizations WHERE name IN (:org_name_0, :org_name_1))"
+        "DELETE FROM cvmanager.intersection_organization WHERE "
+        "intersection_id = (SELECT intersection_id FROM cvmanager.intersections WHERE intersection_number = :intersection_id) "
+        "AND organization_id IN (SELECT organization_id FROM cvmanager.organizations WHERE name IN (:org_name_0, :org_name_1))"
     ),
     {"intersection_id": "1121", "org_name_0": "Test Org3", "org_name_1": "Test Org4"},
 )
 
 add_rsu_sql = (
     (
-        "INSERT INTO public.rsu_intersection(rsu_id, intersection_id) VALUES"
+        "INSERT INTO cvmanager.rsu_intersection(rsu_id, intersection_id) VALUES"
         " ("
-        "(SELECT rsu_id FROM public.rsus WHERE ipv4_address = :rsu_ip_0), "
-        "(SELECT intersection_id FROM public.intersections WHERE intersection_number = :intersection_id)"
+        "(SELECT rsu_id FROM cvmanager.rsus WHERE ipv4_address = :rsu_ip_0), "
+        "(SELECT intersection_id FROM cvmanager.intersections WHERE intersection_number = :intersection_id)"
         "),("
-        "(SELECT rsu_id FROM public.rsus WHERE ipv4_address = :rsu_ip_1), "
-        "(SELECT intersection_id FROM public.intersections WHERE intersection_number = :intersection_id)"
+        "(SELECT rsu_id FROM cvmanager.rsus WHERE ipv4_address = :rsu_ip_1), "
+        "(SELECT intersection_id FROM cvmanager.intersections WHERE intersection_number = :intersection_id)"
         ")"
     ),
     {"intersection_id": "1121", "rsu_ip_0": "1.1.1.1", "rsu_ip_1": "1.1.1.2"},
@@ -182,24 +182,24 @@ add_rsu_sql = (
 
 remove_rsu_sql = (
     (
-        "DELETE FROM public.rsu_intersection WHERE "
-        "intersection_id = (SELECT intersection_id FROM public.intersections WHERE intersection_number = :intersection_id) "
-        "AND rsu_id IN (SELECT rsu_id FROM public.rsus WHERE ipv4_address IN (:rsu_ip_0, :rsu_ip_1))"
+        "DELETE FROM cvmanager.rsu_intersection WHERE "
+        "intersection_id = (SELECT intersection_id FROM cvmanager.intersections WHERE intersection_number = :intersection_id) "
+        "AND rsu_id IN (SELECT rsu_id FROM cvmanager.rsus WHERE ipv4_address IN (:rsu_ip_0, :rsu_ip_1))"
     ),
     {"intersection_id": "1121", "rsu_ip_0": "1.1.1.3", "rsu_ip_1": "1.1.1.4"},
 )
 
 delete_intersection_calls = [
     (
-        "DELETE FROM public.intersection_organization WHERE intersection_id=(SELECT intersection_id FROM public.intersections WHERE intersection_number = :intersection_id)",
+        "DELETE FROM cvmanager.intersection_organization WHERE intersection_id=(SELECT intersection_id FROM cvmanager.intersections WHERE intersection_number = :intersection_id)",
         {"intersection_id": "1111"},
     ),
     (
-        "DELETE FROM public.rsu_intersection WHERE intersection_id=(SELECT intersection_id FROM public.intersections WHERE intersection_number = :intersection_id)",
+        "DELETE FROM cvmanager.rsu_intersection WHERE intersection_id=(SELECT intersection_id FROM cvmanager.intersections WHERE intersection_number = :intersection_id)",
         {"intersection_id": "1111"},
     ),
     (
-        "DELETE FROM public.intersections WHERE intersection_number = :intersection_id",
+        "DELETE FROM cvmanager.intersections WHERE intersection_number = :intersection_id",
         {"intersection_id": "1111"},
     ),
 ]
