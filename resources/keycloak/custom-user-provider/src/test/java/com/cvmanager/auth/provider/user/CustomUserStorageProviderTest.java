@@ -99,13 +99,13 @@ FROM (
         org.name AS org_name,
         roles.name AS role
     FROM
-        public.users
+        cvmanager.users
     LEFT JOIN
-        public.user_organization AS uo ON uo.user_id = users.user_id
+        cvmanager.user_organization AS uo ON uo.user_id = users.user_id
     LEFT JOIN
-        public.organizations AS org ON org.organization_id = uo.organization_id
+        cvmanager.organizations AS org ON org.organization_id = uo.organization_id
     LEFT JOIN
-        public.roles ON roles.role_id = uo.role_id
+        cvmanager.roles ON roles.role_id = uo.role_id
 ) AS subquery
  WHERE keycloak_id = 'user_id'::UUID
 GROUP BY
@@ -172,13 +172,13 @@ FROM (
         org.name AS org_name,
         roles.name AS role
     FROM
-        public.users
+        cvmanager.users
     LEFT JOIN
-        public.user_organization AS uo ON uo.user_id = users.user_id
+        cvmanager.user_organization AS uo ON uo.user_id = users.user_id
     LEFT JOIN
-        public.organizations AS org ON org.organization_id = uo.organization_id
+        cvmanager.organizations AS org ON org.organization_id = uo.organization_id
     LEFT JOIN
-        public.roles ON roles.role_id = uo.role_id
+        cvmanager.roles ON roles.role_id = uo.role_id
 ) AS subquery
  WHERE email = 'email'
 GROUP BY
@@ -245,13 +245,13 @@ FROM (
         org.name AS org_name,
         roles.name AS role
     FROM
-        public.users
+        cvmanager.users
     LEFT JOIN
-        public.user_organization AS uo ON uo.user_id = users.user_id
+        cvmanager.user_organization AS uo ON uo.user_id = users.user_id
     LEFT JOIN
-        public.organizations AS org ON org.organization_id = uo.organization_id
+        cvmanager.organizations AS org ON org.organization_id = uo.organization_id
     LEFT JOIN
-        public.roles ON roles.role_id = uo.role_id
+        cvmanager.roles ON roles.role_id = uo.role_id
 ) AS subquery
  WHERE email = 'email'
 GROUP BY
@@ -289,7 +289,7 @@ GROUP BY
         RealmModel realmModel = mock(RealmModel.class);
         ComponentModel model = mock(ComponentModel.class);
 
-        String expectedQuery = "select count(*) from public.users";
+        String expectedQuery = "select count(*) from cvmanager.users";
 
         try (MockedStatic<CustomUserStorageProvider> mockedStatic = Mockito.mockStatic(CustomUserStorageProvider.class)) {
             Connection connection = mock(Connection.class);
@@ -320,7 +320,7 @@ GROUP BY
         RealmModel realmModel = mock(RealmModel.class);
         ComponentModel model = mock(ComponentModel.class);
 
-        String expectedQuery = "insert into public.users (email, keycloak_id, created_timestamp) values (?, ?::UUID, ?)";
+        String expectedQuery = "insert into cvmanager.users (email, keycloak_id, created_timestamp) values (?, ?::UUID, ?)";
 
         try (MockedStatic<CustomUserStorageProvider> mockedStatic = Mockito.mockStatic(CustomUserStorageProvider.class)) {
             Connection connection = mock(Connection.class);
@@ -365,7 +365,7 @@ GROUP BY
         KeycloakSession keycloakSession = mock(KeycloakSession.class);
         RealmModel realmModel = mock(RealmModel.class);
 
-        String expectedQuery = "update public.users set email = ?, first_name = ?, last_name = ?, created_timestamp = ?, super_user = ?::bit where keycloak_id = ?::UUID";
+        String expectedQuery = "update cvmanager.users set email = ?, first_name = ?, last_name = ?, created_timestamp = ?, super_user = ?::bit where keycloak_id = ?::UUID";
 
         try (MockedStatic<CustomUserStorageProvider> mockedStatic = Mockito.mockStatic(CustomUserStorageProvider.class)) {
             Connection connection = mock(Connection.class);
@@ -421,7 +421,7 @@ GROUP BY
         RealmModel realmModel = mock(RealmModel.class);
         ComponentModel model = mock(ComponentModel.class);
 
-        String expectedQuery = "delete from public.users where keycloak_id = ?::UUID";
+        String expectedQuery = "delete from cvmanager.users where keycloak_id = ?::UUID";
 
         try (MockedStatic<CustomUserStorageProvider> mockedStatic = Mockito.mockStatic(CustomUserStorageProvider.class)) {
             Connection connection = mock(Connection.class);

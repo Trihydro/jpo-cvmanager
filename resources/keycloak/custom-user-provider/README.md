@@ -28,9 +28,9 @@ mvn test
 
 ## User Data
 
-This custom user provider primarily uses the public.users postgres table, while joining this data with the public.user_organization, public.organizations, and public.roles tables to incorporate organization and role data.
+This custom user provider primarily uses the cvmanager.users postgres table, while joining this data with the cvmanager.user_organization, cvmanager.organizations, and cvmanager.roles tables to incorporate organization and role data.
 
-Data stored in public.users table:
+Data stored in cvmanager.users table:
 
 | Field             | Type      | Description                                                                        |
 | ----------------- | --------- | ---------------------------------------------------------------------------------- |
@@ -42,7 +42,7 @@ Data stored in public.users table:
 | created_timestamp | Long      | Time of user creation, in milliseconds since epoch                                 |
 | super_user        | int (0-1) | 1 if user has super-user admin privileges                                          |
 
-Data pulled into custom user config joined from public.user_organization, public.organizations, and public.roles:
+Data pulled into custom user config joined from cvmanager.user_organization, cvmanager.organizations, and cvmanager.roles:
 
 | Field         | Type   | Description                                             |
 | ------------- | ------ | ------------------------------------------------------- |

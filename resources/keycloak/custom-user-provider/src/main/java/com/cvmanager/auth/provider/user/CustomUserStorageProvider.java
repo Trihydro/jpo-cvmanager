@@ -68,13 +68,13 @@ public class CustomUserStorageProvider implements UserStorageProvider,
                     org.name AS org_name,
                     roles.name AS role
                 FROM
-                    public.users
+                    cvmanager.users
                 LEFT JOIN
-                    public.user_organization AS uo ON uo.user_id = users.user_id
+                    cvmanager.user_organization AS uo ON uo.user_id = users.user_id
                 LEFT JOIN
-                    public.organizations AS org ON org.organization_id = uo.organization_id
+                    cvmanager.organizations AS org ON org.organization_id = uo.organization_id
                 LEFT JOIN
-                    public.roles ON roles.role_id = uo.role_id
+                    cvmanager.roles ON roles.role_id = uo.role_id
             ) AS subquery
              %s
             GROUP BY
@@ -184,7 +184,7 @@ public class CustomUserStorageProvider implements UserStorageProvider,
         log.debug("getUsersCount: realm={}", realm.getName());
         try (Connection c = getConnection(this.model)) {
             Statement st = c.createStatement();
-            st.execute("select count(*) from public.users");
+            st.execute("select count(*) from cvmanager.users");
             log.debug("getUsersCount: st={}", st);
             ResultSet rs = st.getResultSet();
             rs.next();
@@ -272,7 +272,7 @@ public class CustomUserStorageProvider implements UserStorageProvider,
         try (Connection c = getConnection(this.model)) {
             // insert new user with username into db
             PreparedStatement st = c.prepareStatement(
-                    "insert into public.users (email, keycloak_id, created_timestamp) values (?, ?::UUID, ?)",
+                    "insert into cvmanager.users (email, keycloak_id, created_timestamp) values (?, ?::UUID, ?)",
                     Statement.RETURN_GENERATED_KEYS);
             st.setString(1, username);
             st.setString(2, id);
@@ -295,7 +295,7 @@ public class CustomUserStorageProvider implements UserStorageProvider,
         try (Connection c = getConnection(this.model)) {
             // insert new user with ID into db
             PreparedStatement st = c.prepareStatement(
-                    "update public.users set email = ?, first_name = ?, last_name = ?, created_timestamp = ?, super_user = ?::bit where keycloak_id = ?::UUID",
+                    "update cvmanager.users set email = ?, first_name = ?, last_name = ?, created_timestamp = ?, super_user = ?::bit where keycloak_id = ?::UUID",
                     Statement.RETURN_GENERATED_KEYS);
             st.setString(1, user.getEmail());
             st.setString(2, user.getFirstName());
@@ -323,7 +323,7 @@ public class CustomUserStorageProvider implements UserStorageProvider,
         try (Connection c = getConnection(this.model)) {
             // remove user with ID from db
             PreparedStatement st = c.prepareStatement(
-                    "delete from public.users where keycloak_id = ?::UUID");
+                    "delete from cvmanager.users where keycloak_id = ?::UUID");
             st.setString(1, user.getId());
             log.debug("removeUser: st={}", st);
             int rowsAffected = st.executeUpdate();
