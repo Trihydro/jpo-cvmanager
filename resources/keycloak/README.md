@@ -17,7 +17,7 @@ This section describes the steps required to add this custom user provider to an
 
 1. Deploy the updated keycloak image
    - This will add the custom-user-provider and custom-protocol-mappers to keycloak, but will not enable them yet (assuming the postgres volume is persisted)
-2. Update the postgres public.users table definition by running the following script in postgres: [user_provider_table_update.sql](../sql_scripts/update_scripts/user_provider_table_update.sql)
+2. Update the postgres cvmanager.users table definition by running the following script in postgres: [user_provider_table_update.sql](../sql_scripts/update_scripts/user_provider_table_update.sql)
 3. In the Keycloak admin console, delete all of the google-idp provided users
    - For google-authenticated users, there is no necessary information stored here
 4. For local users (authenticated by keycloak itself), there are 2 options:
