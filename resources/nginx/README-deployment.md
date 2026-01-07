@@ -30,8 +30,8 @@ If your SSL certificate is issued by a private or corporate CA that is not in th
     ```bash
     mkdir -p services/resources/ca
     ```
-2.  Place your CA certificate (in `.crt` format) in this directory:
-    - `services/resources/ca/your-corporate-ca.crt`
+2.  Place your CA certificate (in `.crt` format) in this directory as `ca.crt`:
+    - `services/resources/ca/ca.crt`
 3.  Rebuild the API service:
     ```bash
     docker compose build cvmanager_api
@@ -41,7 +41,7 @@ Alternatively, you can mount the CA certificate at runtime by updating the `volu
 
 ```yaml
     volumes:
-      - ./path/to/your-ca.crt:/usr/local/share/ca-certificates/your-ca.crt
+      - ./path/to/your-ca.crt:/etc/ssl/ca/ca.crt
 ```
 
 #### 3. Environment Configuration
