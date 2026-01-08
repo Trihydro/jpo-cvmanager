@@ -68,8 +68,8 @@ def init_connection_engine():
     db_pass = os.environ["PG_DB_PASS"]
     db_name = os.environ["PG_DB_NAME"]
     if (
-        "INSTANCE_CONNECTION_NAME" in os.environ
-        and os.environ["INSTANCE_CONNECTION_NAME"].strip()
+            "INSTANCE_CONNECTION_NAME" in os.environ
+            and os.environ["INSTANCE_CONNECTION_NAME"].strip()
     ):
         logging.debug("Using socket connection")
         instance_connection_name = os.environ["INSTANCE_CONNECTION_NAME"]

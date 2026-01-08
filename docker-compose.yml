@@ -2,20 +2,19 @@ version: '3'
 services:
   cvmanager_nginx_proxy:
     build:
-      context: <nginx-proxy-resources>
+      context: ./resources/nginx
     image: cvmanager_nginx_proxy:latest
     restart: unless-stopped
     ports:
       - 80:80
-      - 443:443
+      - 8444:443
     environment:
       NGINX_ENVSUBST_OUTPUT_DIR: /etc/nginx
       SERVER_HOST: ${WEBAPP_DOMAIN}
     volumes:
-      - <nginx-proxy-resources>/nginx-ssl.conf:/etc/nginx/templates/nginx.conf.template
-      - <nginx-proxy-resources>/gen_dhparam.sh:/docker-entrypoint.d/gen_dhparam.sh
-      - <nginx-proxy-resources>/ssl/server.crt:/etc/ssl/certs/server.crt
-      - <nginx-proxy-resources>/ssl/server.key:/etc/ssl/private/server.key
+      - ./resources/nginx/nginx-ssl.conf:/etc/nginx/templates/nginx.conf.template
+      - ./resources/nginx/gen_dhparam.sh:/docker-entrypoint.d/gen_dhparam.sh
+      - ./resources/nginx/ssl:/etc/ssl
     depends_on:
       - cvmanager_webapp
       - cvmanager_keycloak
@@ -32,12 +31,12 @@ services:
     image: jpo_cvmanager_api:latest
     restart: always
     extra_hosts:
-      <dnsnamehere>: ${WEBAPP_HOST_IP}
+      ${WEBAPP_DOMAIN}: ${WEBAPP_HOST_IP}
     environment:
       PG_DB_HOST: ${PG_DB_HOST}
       PG_DB_USER: ${PG_DB_USER}
       PG_DB_PASS: ${PG_DB_PASS}
-      PG_DB_NAME: postgres
+      PG_DB_NAME: ${PG_DB_NAME}
       INSTANCE_CONNECTION_NAME: ${INSTANCE_CONNECTION_NAME}
 
       MONGO_DB_URI: ${MONGO_DB_URI}
@@ -76,7 +75,7 @@ services:
       LOGGING_LEVEL: ${API_LOGGING_LEVEL}
     volumes:
       - ${GOOGLE_APPLICATION_CREDENTIALS}:/google/gcp_credentials.json
-      - <certname>.crt:/etc/ssl/ca/ca.crt
+      - ./services/resources/ca:/etc/ssl/ca
     logging:
       options:
         max-size: '10m'
@@ -102,25 +101,25 @@ services:
       cvmanager_keycloak:
         condition: service_healthy
     extra_hosts:
-      <dnsnamehere>: ${WEBAPP_HOST_IP}
+      ${WEBAPP_DOMAIN}: ${WEBAPP_HOST_IP}
     logging:
       options:
         max-size: '10m'
 
-  # cvmanager_postgres:
-  #   image: postgis/postgis:15-master
-  #   restart: always
-  #   ports:
-  #     - '5432:5432'
-  #   environment:
-  #     POSTGRES_USER: ${PG_DB_USER}
-  #     POSTGRES_PASSWORD: ${PG_DB_PASS}
-  #   volumes:
-  #     - pgdb:/var/lib/postgresql/data
-  #     - ./resources/sql_scripts:/docker-entrypoint-initdb.d
-  #   logging:
-  #     options:
-  #       max-size: '10m'
+  #  cvmanager_postgres:
+  #    image: postgis/postgis:15-master
+  #    restart: always
+  #    ports:
+  #      - '5432:5432'
+  #    environment:
+  #      POSTGRES_USER: ${PG_DB_USER}
+  #      POSTGRES_PASSWORD: ${PG_DB_PASS}
+  #    volumes:
+  #      - pgdb:/var/lib/postgresql/data
+  #      - ./resources/sql_scripts:/docker-entrypoint-initdb.d
+  #    logging:
+  #      options:
+  #        max-size: '10m'
 
   cvmanager_keycloak:
     build:
@@ -130,11 +129,12 @@ services:
         KEYCLOAK_LOGIN_THEME_NAME: ${KEYCLOAK_LOGIN_THEME_NAME}.jar
     image: jpo_cvmanager_keycloak:latest
     restart: always
-    # depends_on:
-    #   - cvmanager_postgres
+    #    ports:
+    #      - '8084:8080'
+    #    depends_on:
+    #      - cvmanager_postgres
     extra_hosts:
       ${WEBAPP_DOMAIN}: ${WEBAPP_HOST_IP}
-      ${KEYCLOAK_DOMAIN}: ${KC_HOST_IP}
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
@@ -142,9 +142,9 @@ services:
       WEBAPP_CM_ORIGIN: https://${WEBAPP_CM_DOMAIN}
       KC_HEALTH_ENABLED: true
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://${PG_DB_HOST}/postgres?currentSchema=keycloak
-      KC_DB_USERNAME: ${PG_DB_USER}
-      KC_DB_PASSWORD: ${PG_DB_PASS}
+      KC_DB_URL: jdbc:postgresql://${PG_DB_KEYCLOAK_HOST}/${PG_DB_KEYCLOAK_NAME}
+      KC_DB_USERNAME: ${PG_DB_KEYCLOAK_USER}
+      KC_DB_PASSWORD: ${PG_DB_KEYCLOAK_PASS}
       KC_HOSTNAME: ${KEYCLOAK_DOMAIN}
       KEYCLOAK_API_CLIENT_SECRET_KEY: ${KEYCLOAK_API_CLIENT_SECRET_KEY}
       KEYCLOAK_CM_API_CLIENT_SECRET_KEY: ${KEYCLOAK_CM_API_CLIENT_SECRET_KEY}

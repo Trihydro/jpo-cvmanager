@@ -9,7 +9,7 @@ services:
       context: ./services
       dockerfile: Dockerfile.geo_msg_query
     image: geo_msg_query:latest
-    restart: on-failure:3
+    restart: on-failure:10
     environment:
       MONGO_DB_URI: ${MONGO_DB_URI}
       MONGO_DB_NAME: ${MONGO_DB_NAME}
@@ -59,7 +59,7 @@ services:
 
       LOGGING_LEVEL: ${COUNTS_LOGGING_LEVEL}
     volumes:
-      - <certname>.crt:/etc/ssl/ca/ca.crt
+      - ./services/resources/ca:/etc/ssl/ca
     logging:
       options:
         max-size: '10m'
@@ -89,7 +89,7 @@ services:
 
       LOGGING_LEVEL: ${RSU_STATUS_LOGGING_LEVEL}
     volumes:
-      - <certname>.crt:/etc/ssl/ca/ca.crt
+      - ./services/resources/ca:/etc/ssl/ca
     logging:
       options:
         max-size: '10m'
@@ -101,8 +101,6 @@ services:
       dockerfile: Dockerfile.iss_health_check
     image: iss_health_check:latest
     restart: on-failure:3
-    # depends_on:
-    #   - cvmanager_postgres
     environment:
       ISS_API_KEY: ${ISS_API_KEY}
       ISS_API_KEY_NAME: ${ISS_API_KEY_NAME}
@@ -123,11 +121,12 @@ services:
       ISS_KEY_TABLE_NAME: iss_keys
     volumes:
       - ${GOOGLE_APPLICATION_CREDENTIALS}:/google/gcp_credentials.json
-      - <certname>.crt:/etc/ssl/ca/ca.crt
+      - ./services/resources/ca:/etc/ssl/ca
     logging:
       options:
         max-size: '10m'
         max-file: '5'
+
 #  firmware_manager:
 #    build:
 #      context: services
@@ -158,7 +157,6 @@ services:
 #    volumes:
 #      - ${GOOGLE_APPLICATION_CREDENTIALS}:/google/gcp_credentials.json
 #      - ${HOST_BLOB_STORAGE_DIRECTORY}:/mnt/blob_storage
-#      - <certname>.crt:/etc/ssl/ca/ca.crt
 #    logging:
 #      options:
 #        max-size: '10m'

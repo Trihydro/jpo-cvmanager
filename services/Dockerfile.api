@@ -1,10 +1,18 @@
 FROM python:3.12.2-slim
 
 # Prepare the SNMP functionality for the image
-RUN apt-get update
-RUN apt-get install -y snmpd
-RUN apt-get install -y snmp
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        snmpd \
+        snmp \
+    && rm -rf /var/lib/apt/lists/*
+
 ADD resources/mibs/* /usr/share/snmp/mibs/
+
+COPY resources/ca/ca.crt /usr/local/share/ca-certificates/ca.crt
+RUN update-ca-certificates
 
 # Allow statements and log messages to immediately appear in the Knative logs
 ENV PYTHONUNBUFFERED True
