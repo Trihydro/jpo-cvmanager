@@ -1,140 +1,81 @@
-.rsu-marker {
-  margin-top: -6px;
-  margin-left: -6px;
-}
+@import 'https://use.typekit.net/ioz0eth.css';
 
 .legend {
   z-index: 90;
-  background: #0e2052;
   margin: 10px;
   border-radius: 15px;
   height: fit-content;
 }
 
 .legend-header {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'museo-slab', Arial, Helvetica, sans-serif;
   font-size: 24px;
   margin-top: 5px;
   margin-left: 10px;
   margin-right: 10px;
-  color: white;
 }
 
-.legend-item {
-  margin-top: 8px;
-  margin-bottom: 8px;
-  margin-left: 10px;
-  margin-right: 10px;
-}
-
-.legend-label {
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 18px;
-  color: white;
-  margin-top: 2px;
-}
-
-.legend-input {
-  width: 16px;
-  height: 16px;
-  margin-right: 10px;
-  accent-color: #b55e12;
-}
-
-.legend-grid {
-  position: absolute;
-  flex-grow: 1;
-}
-
-.rsu-status-div {
-  z-index: 90;
-  background: #0e2052;
-  border-radius: 15px;
-  margin-top: 10px;
-}
-
-.vendor-filter-div {
-  z-index: 90;
-  background: #0e2052;
-  border-radius: 15px;
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-evenly;
-  width: fit-content;
-  height: fit-content;
-  padding: 5px 20px;
-  margin-left: 10px;
-  font-family: Arial, Helvetica, sans-serif;
-  color: #ffffff;
-}
-
-.vendor-filter-div h2 {
-  margin-bottom: 10px;
-}
-
-.vendor-filter-div h4 {
-  font-weight: normal;
-  margin-bottom: 4px;
-}
-
-.form-dropdown {
-  width: 100%;
+/* Remove vertical padding from rsu popup */
+.rsu-popup .mapboxgl-popup-content {
+  padding: 0 !important;
 }
 
 .rw-dropdown-list-value {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'museo-slab', Arial, Helvetica, sans-serif;
 }
 
 .rw-list-option {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-.rsu-status-label {
-  display: block;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 18px;
-  color: white;
-  margin-top: 8px;
-  margin-bottom: 8px;
-  margin-left: 10px;
-  margin-right: 10px;
-}
-
-.rsu-status-input {
-  margin-right: 10px;
-  accent-color: #b55e12;
-  width: 16px;
-  height: 16px;
-}
-
-.map-button {
-  height: 35px;
-  padding: 1px 12px;
-  margin-top: 10px;
-  margin-left: 10px;
-  text-align: center;
-  text-decoration: none;
-  font-size: 18px;
-  background: #d16d15;
-  border-radius: 30px;
-  border: none;
-  cursor: pointer;
-  color: white;
-  z-index: 90;
+  font-family: 'museo-slab', Arial, Helvetica, sans-serif;
 }
 
 .form-group-row {
   gap: 50px;
 }
 
-.contained-button {
-  width: 234.65px;
-}
-
 .mapboxgl-popup-close-button {
   font-size: 24px;
-  top: 0;
-  right: 4px;
+  top: 8px;
+  right: 10px;
+}
+
+.mapboxgl-popup-content {
+  background-color: var(--mui-palette-background-paper);
+  width: fit-content;
+  height: fit-content;
+  padding: 10px 0px;
+  border-radius: 4px;
+}
+
+.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
+  align-self: center;
+  border-bottom: none;
+  border-top-color: var(--mui-palette-background-default);
+}
+
+.menu-container {
+  z-index: 90;
+  position: absolute;
+  top: 144px;
+  max-height: calc(100% - 205px);
+  overflow-y: auto;
+  scrollbar-color: var(--mui-palette-text-primary) var(--mui-palette-background-paper);
+  left: 25px;
+}
+
+.map-control-container {
+  border-radius: 4px;
+}
+
+.map-control-right-aligned {
+  position: absolute;
+  z-index: 90;
+  right: 25px;
+}
+
+.accordion-header {
+  font-size: 20px;
+}
+
+#simple-board {
+  padding: 0px 10px;
 }

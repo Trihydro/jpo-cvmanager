@@ -1,0 +1,236 @@
+import { toPng } from 'html-to-image'
+import { generatePdf } from './pdf-generator'
+import { ReportMetadata } from '../../../apis/intersections/reports-api'
+import { vi } from 'vitest'
+
+// Create a helper function to record constructor calls
+const mockJsPDFConstructor = vi.fn()
+
+const addPageMock = vi.fn()
+const setFontSizeMock = vi.fn()
+const setFontMock = vi.fn()
+const textMock = vi.fn()
+const addImageMock = vi.fn()
+const saveMock = vi.fn()
+const getHeightMock = vi.fn(() => 297)
+const getWidthMock = vi.fn(() => 210)
+const getImagePropertiesMock = vi.fn(() => ({ height: 100, width: 200 }))
+
+vi.mock('jspdf', () => {
+  return {
+    jsPDF: class MockJsPDF {
+      addPage = addPageMock
+      setFontSize = setFontSizeMock
+      setFont = setFontMock
+      text = textMock
+      addImage = addImageMock
+      getImageProperties = getImagePropertiesMock
+      internal = {
+        pageSize: {
+          getHeight: getHeightMock,
+          getWidth: getWidthMock,
+        },
+      }
+      save = saveMock
+      constructor(...args: any[]) {
+        // Record the arguments with which the constructor is called
+        mockJsPDFConstructor(...args)
+      }
+    },
+  }
+})
+
+vi.mock('html-to-image', () => ({
+  toPng: vi.fn(),
+}))
+
+describe('generatePdf', () => {
+  let mockSetLoading: any
+  let mockSetProgress: any
+  let mockIsModalOpen: any
+  let mockSignal: AbortSignal
+  let mockReport: ReportMetadata
+
+  beforeEach(() => {
+    // Initialize mock functions
+    mockSetLoading = vi.fn()
+    mockSetProgress = vi.fn()
+    mockIsModalOpen = vi.fn().mockReturnValue(true)
+    mockSignal = { aborted: false } as AbortSignal
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    mockReport = {
+      reportName: 'Test Report',
+      intersectionID: 123,
+      reportGeneratedAt: new Date('2023-01-01T00:00:00Z'),
+      reportStartTime: new Date('2023-01-01T00:00:00Z'),
+      reportStopTime: new Date('2023-01-01T01:00:00Z'),
+      reportContents: ['Lane Direction of Travel', 'Stop Line Passage Events'],
+      laneDirectionOfTravelEventCounts: [
+        { id: '1', count: 10 },
+        { id: '2', count: 15 },
+      ],
+      laneDirectionOfTravelMedianDistanceDistribution: [
+        { id: '1', count: 5 },
+        { id: '2', count: 8 },
+      ],
+      laneDirectionOfTravelMedianHeadingDistribution: [
+        { id: '1', count: 3 },
+        { id: '2', count: 7 },
+      ],
+      laneDirectionOfTravelReportData: [
+        { timestamp: 1743434775000, laneID: 1, segmentID: 1, headingDelta: 0.5, medianCenterlineDistance: 1.2 },
+        { timestamp: 1743434776000, laneID: 2, segmentID: 2, headingDelta: 0.7, medianCenterlineDistance: 1.5 },
+      ],
+      connectionOfTravelEventCounts: [
+        { id: '1', count: 20 },
+        { id: '2', count: 25 },
+      ],
+      signalStateConflictEventCount: [{ id: '1', count: 5 }],
+      stopLinePassageEventCounts: [
+        { id: '1', count: 30 },
+        { id: '2', count: 35 },
+      ],
+      stopLineStopEventCounts: [
+        { id: '1', count: 12 },
+        { id: '2', count: 18 },
+      ],
+      timeChangeDetailsEventCount: [{ id: '1', count: 4 }],
+      intersectionReferenceAlignmentEventCounts: [
+        { id: '1', count: 6 },
+        { id: '2', count: 9 },
+      ],
+      mapBroadcastRateEventCount: [{ id: '1', count: 40 }],
+      mapMinimumDataEventCount: [{ id: '1', count: 50 }],
+      spatMinimumDataEventCount: [{ id: '1', count: 60 }],
+      spatBroadcastRateEventCount: [{ id: '1', count: 70 }],
+      latestMapMinimumDataEventMissingElements: ['Element1', 'Element2'],
+      latestSpatMinimumDataEventMissingElements: ['Element3', 'Element4'],
+      validConnectionOfTravelData: [
+        { connectionID: 1, ingressLaneID: 101, egressLaneID: 201, eventCount: 5 },
+        { connectionID: 2, ingressLaneID: 102, egressLaneID: 202, eventCount: 10 },
+      ],
+      invalidConnectionOfTravelData: [
+        { connectionID: 3, ingressLaneID: 103, egressLaneID: 203, eventCount: 2 },
+        { connectionID: 4, ingressLaneID: 104, egressLaneID: 204, eventCount: 4 },
+      ],
+      headingTolerance: 5,
+      distanceTolerance: 10,
+      stopLineStopReportData: [
+        {
+          signalGroup: 1,
+          numberOfEvents: 5,
+          timeStoppedOnRed: 10,
+          timeStoppedOnYellow: 15,
+          timeStoppedOnGreen: 20,
+          timeStoppedOnDark: 25,
+        },
+        {
+          signalGroup: 2,
+          numberOfEvents: 8,
+          timeStoppedOnRed: 12,
+          timeStoppedOnYellow: 18,
+          timeStoppedOnGreen: 22,
+          timeStoppedOnDark: 28,
+        },
+      ],
+      stopLinePassageReportData: [
+        {
+          signalGroup: 1,
+          totalEvents: 5,
+          redEvents: 10,
+          yellowEvents: 15,
+          greenEvents: 20,
+          darkEvents: 25,
+        },
+        {
+          signalGroup: 2,
+          totalEvents: 8,
+          redEvents: 12,
+          yellowEvents: 18,
+          greenEvents: 22,
+          darkEvents: 28,
+        },
+      ],
+    }
+    vi.spyOn(document, 'getElementById').mockImplementation((id) => {
+      const mockElement = document.createElement('div')
+      mockElement.id = id
+      return mockElement
+    })
+  })
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('should initialize the PDF and set loading state', async () => {
+    await generatePdf(mockReport, mockSetLoading, false, mockIsModalOpen, mockSetProgress, mockSignal)
+
+    expect(getHeightMock()).toBeCloseTo(297)
+    expect(getWidthMock()).toBeCloseTo(210)
+
+    expect(mockSetLoading).toHaveBeenCalledWith(true)
+    expect(mockJsPDFConstructor).toHaveBeenCalledWith('p', 'mm', 'a4')
+    expect(setFontSizeMock).toHaveBeenCalledWith(36)
+    expect(textMock).toHaveBeenCalledWith(
+      'Conflict Monitor Report',
+      105, // Centered on A4 width (210mm)
+      98.5, // Centered vertically
+      { align: 'center' }
+    )
+    expect(mockSetLoading).toHaveBeenCalledWith(false)
+  })
+
+  it('should calculate unique lane IDs and total graphs', async () => {
+    await generatePdf(mockReport, mockSetLoading, true, mockIsModalOpen, mockSetProgress, mockSignal)
+
+    expect(textMock).toHaveBeenCalledWith('Lane Direction of Travel', 105, 20, { align: 'center' })
+    expect(mockSetProgress).toHaveBeenCalledWith(expect.any(Number))
+  })
+
+  it('should add lane-specific charts if includeLaneSpecificCharts is true', async () => {
+    await generatePdf(mockReport, mockSetLoading, true, mockIsModalOpen, mockSetProgress, mockSignal)
+
+    expect(textMock).toHaveBeenCalledWith('Distance From Centerline Over Time', 105, 25, { align: 'center' })
+    expect(textMock).toHaveBeenCalledWith('Vehicle Heading Error Delta Over Time', 105, 25, { align: 'center' })
+  })
+
+  it('should skip lane-specific charts if includeLaneSpecificCharts is false', async () => {
+    await generatePdf(mockReport, mockSetLoading, false, mockIsModalOpen, mockSetProgress, mockSignal)
+
+    expect(textMock).not.toHaveBeenCalledWith('Distance From Centerline Over Time', 105, 25, { align: 'center' })
+    expect(textMock).not.toHaveBeenCalledWith('Vehicle Heading Error Delta Over Time', 105, 25, { align: 'center' })
+  })
+
+  it('should save the PDF if the modal is still open', async () => {
+    await generatePdf(mockReport, mockSetLoading, false, mockIsModalOpen, mockSetProgress, mockSignal)
+
+    expect(mockIsModalOpen).toHaveBeenCalled()
+    expect(saveMock).toHaveBeenCalledWith('Test Report.pdf')
+  })
+
+  it('should not save the PDF if the modal is closed', async () => {
+    mockIsModalOpen.mockReturnValue(false)
+    await generatePdf(mockReport, mockSetLoading, false, mockIsModalOpen, mockSetProgress, mockSignal)
+
+    expect(mockIsModalOpen).toHaveBeenCalled()
+    expect(saveMock).not.toHaveBeenCalled()
+  })
+
+  it('should handle errors during graph capture gracefully', async () => {
+    ;(toPng as any).mockRejectedValue(new Error('Graph capture failed'))
+    await generatePdf(mockReport, mockSetLoading, false, mockIsModalOpen, mockSetProgress, mockSignal)
+
+    expect(console.error).toHaveBeenCalledWith('Error capturing graph:', expect.any(Error))
+  })
+
+  it('should handle an aborted signal gracefully', async () => {
+    const abortController = new AbortController()
+    abortController.abort()
+    mockSignal = abortController.signal
+    await generatePdf(mockReport, mockSetLoading, false, mockIsModalOpen, mockSetProgress, mockSignal)
+
+    expect(console.error).not.toHaveBeenCalled()
+    expect(mockSetProgress).not.toHaveBeenCalled()
+  })
+})

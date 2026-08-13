@@ -1,156 +1,214 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import dayjs from 'dayjs'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
-import TextField from '@mui/material/TextField'
-import EnvironmentVars from '../../EnvironmentVars'
-import BounceLoader from 'react-spinners/BounceLoader'
-import Select from 'react-select'
 import {
-  selectRequestOut,
-  selectMsgType,
-  selectCountList,
-  selectStartDate,
-  selectEndDate,
-  selectWarningMessage,
-  selectMessageLoading,
-  updateMessageType,
-} from '../../generalSlices/rsuSlice'
-import { selectCurrentSort, selectSortedCountList, sortCountList, changeDate } from './menuSlice'
+  selectCountsEndDate,
+  selectCountsMsgType,
+  selectCountsStartDate,
+  setCountsEndDate,
+  setCountsMsgType,
+  setCountsStartDate,
+  toggleMapMenuSelection,
+} from './menuSlice'
 
 import '../../components/css/SnmpwalkMenu.css'
 import { AnyAction, ThunkDispatch } from '@reduxjs/toolkit'
 import { RootState } from '../../store'
-import { CountsListElement } from '../../types/Rsu'
-import { MessageType } from '../../types/MessageTypes'
-
-const messageTypeOptions = EnvironmentVars.getMessageTypes().map((type) => {
-  return { value: type, label: type }
-})
+import { CountsListElement } from '../../models/Rsu'
+import { MessageType } from '../../models/MessageTypes'
+import { Box, FormControl, InputLabel, MenuItem, Paper, Select, Stack, Typography, useTheme } from '@mui/material'
+import { SideBarHeader } from '../../styles/components/SideBarHeader'
+import { useGetRsuCountsQuery } from '../api/rsuCountsApiSlice'
+import { selectOrganizationName } from '../../generalSlices/userSlice'
 
 const DisplayCounts = () => {
   const dispatch: ThunkDispatch<RootState, void, AnyAction> = useDispatch()
-  const countsMsgType = useSelector(selectMsgType)
-  const startDate = useSelector(selectStartDate)
-  const endDate = useSelector(selectEndDate)
-  const requestOut = useSelector(selectRequestOut)
-  const warning = useSelector(selectWarningMessage)
-  const messageLoading = useSelector(selectMessageLoading)
-  const countList = useSelector(selectCountList)
-  const currentSort = useSelector(selectCurrentSort)
-  const sortedCountList = useSelector(selectSortedCountList)
+  const theme = useTheme()
+  const organization = useSelector(selectOrganizationName)
+  const countsMsgType = useSelector(selectCountsMsgType)
+  const startDate = useSelector(selectCountsStartDate)
+  const endDate = useSelector(selectCountsEndDate)
 
-  const dateChanged = (e: Date, type: 'start' | 'end') => {
-    if (!Number.isNaN(Date.parse(e.toString()))) {
-      dispatch(changeDate(e, type, requestOut))
+  const [currentSort, setCurrentSort] = React.useState<string | null>(null)
+
+  const { data: rsuCounts } = useGetRsuCountsQuery({ organization, startDate, endDate })
+
+  const messageTypeOptions = useMemo(() => {
+    // parse message types from rsuCounts count keys
+    const typesSet = new Set<string>()
+    Object.values(rsuCounts || {}).forEach((rsuCount) => {
+      Object.keys(rsuCount.messageTypeCounts || {}).forEach((msgType) => typesSet.add(msgType))
+    })
+    if (typesSet.size === 0) {
+      return [{ value: 'BSM', label: 'BSM' }]
     }
-  }
+    return Array.from(typesSet).map((type) => ({ value: type, label: type?.toUpperCase() }))
+  }, [rsuCounts])
+
+  const countList = useMemo(() => {
+    return Object.entries(rsuCounts ?? {}).map(([key, value]) => {
+      return {
+        key: key,
+        rsu: key,
+        road: value.road,
+        count: value.messageTypeCounts?.[countsMsgType] || 0,
+      }
+    })
+  }, [rsuCounts, countsMsgType])
+
+  const dateRangeValid = useMemo(() => {
+    const ONE_WEEK_MILLISECONDS = 86400 * 1000 * 7
+    return endDate.getTime() - startDate.getTime() > ONE_WEEK_MILLISECONDS
+  }, [startDate, endDate])
 
   const getWarningMessage = (warning: boolean) =>
     warning ? (
-      <span className="warningMessage" role="alert">
-        <p>Warning: time ranges greater than 24 hours may have longer load times.</p>
-      </span>
-    ) : (
-      <span></span>
-    )
+      <Typography
+        component="span"
+        role="alert"
+        sx={{ backgroundColor: theme.palette.error.main, display: 'flex', justifyContent: 'center' }}
+      >
+        Warning: time ranges greater than 7 days may have longer load times.
+      </Typography>
+    ) : null
+
+  const sortedCountList = useMemo(() => {
+    if (!currentSort) return countList
+
+    const key = currentSort.replace('__desc', '')
+    const isDescending = currentSort.includes('__desc')
+
+    return [...countList].sort((a, b) => {
+      const aVal = a[key]
+      const bVal = b[key]
+
+      if (aVal < bVal) return isDescending ? 1 : -1
+      if (aVal > bVal) return isDescending ? -1 : 1
+      return 0
+    })
+  }, [currentSort, countList])
 
   const sortBy = (key: string) => {
-    dispatch(sortCountList(key, currentSort, countList))
+    // Default to ascending. If re-pressed (already sorting by this key), switch to descending.
+    if (key === currentSort) {
+      setCurrentSort(key + '__desc')
+    } else {
+      setCurrentSort(key)
+    }
   }
 
-  const getTable = (messageLoading: boolean, sortedCountList: CountsListElement[]) =>
-    messageLoading ? (
-      <div>
-        <div className="table">
-          <div className="header">
-            <div>RSU</div>
-            <div>Road</div>
-            <div>Count</div>
+  const getTable = (sortedCountList: CountsListElement[]) => (
+    <div className="table">
+      <div className="header">
+        <div onClick={() => sortBy('rsu')} style={{ borderBottom: `1px solid ${theme.palette.text.primary}` }}>
+          RSU
+        </div>
+        <div onClick={() => sortBy('road')} style={{ borderBottom: `1px solid ${theme.palette.text.primary}` }}>
+          Road
+        </div>
+        <div onClick={() => sortBy('count')} style={{ borderBottom: `1px solid ${theme.palette.text.primary}` }}>
+          Count
+        </div>
+      </div>
+      <div className="body">{formatRows(sortedCountList)}</div>
+    </div>
+  )
+
+  const formatRows = (rows: CountsListElement[]) => {
+    if (rows.length === 0) {
+      return (
+        <div className="row">
+          <div
+            style={{
+              gridColumn: '1 / span 3',
+              textAlign: 'center',
+            }}
+          >
+            <Typography>No data found for the selected range</Typography>
           </div>
         </div>
-        <span className="bounceLoader">
-          <BounceLoader loading={true} color={'#ffffff'}></BounceLoader>
-        </span>
-      </div>
-    ) : (
-      <div className="table">
-        <div className="header">
-          <div onClick={() => sortBy('rsu')}>RSU</div>
-          <div onClick={() => sortBy('road')}>Road</div>
-          <div onClick={() => sortBy('count')}>Count</div>
-        </div>
-        <div className="body">{formatRows(sortedCountList)}</div>
-      </div>
-    )
-  const formatRows = (rows: CountsListElement[]) => rows.map((rowData) => <Row {...rowData} />)
+      )
+    }
+    return rows.map((rowData) => <Row {...rowData} />)
+  }
   return (
-    <div>
-      <div id="container" className="sideBarOn">
-        <h1 className="h1">{countsMsgType} Counts</h1>
-        <div className="DateRangeContainer">
-          <div style={{ marginBottom: '8px' }}>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DateTimePicker
-                label="Select start date"
-                value={dayjs(startDate)}
-                maxDateTime={dayjs(endDate)}
-                onChange={(e) => {
-                  if (e === null) return
-                  dateChanged(e.toDate(), 'start')
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    InputProps={{ ...params.InputProps, style: { color: 'black' } }}
-                    InputLabelProps={{ style: { color: 'black' } }}
-                  />
-                )}
-              />
-            </LocalizationProvider>
-          </div>
-          <div>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DateTimePicker
-                label="Select end date"
-                value={dayjs(endDate)}
-                minDateTime={dayjs(startDate)}
-                maxDateTime={dayjs(new Date())}
-                onChange={(e) => {
-                  if (e === null) return
-                  dateChanged(e.toDate(), 'end')
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    InputProps={{ ...params.InputProps, style: { color: 'black' } }}
-                    InputLabelProps={{ style: { color: 'black' } }}
-                  />
-                )}
-              />
-            </LocalizationProvider>
-          </div>
-        </div>
-        <Select
-          options={messageTypeOptions}
-          defaultValue={messageTypeOptions.filter((o) => o.label === countsMsgType)}
-          placeholder="Select Message Type"
-          className="selectContainer"
-          onChange={(value) => dispatch(updateMessageType(value.value as MessageType))}
-        />
-        {getWarningMessage(warning)}
-        {getTable(messageLoading, sortedCountList)}
-      </div>
+    <Paper sx={{ pb: 1, pl: 1, pr: 1 }}>
+      <SideBarHeader
+        onClick={() => dispatch(toggleMapMenuSelection('Display Message Counts'))}
+        title="Message Counts"
+      />
+      <Stack direction="column" spacing={2}>
+        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DateTimePicker
+              sx={{ width: '90%' }}
+              label="Select start date"
+              value={dayjs(startDate)}
+              maxDateTime={dayjs(endDate)}
+              onChange={(e) => {
+                if (e && !Number.isNaN(Date.parse(e.toString()))) {
+                  dispatch(setCountsStartDate(e.toDate()))
+                }
+              }}
+            />
+          </LocalizationProvider>
+        </Box>
+        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DateTimePicker
+              sx={{ width: '90%' }}
+              label="Select end date"
+              value={dayjs(endDate)}
+              minDateTime={dayjs(startDate)}
+              maxDateTime={dayjs(endDate)}
+              onChange={(e) => {
+                if (e && !Number.isNaN(Date.parse(e.toString()))) {
+                  dispatch(setCountsEndDate(e.toDate()))
+                }
+              }}
+            />
+          </LocalizationProvider>
+        </Box>
+        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+          <FormControl sx={{ width: '90%' }}>
+            <InputLabel htmlFor="counts-msg-dropdown">Message Type</InputLabel>
+            <Select
+              label="Message Type"
+              id="counts-msg-dropdown"
+              value={countsMsgType}
+              onChange={(event) => dispatch(setCountsMsgType(event.target.value as MessageType))}
+              sx={{
+                textAlign: 'left',
+              }}
+            >
+              {messageTypeOptions.map((option) => {
+                return (
+                  <MenuItem value={option.value} key={option.value}>
+                    {option.label}
+                  </MenuItem>
+                )
+              })}
+            </Select>
+          </FormControl>
+        </Box>
+        {getWarningMessage(dateRangeValid)}
+        {getTable(sortedCountList)}
+      </Stack>
+    </Paper>
+  )
+}
+const Row = ({ rsu, road, count }: { rsu: string; road: string; count: number }) => {
+  const theme = useTheme()
+  return (
+    <div className="row">
+      <div style={{ borderBottom: `1px solid ${theme.palette.text.primary}` }}>{rsu}</div>
+      <div style={{ borderBottom: `1px solid ${theme.palette.text.primary}` }}>{road}</div>
+      <div style={{ borderBottom: `1px solid ${theme.palette.text.primary}` }}>{count}</div>
     </div>
   )
 }
-const Row = ({ rsu, road, count }: { rsu: string; road: string; count: number }) => (
-  <div className="row">
-    <div>{rsu}</div>
-    <div>{road}</div>
-    <div>{count}</div>
-  </div>
-)
 export default DisplayCounts

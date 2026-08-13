@@ -1,8 +1,15 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import RsuApi from '../apis/rsu-api'
+import RsuFirmwareApi from '../apis/intersections/rsu-firmware-api'
 import { selectToken, selectOrganizationName } from './userSlice'
 import { RootState } from '../store'
-import { RsuCommandPostBody, RsuDsrcFwdConfigs, RsuRxTxMsgFwdConfigs, SnmpFwdWalkConfig } from '../apis/rsu-api-types'
+import {
+  RsuCommandPostBody,
+  RsuDsrcFwdConfigs,
+  RsuRxTxMsgFwdConfigs,
+  RsuUpgradeCheckPostBody,
+  RsuUpgradePostBody,
+} from '../models/RsuApi'
 
 const initialState = {
   msgFwdConfig: {} as any,
@@ -15,54 +22,65 @@ const initialState = {
   firmwareUpgradeErr: false,
   destIp: '',
   snmpMsgType: 'bsm',
-  snmpFilterMsg: '',
-  snmpFilterErr: false,
+  includeSecurityHeader: false,
   addConfigPoint: false,
   configCoordinates: [] as number[][],
   configList: [] as number[],
+  msgFwdConfigType: 'database' as 'database' | 'rsu',
 }
 
-export const refreshSnmpFwdConfig = createAsyncThunk(
-  'config/refreshSnmpFwdConfig',
-  async (rsu_ip: string, { getState, dispatch }) => {
-    const currentState = getState() as RootState
-    const token = selectToken(currentState)
-    const organization = selectOrganizationName(currentState)
+export const getCachedSnmpFwdConfigsFromDatabase = createAsyncThunk<
+  { msgFwdConfig: RsuDsrcFwdConfigs | RsuRxTxMsgFwdConfigs; errorState: string },
+  string,
+  { state: RootState }
+>('config/refreshSnmpFwdConfig', async (rsu_ip: string, { getState }) => {
+  const currentState = getState() as RootState
+  const token = selectToken(currentState)
+  const organization = selectOrganizationName(currentState)
 
-    const response = await RsuApi.getRsuMsgFwdConfigs(token, organization, '', { rsu_ip })
+  const response = await RsuApi.getCachedRsuMsgFwdConfigsFromDatabase(token, organization, '', { rsu_ip })
+  if (!response) {
+    return {
+      msgFwdConfig: {},
+      errorState:
+        'Failed to retrieve RSU message forwarding configuration from database for RSU IP ${rsu_ip}: received empty or no response',
+    }
+  }
 
+  return {
+    msgFwdConfig: response.RsuFwdSnmpwalk,
+    errorState: '',
+  }
+})
+
+export const getRsuMsgConfigsFromRsu = createAsyncThunk<
+  { msgFwdConfig: RsuDsrcFwdConfigs | RsuRxTxMsgFwdConfigs; errorState: string },
+  string,
+  { state: RootState }
+>('config/getRsuMsgFwdFetch', async (rsu_ip: string, { getState, rejectWithValue }) => {
+  const currentState = getState() as RootState
+  const token = selectToken(currentState)
+  const organization = selectOrganizationName(currentState)
+
+  try {
+    const response = await RsuApi.getRsuMsgConfigsFromRsu(token, organization, '', { rsu_ip })
+    if (!response) {
+      return rejectWithValue('Failed to fetch RSU message forwarding configuration')
+    }
     return {
       msgFwdConfig: response.RsuFwdSnmpwalk,
       errorState: '',
     }
-  }
-)
-
-export const refreshSnmpFwdConfigManual = createAsyncThunk(
-  'config/refreshSnmpFwdConfigManual',
-  async (ipList: string[], { getState, dispatch }) => {
-    const currentState = getState() as RootState
-    const token = selectToken(currentState)
-    const organization = selectOrganizationName(currentState)
-
-    const body: RsuCommandPostBody = {
-      command: 'rsufwdsnmpwalk',
-      rsu_ip: ipList,
-      args: {},
+  } catch (e) {
+    if (e instanceof Error) {
+      return rejectWithValue(e.message)
     }
-
-    const response = await RsuApi.postRsuData(token, organization, body, '')
-
-    return response.status === 200
-      ? { msgFwdConfig: response.body.RsuFwdSnmpwalk, errorState: '' }
-      : {
-          msgFwdConfig: {} as {
-            [id: string]: SnmpFwdWalkConfig
-          },
-          errorState: response.body.RsuFwdSnmpwalk,
-        }
+    if (typeof e === 'string') {
+      return rejectWithValue(e)
+    }
+    return rejectWithValue('An unknown error occurred while fetching RSU message forwarding configuration')
   }
-)
+})
 
 export const submitSnmpSet = createAsyncThunk('config/submitSnmpSet', async (ipList: string[], { getState }) => {
   const currentState = getState() as RootState
@@ -70,6 +88,7 @@ export const submitSnmpSet = createAsyncThunk('config/submitSnmpSet', async (ipL
   const organization = selectOrganizationName(currentState)
   const destIp = selectDestIp(currentState)
   const snmpMsgType = selectSnmpMsgType(currentState)
+  const securityHeader = selectIncludeSecurityHeader(currentState) ? 1 : 0
 
   const body: RsuCommandPostBody = {
     command: 'rsufwdsnmpset',
@@ -77,14 +96,18 @@ export const submitSnmpSet = createAsyncThunk('config/submitSnmpSet', async (ipL
     args: {
       dest_ip: destIp,
       msg_type: snmpMsgType,
+      security: securityHeader,
     },
   }
 
   const response = await RsuApi.postRsuData(token, organization, body, '')
+  if (!response) {
+    return { changeSuccess: false, errorState: 'Failed to submit SNMP configuration' }
+  }
 
   return response.status === 200
     ? { changeSuccess: true, errorState: '' }
-    : { changeSuccess: false, errorState: response.body.RsuFwdSnmpset }
+    : { changeSuccess: false, errorState: response.body?.RsuFwdSnmpset }
 })
 
 export const deleteSnmpSet = createAsyncThunk(
@@ -111,33 +134,15 @@ export const deleteSnmpSet = createAsyncThunk(
     }
 
     const response = await RsuApi.postRsuData(token, organization, body, '')
+    if (!response) {
+      return { changeSuccess: false, errorState: 'Failed to delete SNMP configuration' }
+    }
 
     return response.status === 200
       ? { changeSuccess: true, errorState: '' }
-      : { changeSuccess: false, errorState: response.body.RsuFwdSnmpset }
+      : { changeSuccess: false, errorState: response.body?.RsuFwdSnmpset }
   }
 )
-
-export const filterSnmp = createAsyncThunk('config/filterSnmp', async (ipList: string[], { getState }) => {
-  const currentState = getState() as RootState
-  const token = selectToken(currentState)
-  const organization = selectOrganizationName(currentState)
-
-  const body: RsuCommandPostBody = {
-    command: 'snmpFilter',
-    rsu_ip: ipList,
-    args: {},
-  }
-
-  const response = await RsuApi.postRsuData(token, organization, body, '')
-
-  return response.status === 200
-    ? { snmpFilterErr: false, snmpFilterMsg: 'Filter applied' }
-    : {
-        snmpFilterErr: true,
-        snmpFilterMsg: 'Filter failed to be applied',
-      }
-})
 
 export const rebootRsu = createAsyncThunk('config/rebootRsu', async (ipList: string[], { getState }) => {
   const currentState = getState() as RootState
@@ -157,18 +162,26 @@ export const rebootRsu = createAsyncThunk('config/rebootRsu', async (ipList: str
 
 export const checkFirmwareUpgrade = createAsyncThunk(
   'config/checkFirmwareUpgrade',
-  async (rsuIp: string[], { getState, dispatch }) => {
+  async (rsuIps: string[], { getState, rejectWithValue }) => {
+    if (rsuIps.length !== 1) {
+      return rejectWithValue('Firmware upgrade availability check requires exactly one RSU')
+    }
+
     const currentState = getState() as RootState
     const token = selectToken(currentState)
-    const organization = selectOrganizationName(currentState)
 
-    const body: RsuCommandPostBody = {
-      command: 'upgrade-check',
-      rsu_ip: rsuIp,
+    const body: RsuUpgradeCheckPostBody = {
+      rsu_ip: rsuIps[0],
       args: {},
     }
 
-    const response = await RsuApi.postRsuData(token, organization, body, '')
+    const response = await RsuFirmwareApi.postRsuUpgradeData(token, body, '/check')
+    if (!response) {
+      return rejectWithValue('Failed to check firmware upgrade availability')
+    }
+    if (response.status >= 400) {
+      return rejectWithValue(response.message || 'Failed to check firmware upgrade availability')
+    }
     return {
       firmwareUpgradeAvailable: response.body?.upgrade_available,
       firmwareUpgradeName: response.body?.upgrade_name,
@@ -178,42 +191,115 @@ export const checkFirmwareUpgrade = createAsyncThunk(
 
 export const startFirmwareUpgrade = createAsyncThunk(
   'config/startFirmwareUpgrade',
-  async (ipList: string[], { getState, dispatch }) => {
+  async (rsuIps: string[], { getState, rejectWithValue }) => {
     const currentState = getState() as RootState
     const token = selectToken(currentState)
-    const organization = selectOrganizationName(currentState)
 
-    const body: RsuCommandPostBody = {
-      command: 'upgrade-rsu',
-      rsu_ip: ipList,
+    const body: RsuUpgradePostBody = {
+      rsu_ips: rsuIps,
       args: {},
     }
 
-    const response = await RsuApi.postRsuData(token, organization, body, '')
+    const response = await RsuFirmwareApi.postRsuUpgradeData(token, body, '')
+    if (!response) {
+      return rejectWithValue('Firmware upgrades failed to be started')
+    }
+    if (response.status >= 400) {
+      return rejectWithValue(response.message || 'Firmware upgrades failed to be started')
+    }
 
-    if (ipList.length === 1) {
+    const perRsuResults = response.body as Record<string, { code?: number; data?: unknown }> | undefined
+    if (!perRsuResults || typeof perRsuResults !== 'object') {
+      return response.status === 200
+        ? { message: 'Firmware upgrades started successfully', statusCode: response.status }
+        : { message: 'Firmware upgrades failed to be started', statusCode: response.status }
+    }
+
+    const failedIps: string[] = []
+    const startedIps: string[] = []
+    const upToDateIps: string[] = []
+
+    const extractDataMessage = (data: unknown): string => {
+      if (typeof data === 'string') {
+        return data
+      }
+      if (data && typeof data === 'object' && 'message' in data) {
+        const message = (data as { message?: unknown }).message
+        return typeof message === 'string' ? message : ''
+      }
+      return ''
+    }
+
+    rsuIps.forEach((ip) => {
+      const code = perRsuResults?.[ip]?.code
+      const dataMessage = extractDataMessage(perRsuResults?.[ip]?.data)
+      const isUpToDate = code === 409 && dataMessage.toLowerCase().includes('already up to date')
+
+      if (code === 200 || code === 201) {
+        startedIps.push(ip)
+      } else if (isUpToDate) {
+        upToDateIps.push(ip)
+      } else {
+        failedIps.push(ip)
+      }
+    })
+
+    if (rsuIps.length === 1) {
+      if (upToDateIps.length > 0) {
+        return {
+          message: 'Selected RSU is already up to date.',
+          statusCode: 200,
+        }
+      }
+
+      return failedIps.length > 0
+        ? { message: 'Firmware upgrade failed to start.', statusCode: perRsuResults?.[rsuIps[0]]?.code ?? 500 }
+        : { message: 'Firmware upgrade started successfully.', statusCode: 200 }
+    }
+
+    if (failedIps.length === 0) {
+      if (upToDateIps.length > 0 && startedIps.length > 0) {
+        return {
+          message: `Firmware upgrade started for ${startedIps.length} RSUs. ${upToDateIps.length} RSUs already up to date.`,
+          statusCode: 200,
+        }
+      }
+      if (upToDateIps.length > 0) {
+        return {
+          message: 'Selected RSUs are already up to date.',
+          statusCode: 200,
+        }
+      }
+      return { message: `Firmware upgrade started for ${startedIps.length} RSUs.`, statusCode: 200 }
+    }
+
+    if (startedIps.length === 0) {
       return {
-        message: response.body?.[ipList[0]]?.data?.message,
-        statusCode: response.body?.[ipList[0]]?.code,
+        message: `Firmware upgrade failed for selected RSUs: ${failedIps.join(', ')}`,
+        statusCode: 500,
       }
     }
 
-    return response.status === 200
-      ? { message: 'Firmware upgrades started successfully', statusCode: response.status }
-      : { message: 'Firmware upgrades failed to be started', statusCode: response.status }
+    const successSummary = startedIps.length > 0 ? `Firmware upgrade started for ${startedIps.length} RSUs.` : ''
+    const upToDateSummary = upToDateIps.length > 0 ? ` ${upToDateIps.length} RSUs already up to date.` : ''
+    const firstFailedIpCode = failedIps.length > 0 ? (perRsuResults?.[failedIps[0]]?.code ?? 500) : 500
+
+    return {
+      message: `${successSummary}${upToDateSummary} Failed: ${failedIps.join(', ')}`.trim(),
+      statusCode: firstFailedIpCode,
+    }
   }
 )
 
 export const geoRsuQuery = createAsyncThunk(
   'config/geoRsuQuery',
-  async (vendor: string, { getState }) => {
+  async (vendor: string, { getState, rejectWithValue }) => {
     const currentState = getState() as RootState
     const token = selectToken(currentState)
     const organization = selectOrganizationName(currentState)
     const configCoordinates = selectConfigCoordinates(currentState)
-    console.debug(configCoordinates)
 
-    return await RsuApi.postRsuGeo(
+    const response = await RsuApi.postRsuGeo(
       token,
       organization,
       JSON.stringify({
@@ -222,6 +308,10 @@ export const geoRsuQuery = createAsyncThunk(
       }),
       ''
     )
+    if (!response) {
+      return rejectWithValue('Failed to query RSUs by geometry')
+    }
+    return response
   },
   {
     // Will guard thunk from being executed
@@ -248,12 +338,14 @@ export const configSlice = createSlice({
     setMsgType: (state, action) => {
       state.value.snmpMsgType = action.payload
     },
+    setIncludeSecurityHeader: (state, action) => {
+      state.value.includeSecurityHeader = action.payload
+    },
     toggleConfigPointSelect: (state) => {
       state.value.addConfigPoint = !state.value.addConfigPoint
     },
     updateConfigPoints: (state, action) => {
       state.value.configCoordinates = action.payload
-      console.debug('updateConfigPoints', action.payload)
     },
     clearConfig: (state) => {
       state.value.configCoordinates = []
@@ -269,71 +361,67 @@ export const configSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(refreshSnmpFwdConfig.pending, (state) => {
+      .addCase(getCachedSnmpFwdConfigsFromDatabase.pending, (state) => {
         state.loading = true
         state.value.msgFwdConfig = {} as RsuDsrcFwdConfigs | RsuRxTxMsgFwdConfigs
         state.value.errorState = ''
-        state.value.snmpFilterMsg = ''
         state.value.destIp = ''
         state.value.snmpMsgType = 'bsm'
         state.value.changeSuccess = false
-        state.value.snmpFilterErr = false
         state.value.rebootChangeSuccess = false
-        console.debug('Pending refreshSnmpFwdConfig', state.loading)
       })
-      .addCase(refreshSnmpFwdConfig.fulfilled, (state, action) => {
+      .addCase(getCachedSnmpFwdConfigsFromDatabase.fulfilled, (state, action) => {
         state.loading = false
-        state.value.msgFwdConfig = action.payload.msgFwdConfig
+        state.value.msgFwdConfig = action.payload.msgFwdConfig ?? ({} as RsuDsrcFwdConfigs | RsuRxTxMsgFwdConfigs)
         state.value.errorState = action.payload.errorState
-        console.debug('fulfilled refreshSnmpFwdConfig', state.loading)
+        state.value.msgFwdConfigType = 'database'
       })
-      .addCase(refreshSnmpFwdConfig.rejected, (state) => {
+      .addCase(getCachedSnmpFwdConfigsFromDatabase.rejected, (state) => {
         state.loading = false
+      })
+      .addCase(getRsuMsgConfigsFromRsu.pending, (state) => {
+        state.loading = true
+        state.value.msgFwdConfig = {} as RsuDsrcFwdConfigs | RsuRxTxMsgFwdConfigs
+        state.value.errorState = ''
+        state.value.destIp = ''
+        state.value.snmpMsgType = 'bsm'
+        state.value.changeSuccess = false
+        state.value.rebootChangeSuccess = false
+      })
+      .addCase(getRsuMsgConfigsFromRsu.fulfilled, (state, action) => {
+        state.loading = false
+        state.value.msgFwdConfig = action.payload.msgFwdConfig ?? ({} as RsuDsrcFwdConfigs | RsuRxTxMsgFwdConfigs)
+        state.value.errorState = action.payload.errorState
+        state.value.msgFwdConfigType = 'rsu'
+      })
+      .addCase(getRsuMsgConfigsFromRsu.rejected, (state, action) => {
+        state.loading = false
+        state.value.errorState =
+          (action.payload as string | undefined) || 'Failed to fetch RSU message forwarding configuration'
       })
       .addCase(submitSnmpSet.pending, (state) => {
         state.loading = true
-        state.value.errorState = ''
-        state.value.changeSuccess = false
       })
-      .addCase(submitSnmpSet.fulfilled, (state, action) => {
+      .addCase(submitSnmpSet.fulfilled, (state) => {
         state.loading = false
-        state.value.changeSuccess = action.payload.changeSuccess
-        state.value.errorState = action.payload.errorState
       })
       .addCase(submitSnmpSet.rejected, (state) => {
         state.loading = false
       })
       .addCase(deleteSnmpSet.pending, (state) => {
         state.loading = true
-        state.value.errorState = ''
-        state.value.changeSuccess = false
       })
-      .addCase(deleteSnmpSet.fulfilled, (state, action) => {
+      .addCase(deleteSnmpSet.fulfilled, (state) => {
         state.loading = false
-        state.value.changeSuccess = action.payload.changeSuccess
-        state.value.errorState = action.payload.errorState
       })
       .addCase(deleteSnmpSet.rejected, (state) => {
-        state.loading = false
-      })
-      .addCase(filterSnmp.pending, (state) => {
-        state.loading = true
-        state.value.snmpFilterMsg = ''
-        state.value.snmpFilterErr = false
-      })
-      .addCase(filterSnmp.fulfilled, (state, action) => {
-        state.loading = false
-        state.value.snmpFilterMsg = action.payload.snmpFilterMsg
-        state.value.snmpFilterErr = action.payload.snmpFilterErr
-      })
-      .addCase(filterSnmp.rejected, (state) => {
         state.loading = false
       })
       .addCase(rebootRsu.pending, (state) => {
         state.loading = true
         state.value.rebootChangeSuccess = false
       })
-      .addCase(rebootRsu.fulfilled, (state, action) => {
+      .addCase(rebootRsu.fulfilled, (state) => {
         state.loading = false
         state.value.rebootChangeSuccess = true
       })
@@ -353,11 +441,12 @@ export const configSlice = createSlice({
         state.value.firmwareUpgradeName = action.payload.firmwareUpgradeName
         if (!action.payload.firmwareUpgradeAvailable) state.value.firmwareUpgradeMsg = 'Firmware is up to date!'
       })
-      .addCase(checkFirmwareUpgrade.rejected, (state) => {
+      .addCase(checkFirmwareUpgrade.rejected, (state, action) => {
         state.loading = false
         state.value.firmwareUpgradeAvailable = false
         state.value.firmwareUpgradeName = ''
-        state.value.firmwareUpgradeMsg = 'An error occurred while checking for an upgrade'
+        state.value.firmwareUpgradeMsg =
+          (action.payload as string | undefined) || 'An error occurred while checking for an upgrade'
         state.value.firmwareUpgradeErr = true
       })
       .addCase(startFirmwareUpgrade.pending, (state) => {
@@ -372,25 +461,24 @@ export const configSlice = createSlice({
         if (action.payload.statusCode !== 201 && action.payload.statusCode !== 200)
           state.value.firmwareUpgradeErr = true
       })
-      .addCase(startFirmwareUpgrade.rejected, (state) => {
+      .addCase(startFirmwareUpgrade.rejected, (state, action) => {
         state.loading = false
         state.value.firmwareUpgradeAvailable = false
         state.value.firmwareUpgradeName = ''
-        state.value.firmwareUpgradeMsg = 'An error occurred while starting the firmware upgrade'
+        state.value.firmwareUpgradeMsg =
+          (action.payload as string | undefined) || 'An error occurred while starting the firmware upgrade'
         state.value.firmwareUpgradeErr = true
       })
       .addCase(geoRsuQuery.pending, (state) => {
         state.loading = true
         state.value.errorState = ''
-        state.value.snmpFilterMsg = ''
         state.value.destIp = ''
         state.value.snmpMsgType = 'bsm'
         state.value.changeSuccess = false
-        state.value.snmpFilterErr = false
         state.value.rebootChangeSuccess = false
       })
       .addCase(geoRsuQuery.fulfilled, (state, action) => {
-        state.value.configList = action.payload.body
+        state.value.configList = action.payload.body ?? []
         state.value.addConfigPoint = false
         state.loading = false
       })
@@ -410,14 +498,21 @@ export const selectFirmwareUpgradeMsg = (state: RootState) => state.config.value
 export const selectFirmwareUpgradeErr = (state: RootState) => state.config.value.firmwareUpgradeErr
 export const selectDestIp = (state: RootState) => state.config.value.destIp
 export const selectSnmpMsgType = (state: RootState) => state.config.value.snmpMsgType
-export const selectSnmpFilterMsg = (state: RootState) => state.config.value.snmpFilterMsg
-export const selectSnmpFilterErr = (state: RootState) => state.config.value.snmpFilterErr
+export const selectIncludeSecurityHeader = (state: RootState) => state.config.value.includeSecurityHeader
 export const selectLoading = (state: RootState) => state.config.loading
 export const selectAddConfigPoint = (state: RootState) => state.config.value.addConfigPoint
 export const selectConfigCoordinates = (state: RootState) => state.config.value.configCoordinates
 export const selectConfigList = (state: RootState) => state.config.value.configList
+export const selectMsgFwdConfigType = (state: RootState) => state.config.value.msgFwdConfigType
 
-export const { setDestIp, setMsgType, toggleConfigPointSelect, updateConfigPoints, clearConfig, clearFirmware } =
-  configSlice.actions
+export const {
+  setDestIp,
+  setMsgType,
+  setIncludeSecurityHeader,
+  toggleConfigPointSelect,
+  updateConfigPoints,
+  clearConfig,
+  clearFirmware,
+} = configSlice.actions
 
 export default configSlice.reducer

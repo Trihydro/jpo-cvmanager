@@ -1,32 +1,35 @@
-version: '3'
+include:
+  - docker-compose-addons.yml
+  - docker-compose-intersection.yml
+  - docker-compose-conflictmonitor.yml
+  - docker-compose-obu-ota-server.yml
+
 services:
   cvmanager_api:
+    profiles:
+      - basic
+      - cvmanager_api
     build:
       context: services
       dockerfile: Dockerfile.api
     image: jpo_cvmanager_api:latest
     restart: always
-    extra_hosts:
-      ${WEBAPP_DOMAIN}: ${WEBAPP_HOST_IP}
-      ${KEYCLOAK_DOMAIN}: ${KC_HOST_IP}
     ports:
       - '8081:5000'
     environment:
-      PG_DB_HOST: ${PG_DB_HOST}
-      PG_DB_USER: ${PG_DB_USER}
-      PG_DB_PASS: ${PG_DB_PASS}
-      PG_DB_NAME: postgres
+      PG_DB_HOST: ${PG_DB_HOST:-cvmanager_postgres:5432}
+      PG_DB_USER: ${PG_DB_USER:-postgres}
+      PG_DB_PASS: ${PG_DB_PASS:-postgres}
+      PG_DB_NAME: ${PG_DB_NAME:-postgres}
       INSTANCE_CONNECTION_NAME: ${INSTANCE_CONNECTION_NAME}
 
-      MONGO_DB_URI: ${MONGO_DB_URI}
-      MONGO_DB_NAME: ${MONGO_DB_NAME}
+      MONGO_DB_URI: ${MONGO_DB_URI:-mongodb://${MONGO_READ_WRITE_USER:-ode}:${MONGO_READ_WRITE_PASS:-replace-me}@${DB_HOST_IP:-mongo}:${DB_HOST_PORT:-27017}/?directConnection=true&authSource=admin}
+      MONGO_DB_NAME: ${CM_DATABASE_NAME:-CV}
+      MONGO_PROCESSED_BSM_COLLECTION_NAME: ${MONGO_PROCESSED_BSM_COLLECTION_NAME:-processed_bsm}
+      MONGO_PROCESSED_PSM_COLLECTION_NAME: ${MONGO_PROCESSED_PSM_COLLECTION_NAME:-processed_psm}
 
-      COUNTS_MSG_TYPES: ${COUNTS_MSG_TYPES}
-      GOOGLE_APPLICATION_CREDENTIALS: '/google/gcp_credentials.json'
-
-      GEO_DB_NAME: ${GEO_DB_NAME}
-      SSM_DB_NAME: ${SSM_DB_NAME}
-      SRM_DB_NAME: ${SRM_DB_NAME}
+      MONGO_SSM_COLLECTION_NAME: ${MONGO_SSM_COLLECTION_NAME}
+      MONGO_SRM_COLLECTION_NAME: ${MONGO_SRM_COLLECTION_NAME}
 
       MAX_GEO_QUERY_RECORDS: ${MAX_GEO_QUERY_RECORDS}
 
@@ -35,111 +38,177 @@ services:
       WZDX_API_KEY: ${WZDX_API_KEY}
       WZDX_ENDPOINT: ${WZDX_ENDPOINT}
 
-      CORS_DOMAIN: ${CORS_DOMAIN}
-      KEYCLOAK_ENDPOINT: http://${KEYCLOAK_DOMAIN}:8084/
-      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
-      KEYCLOAK_API_CLIENT_ID: ${KEYCLOAK_API_CLIENT_ID}
-      KEYCLOAK_API_CLIENT_SECRET_KEY: ${KEYCLOAK_API_CLIENT_SECRET_KEY}
+      ENABLE_ERROR_EMAILS: ${ENABLE_ERROR_EMAILS:-false}
+      IAPI_ENDPOINT: ${IAPI_ENDPOINT:-http://localhost:8089}
+      KC_SA_CLIENT_ID: ${KEYCLOAK_SA_PYTHON_API_CLIENT_ID:-sa_cvmanager_python_api}
+      KC_SA_CLIENT_SECRET: ${KEYCLOAK_SA_PYTHON_API_CLIENT_SECRET_KEY:-sa-python-api-secret-key}
 
-      CSM_EMAIL_TO_SEND_FROM: ${CSM_EMAIL_TO_SEND_FROM}
-      CSM_EMAILS_TO_SEND_TO: ${CSM_EMAILS_TO_SEND_TO}
-      CSM_TARGET_SMTP_SERVER_ADDRESS: ${CSM_TARGET_SMTP_SERVER_ADDRESS}
-      CSM_TARGET_SMTP_SERVER_PORT: ${CSM_TARGET_SMTP_SERVER_PORT}
-      CSM_TLS_ENABLED: ${CSM_TLS_ENABLED}
-      CSM_AUTH_ENABLED: ${CSM_AUTH_ENABLED}
-      CSM_EMAIL_APP_USERNAME: ${CSM_EMAIL_APP_USERNAME}
-      CSM_EMAIL_APP_PASSWORD: ${CSM_EMAIL_APP_PASSWORD}
+      ENABLE_RSU_FEATURES: ${ENABLE_RSU_FEATURES:-true}
+      ENABLE_INTERSECTION_FEATURES: ${ENABLE_INTERSECTION_FEATURES:-true}
+      ENABLE_WZDX_FEATURES: ${ENABLE_WZDX_FEATURES:-false}
 
-      TIMEZONE: ${TIMEZONE}
-      LOGGING_LEVEL: ${API_LOGGING_LEVEL}
-    volumes:
-      - ${GOOGLE_APPLICATION_CREDENTIALS}:/google/gcp_credentials.json
+      CORS_DOMAIN: ${CORS_DOMAIN:-*}
+      KEYCLOAK_ENDPOINT: ${KEYCLOAK_ENDPOINT:-http://${DOCKER_HOST_IP:?error}:8084}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-cvmanager}
+      KEYCLOAK_API_CLIENT_ID: ${KEYCLOAK_API_CLIENT_ID:-cvmanager-api}
+      KEYCLOAK_API_CLIENT_SECRET_KEY: ${KEYCLOAK_API_CLIENT_SECRET_KEY:-keycloak-secret-key}
+
+      CSM_EMAIL_TO_SEND_FROM: ${CSM_EMAIL_TO_SEND_FROM:-}
+      CSM_EMAILS_TO_SEND_TO: ${CSM_EMAILS_TO_SEND_TO:-}
+      CSM_TARGET_SMTP_SERVER_ADDRESS: ${CSM_TARGET_SMTP_SERVER_ADDRESS:-}
+      CSM_TARGET_SMTP_SERVER_PORT: ${CSM_TARGET_SMTP_SERVER_PORT:-}
+      CSM_TLS_ENABLED: ${CSM_TLS_ENABLED:-}
+      CSM_AUTH_ENABLED: ${CSM_AUTH_ENABLED:-}
+      CSM_EMAIL_APP_USERNAME: ${CSM_EMAIL_APP_USERNAME:-}
+      CSM_EMAIL_APP_PASSWORD: ${CSM_EMAIL_APP_PASSWORD:-}
+
+      ENVIRONMENT_NAME: ${ENVIRONMENT_NAME:-}
+      LOGS_LINK: ${LOGS_LINK:-}
+
+      TIMEZONE: ${TIMEZONE:-}
+      LOGGING_LEVEL: ${API_LOGGING_LEVEL:-}
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
     logging:
       options:
         max-size: '10m'
         max-file: '5'
 
   cvmanager_webapp:
+    profiles:
+      - webapp
+      - cvmanager_webapp
     build:
       context: webapp
       dockerfile: Dockerfile
       args:
-        API_URI: http://${WEBAPP_DOMAIN}:8081
-        MAPBOX_TOKEN: ${MAPBOX_TOKEN}
-        KEYCLOAK_HOST_URL: http://${KEYCLOAK_DOMAIN}:8084/
-        COUNT_MESSAGE_TYPES: ${COUNTS_MSG_TYPES}
-        VIEWER_MESSAGE_TYPES: ${VIEWER_MSG_TYPES}
-        DOT_NAME: ${DOT_NAME}
-        MAPBOX_INIT_LATITUDE: ${MAPBOX_INIT_LATITUDE}
-        MAPBOX_INIT_LONGITUDE: ${MAPBOX_INIT_LONGITUDE}
-        MAPBOX_INIT_ZOOM: ${MAPBOX_INIT_ZOOM}
+        API_URI: ${API_ENDPOINT:-http://localhost:8081}
+        MAPBOX_TOKEN: ${MAPBOX_TOKEN?:error}
+        KEYCLOAK_HOST_URL: ${KEYCLOAK_ENDPOINT:-http://${DOCKER_HOST_IP:?error}:8084}
+        KEYCLOAK_REALM: ${KEYCLOAK_REALM:-cvmanager}
+        KEYCLOAK_CLIENT_ID: ${KEYCLOAK_GUI_CLIENT_ID:-cvmanager-gui}
+        VIEWER_MESSAGE_TYPES: ${VIEWER_MSG_TYPES:-BSM}
+        DOT_NAME: ${DOT_NAME:-CDOT}
+        MAPBOX_INIT_LATITUDE: ${MAPBOX_INIT_LATITUDE:-39.7392}
+        MAPBOX_INIT_LONGITUDE: ${MAPBOX_INIT_LONGITUDE:--104.9903}
+        MAPBOX_INIT_ZOOM: ${MAPBOX_INIT_ZOOM:-10}
+        CVIZ_API_SERVER_URL: ${CVIZ_API_SERVER_URL:-http://localhost:8089}${INTERSECTION_API_ROUTE_PREFIX:-/}
+        CVIZ_API_WS_URL: ${CVIZ_API_WS_URL:-ws://localhost:8089}${INTERSECTION_API_ROUTE_PREFIX:-/}
+        ENABLE_RSU_FEATURES: ${ENABLE_RSU_FEATURES:-true}
+        ENABLE_INTERSECTION_FEATURES: ${ENABLE_INTERSECTION_FEATURES:-true}
+        ENABLE_WZDX_FEATURES: ${ENABLE_WZDX_FEATURES:-false}
+        ENABLE_HAAS_FEATURES: ${ENABLE_HAAS_FEATURES:-true}
+        WEBAPP_THEME_LIGHT: ${WEBAPP_THEME_LIGHT:-dark}
+        WEBAPP_THEME_DARK: ${WEBAPP_THEME_DARK:-dark}
     image: jpo_cvmanager_webapp:latest
     restart: always
+    volumes:
+      - ${WEBAPP_LOGO_PNG_ROOT_FILE_PATH_LIGHT:-./webapp/public/icons/logo_light.png}:/usr/share/nginx/html/icons/logo_light.png
+      - ${WEBAPP_LOGO_PNG_ROOT_FILE_PATH_DARK:-./webapp/public/icons/logo_dark.png}:/usr/share/nginx/html/icons/logo_dark.png
     depends_on:
       cvmanager_keycloak:
         condition: service_healthy
-    extra_hosts:
-      ${WEBAPP_DOMAIN}: ${WEBAPP_HOST_IP}
-      ${KEYCLOAK_DOMAIN}: ${KC_HOST_IP}
+        required: false
     ports:
-      - '80:80'
+      - '${WEBAPP_PORT:-3000}:80'
     logging:
       options:
         max-size: '10m'
 
   cvmanager_postgres:
+    profiles:
+      - basic
+      - cvmanager_postgres
     image: postgis/postgis:15-master
     restart: always
     ports:
       - '5432:5432'
     environment:
-      POSTGRES_USER: ${PG_DB_USER}
-      POSTGRES_PASSWORD: ${PG_DB_PASS}
+      POSTGRES_USER: ${PG_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${PG_DB_PASS:-postgres}
     volumes:
       - pgdb:/var/lib/postgresql/data
-      - ./resources/sql_scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     logging:
       options:
         max-size: '10m'
 
   cvmanager_keycloak:
+    profiles:
+      - basic
+      - keycloak
+      - cvmanager_keycloak
     build:
       context: ./resources/keycloak
       dockerfile: Dockerfile
       args:
-        KEYCLOAK_LOGIN_THEME_NAME: ${KEYCLOAK_LOGIN_THEME_NAME}.jar
+        KEYCLOAK_LOGIN_THEME_NAME: ${KEYCLOAK_LOGIN_THEME_NAME:-sample_theme}.jar
     image: jpo_cvmanager_keycloak:latest
     restart: always
     depends_on:
-      - cvmanager_postgres
-    extra_hosts:
-      ${WEBAPP_DOMAIN}: ${WEBAPP_HOST_IP}
-      ${KEYCLOAK_DOMAIN}: ${KC_HOST_IP}
+      cvmanager_postgres:
+        required: false
+        condition: service_started
     ports:
       - '8084:8080'
+      - '9000:9000'
     environment:
-      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      WEBAPP_ORIGIN: http://${WEBAPP_DOMAIN}
-      WEBAPP_CM_ORIGIN: http://${WEBAPP_CM_DOMAIN}
-      KC_HEALTH_ENABLED: true
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      WEBAPP_ENDPOINT: ${WEBAPP_ENDPOINT:-http://localhost:${WEBAPP_PORT:-3000}}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_HEALTH_ENABLED: 'true'
+      KC_LOG_LEVEL: ${KC_LOG_LEVEL:-INFO}
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://${PG_DB_HOST}/postgres?currentSchema=keycloak
-      KC_DB_USERNAME: ${PG_DB_USER}
-      KC_DB_PASSWORD: ${PG_DB_PASS}
-      KC_HOSTNAME: ${KEYCLOAK_DOMAIN}
-      KEYCLOAK_API_CLIENT_SECRET_KEY: ${KEYCLOAK_API_CLIENT_SECRET_KEY}
-      KEYCLOAK_CM_API_CLIENT_SECRET_KEY: ${KEYCLOAK_CM_API_CLIENT_SECRET_KEY}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      KC_DB_SCHEMA: keycloak
+      KC_DB_URL_HOST: cvmanager_postgres
+      KC_DB_URL_DATABASE: postgres
+      KC_DB_URL_PORT: 5432
+      KC_DB_USERNAME: ${PG_DB_USER:-postgres}
+      KC_DB_PASSWORD: ${PG_DB_PASS:-postgres}
+      KC_HOSTNAME: ${KEYCLOAK_ENDPOINT:-http://${DOCKER_HOST_IP:?error}:8084}
+      KEYCLOAK_API_CLIENT_SECRET_KEY: ${KEYCLOAK_API_CLIENT_SECRET_KEY:-keycloak-secret-key}
+      KEYCLOAK_SA_COUNT_METRIC_CLIENT_SECRET_KEY: ${KEYCLOAK_SA_COUNT_METRIC_CLIENT_SECRET_KEY:-sa-count-metric-secret-key}
+      KEYCLOAK_SA_PYTHON_API_CLIENT_SECRET_KEY: ${KEYCLOAK_SA_PYTHON_API_CLIENT_SECRET_KEY:-sa-python-api-secret-key}
+      KEYCLOAK_SA_FIRMWARE_UPGRADE_RUNNER_CLIENT_SECRET_KEY: ${KEYCLOAK_SA_FIRMWARE_UPGRADE_RUNNER_CLIENT_SECRET_KEY:-sa-firmware-upgrade-runner-secret-key}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
     command:
       - start-dev
-      - --log-level=${KC_LOGGING_LEVEL}
       - --import-realm
-      - --spi-theme-welcome-theme=custom-welcome
     logging:
       options:
         max-size: '10m'
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  flyway:
+    profiles:
+      - basic
+      - cvmanager_postgres
+    image: flyway/flyway:10-alpine
+    command: migrate
+    volumes:
+      - ./resources/db/migration:/flyway/sql
+      - ./resources/db/flyway.toml:/flyway/conf/flyway.toml
+    environment:
+      FLYWAY_URL: jdbc:postgresql://cvmanager_postgres:5432/${PG_DB_NAME:-postgres}
+      FLYWAY_USER: ${PG_DB_USER:-postgres}
+      FLYWAY_PASSWORD: ${PG_DB_PASS:-postgres}
+    depends_on:
+      cvmanager_postgres:
+        condition: service_healthy
+    restart: no
 
 volumes:
   pgdb:

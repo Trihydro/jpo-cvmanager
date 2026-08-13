@@ -1,77 +1,23 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
-import { selectToken } from '../../generalSlices/userSlice'
-import EnvironmentVars from '../../EnvironmentVars'
-import apiHelper from '../../apis/api-helper'
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { selectToken, setOrganizationList } from '../../generalSlices/userSlice'
 import { RootState } from '../../store'
 import {
   AdminOrgTabUserAddMultiple,
   AdminOrgTabUserBulkEdit,
   AdminOrgUserDeleteMultiple,
 } from './AdminOrganizationTabUserTypes'
-import { ApiMsgRespWithCodes } from '../../apis/rsu-api-types'
+
 import { adminOrgPatch, AdminOrgUser, editOrg } from '../adminOrganizationTab/adminOrganizationTabSlice'
+import {
+  ORGANIZATION_API_AVAILABLE_USER_LIST_TAG,
+  ORGANIZATION_API_USER_LIST_TAG,
+  ORGANIZATION_API_USER_TAG,
+  organizationApiSlice,
+} from '../api/organizationApiSlice'
 
 const initialState = {
-  availableUserList: [] as {
-    id: number
-    email: string
-    role: string
-  }[],
   selectedUserList: [] as AdminOrgUser[],
-  availableRoles: [] as { role: string }[],
 }
-
-export const getUserData = async (
-  email: string,
-  token: string
-): Promise<ApiMsgRespWithCodes<{ user_data: AdminOrgUser | AdminOrgUser[] }>> => {
-  return await apiHelper._getDataWithCodes({
-    url: EnvironmentVars.adminUser,
-    token,
-    query_params: { user_email: email },
-    additional_headers: { 'Content-Type': 'application/json' },
-  })
-}
-
-export const getAvailableRoles = createAsyncThunk(
-  'adminOrganizationTabUser/getAvailableRoles',
-  async (_, { getState }) => {
-    const currentState = getState() as RootState
-    const token = selectToken(currentState)
-
-    const data = await apiHelper._getDataWithCodes({
-      url: EnvironmentVars.adminAddUser,
-      token,
-      additional_headers: { 'Content-Type': 'application/json' },
-    })
-
-    switch (data.status) {
-      case 200:
-        return { success: true, message: '', data: data.body as AvailableRoles }
-      default:
-        return { success: false, message: data.message }
-    }
-  },
-  { condition: (_, { getState }) => selectToken(getState() as RootState) != undefined }
-)
-
-export const getAvailableUsers = createAsyncThunk(
-  'adminOrganizationTabUser/getAvailableUsers',
-  async (orgName: string, { getState }) => {
-    const currentState = getState() as RootState
-    const token = selectToken(currentState)
-
-    const data = await getUserData('all', token)
-
-    switch (data.status) {
-      case 200:
-        return { success: true, message: '', data: data.body as { user_data: AdminOrgUser[] }, orgName }
-      default:
-        return { success: false, message: data.message }
-    }
-  },
-  { condition: (_, { getState }) => selectToken(getState() as RootState) != undefined }
-)
 
 export const userDeleteSingle = createAsyncThunk(
   'adminOrganizationTabUser/userDeleteSingle',
@@ -79,20 +25,22 @@ export const userDeleteSingle = createAsyncThunk(
     payload: {
       user: { email: string; role: string }
       selectedOrg: string
+      selectedOrgEmail: string
       updateTableData: (org: string) => void
     },
     { getState, dispatch }
   ) => {
-    const { user, selectedOrg, updateTableData } = payload
-    const currentState = getState() as RootState
-    const token = selectToken(currentState)
+    const { user, selectedOrg, selectedOrgEmail, updateTableData } = payload
 
-    let promises = []
-    const userData = (await getUserData(user.email, token)).body as { user_data: AdminOrgUser }
-    if (userData?.user_data?.organizations?.length > 1) {
+    const promises = []
+    const userData =
+      (await dispatch(organizationApiSlice.endpoints.getUserOrganizations.initiate(user.email)))?.data ?? []
+
+    if (userData?.length > 1) {
       const userRole = { email: user.email, role: user.role }
       const patchJson: adminOrgPatch = {
         name: selectedOrg,
+        email: selectedOrgEmail,
         users_to_remove: [userRole],
       }
       promises.push(dispatch(editOrg(patchJson)))
@@ -105,9 +53,23 @@ export const userDeleteSingle = createAsyncThunk(
           ' because they must belong to at least one organization.'
       )
     }
-    Promise.all(promises).then(() => {
-      dispatch(refresh({ selectedOrg, updateTableData }))
-    })
+    // Invalidate RTK Query cache
+    dispatch(
+      organizationApiSlice.util.invalidateTags([
+        ORGANIZATION_API_USER_LIST_TAG,
+        ORGANIZATION_API_AVAILABLE_USER_LIST_TAG,
+        { type: ORGANIZATION_API_USER_TAG, id: user.email },
+      ])
+    )
+
+    const res = await Promise.all(promises)
+    dispatch(refresh({ selectedOrg, updateTableData }))
+
+    if ((res[0].payload as any).success) {
+      return { success: true, message: 'User deleted successfully' }
+    } else {
+      return { success: false, message: 'Failed to delete user' }
+    }
   },
   { condition: (_, { getState }) => selectToken(getState() as RootState) != undefined }
 )
@@ -115,18 +77,18 @@ export const userDeleteSingle = createAsyncThunk(
 export const userDeleteMultiple = createAsyncThunk(
   'adminOrganizationTabUser/userDeleteMultiple',
   async (payload: AdminOrgUserDeleteMultiple, { getState, dispatch }) => {
-    const { users, selectedOrg, updateTableData } = payload
-    const currentState = getState() as RootState
-    const token = selectToken(currentState)
+    const { users, selectedOrg, selectedOrgEmail, updateTableData } = payload
 
     const invalidUsers = []
     const patchJson: adminOrgPatch = {
       name: selectedOrg,
+      email: selectedOrgEmail,
       users_to_remove: [],
     }
     for (const user of users) {
-      const userData = (await getUserData(user.email, token)).body as { user_data: AdminOrgUser }
-      if (userData?.user_data?.organizations?.length > 1) {
+      const userData =
+        (await dispatch(organizationApiSlice.endpoints.getUserOrganizations.initiate(user.email)))?.data ?? []
+      if (userData?.length > 1) {
         const userRole = { email: user.email, role: user.role }
         patchJson.users_to_remove.push(userRole)
       } else {
@@ -134,8 +96,21 @@ export const userDeleteMultiple = createAsyncThunk(
       }
     }
     if (invalidUsers.length === 0) {
-      await dispatch(editOrg(patchJson))
+      const res = await dispatch(editOrg(patchJson))
       dispatch(refresh({ selectedOrg, updateTableData }))
+      if ((res.payload as any).success) {
+        const userTags = users.map((user) => ({ type: ORGANIZATION_API_USER_TAG, id: user.email }))
+        dispatch(
+          organizationApiSlice.util.invalidateTags([
+            ORGANIZATION_API_USER_LIST_TAG,
+            ORGANIZATION_API_AVAILABLE_USER_LIST_TAG,
+            ...userTags,
+          ])
+        )
+        return { success: true, message: 'User(s) deleted successfully' }
+      } else {
+        return { success: false, message: 'Failed to delete user(s)' }
+      }
     } else {
       alert(
         'Cannot remove User(s) ' +
@@ -152,18 +127,32 @@ export const userDeleteMultiple = createAsyncThunk(
 export const userAddMultiple = createAsyncThunk(
   'adminOrganizationTabUser/userAddMultiple',
   async (payload: AdminOrgTabUserAddMultiple, { dispatch }) => {
-    const { userList, selectedOrg, updateTableData } = payload
+    const { userList, selectedOrg, selectedOrgEmail, updateTableData } = payload
 
     const patchJson: adminOrgPatch = {
       name: selectedOrg,
+      email: selectedOrgEmail,
       users_to_add: [],
     }
     for (const user of userList) {
       const userRole = { email: user?.email, role: user?.role }
       patchJson.users_to_add.push(userRole)
     }
-    await dispatch(editOrg(patchJson))
+    const res = await dispatch(editOrg(patchJson))
     dispatch(refresh({ selectedOrg, updateTableData }))
+    if ((res.payload as any).success) {
+      const userTags = userList.map((user) => ({ type: ORGANIZATION_API_USER_TAG, id: user.email }))
+      dispatch(
+        organizationApiSlice.util.invalidateTags([
+          ORGANIZATION_API_USER_LIST_TAG,
+          ORGANIZATION_API_AVAILABLE_USER_LIST_TAG,
+          ...userTags,
+        ])
+      )
+      return { success: true, message: 'User(s) added successfully' }
+    } else {
+      return { success: false, message: 'Failed to add user(s)' }
+    }
   },
   {
     condition: (payload: AdminOrgTabUserAddMultiple, { getState }) =>
@@ -174,19 +163,34 @@ export const userAddMultiple = createAsyncThunk(
 export const userBulkEdit = createAsyncThunk(
   'adminOrganizationTabUser/userBulkEdit',
   async (payload: AdminOrgTabUserBulkEdit, { dispatch }) => {
-    const { json, selectedOrg, updateTableData } = payload
+    const { json, selectedOrg, selectedUser, selectedOrgEmail, updateTableData } = payload
 
     const patchJson: adminOrgPatch = {
       name: selectedOrg,
+      email: selectedOrgEmail,
       users_to_modify: [],
     }
     const rows = Object.values(json)
-    for (var row of rows) {
+    let orgUpdateVal = {}
+    for (const row of rows) {
+      if (row.newData.email === selectedUser) {
+        orgUpdateVal = { name: selectedOrg, role: row.newData.role }
+      }
       const userRole = { email: row.newData.email, role: row.newData.role }
       patchJson.users_to_modify.push(userRole)
     }
-    await dispatch(editOrg(patchJson))
+    const res = await dispatch(editOrg(patchJson))
     dispatch(refresh({ selectedOrg, updateTableData }))
+
+    if (Object.keys(orgUpdateVal).length > 0) {
+      dispatch(setOrganizationList({ value: orgUpdateVal, orgName: selectedOrg, type: 'update' }))
+    }
+
+    if ((res.payload as any).success) {
+      return { success: true, message: 'User(s) updated successfully' }
+    } else {
+      return { success: false, message: 'Failed to update user(s)' }
+    }
   },
   { condition: (_, { getState }) => selectToken(getState() as RootState) != undefined }
 )
@@ -202,7 +206,6 @@ export const refresh = createAsyncThunk(
   ) => {
     const { selectedOrg, updateTableData } = payload
     updateTableData(selectedOrg)
-    dispatch(getAvailableUsers(selectedOrg))
     dispatch(setSelectedUserList([]))
   },
   { condition: (_, { getState }) => selectToken(getState() as RootState) != undefined }
@@ -215,8 +218,12 @@ export const adminOrganizationTabUserSlice = createSlice({
     value: initialState,
   },
   reducers: {
-    setSelectedUserList: (state, action) => {
-      state.value.selectedUserList = action.payload
+    setSelectedUserList: (state, action: PayloadAction<AdminUser[]>) => {
+      state.value.selectedUserList = action.payload.map((user) => ({
+        ...user,
+        role: undefined,
+        organizations: user.organizations.map((org) => ({ name: org.organization, role: org.role })),
+      }))
     },
     setSelectedUserRole: (state, action) => {
       const { email, role } = action.payload
@@ -230,65 +237,11 @@ export const adminOrganizationTabUserSlice = createSlice({
       state.value.selectedUserList = selectedUsers
     },
   },
-  extraReducers: (builder) => {
-    builder
-      .addCase(getAvailableRoles.pending, (state) => {
-        state.loading = true
-      })
-      .addCase(getAvailableRoles.fulfilled, (state, action) => {
-        state.loading = false
-        if (action.payload.success) {
-          const roleData = []
-          const apiData = action.payload.data
-          for (let i = 0; i < apiData.roles.length; i++) {
-            const role = {
-              role: apiData.roles[i],
-            }
-            roleData.push(role)
-          }
-          state.value.availableRoles = roleData
-        }
-      })
-      .addCase(getAvailableRoles.rejected, (state) => {
-        state.loading = false
-      })
-      .addCase(getAvailableUsers.pending, (state) => {
-        state.loading = true
-      })
-      .addCase(getAvailableUsers.fulfilled, (state, action) => {
-        state.loading = false
-        if (action.payload.success) {
-          const userData = action.payload.data
-          let availableUserList = []
-          let counter = 0
-          if (userData?.user_data) {
-            for (const user of userData.user_data) {
-              const userOrgs = user?.organizations
-              if (!userOrgs.some((e) => e.name === action.payload.orgName)) {
-                let tempValue = {
-                  id: counter,
-                  email: user.email,
-                  role: 'user',
-                }
-                availableUserList.push(tempValue)
-                counter += 1
-              }
-            }
-          }
-          state.value.availableUserList = availableUserList
-        }
-      })
-      .addCase(getAvailableUsers.rejected, (state) => {
-        state.loading = false
-      })
-  },
 })
 
 export const { setSelectedUserList, setSelectedUserRole } = adminOrganizationTabUserSlice.actions
 
 export const selectLoading = (state: RootState) => state.adminOrganizationTabUser.loading
-export const selectAvailableUserList = (state: RootState) => state.adminOrganizationTabUser.value.availableUserList
 export const selectSelectedUserList = (state: RootState) => state.adminOrganizationTabUser.value.selectedUserList
-export const selectAvailableRoles = (state: RootState) => state.adminOrganizationTabUser.value.availableRoles
 
 export default adminOrganizationTabUserSlice.reducer

@@ -1,0 +1,12 @@
+FROM python:3.12.2-slim
+
+WORKDIR /home
+
+COPY addons/images/firmware_manager/requirements.txt .
+COPY addons/images/firmware_manager/upgrade_scheduler/*.py .
+COPY common/*.py ./common/
+
+RUN pip3 install -r requirements.txt && apt-get update
+
+CMD ["/home/upgrade_scheduler.py"]
+ENTRYPOINT ["python3"]

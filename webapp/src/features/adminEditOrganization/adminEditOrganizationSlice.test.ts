@@ -11,12 +11,8 @@ import {
 
   // selectors
   selectSuccessMsg,
-  selectErrorState,
-  selectErrorMsg,
   selectLoading,
 } from './adminEditOrganizationSlice'
-import apiHelper from '../../apis/api-helper'
-import EnvironmentVars from '../../EnvironmentVars'
 import { RootState } from '../../store'
 
 describe('admin add User reducer', () => {
@@ -25,8 +21,6 @@ describe('admin add User reducer', () => {
       loading: false,
       value: {
         successMsg: '',
-        errorState: false,
-        errorMsg: '',
       },
     })
   })
@@ -37,8 +31,6 @@ describe('async thunks', () => {
     loading: null,
     value: {
       successMsg: null,
-      errorState: null,
-      errorMsg: null,
     },
   }
 
@@ -73,19 +65,19 @@ describe('async thunks', () => {
           },
         },
       })
-      const json = { name: 'orgName' }
+      const json = { name: 'orgName', email: 'name@email.com' }
       const selectedOrg = 'selectedOrg'
       let setValue = jest.fn()
       const action = editOrganization({ json, selectedOrg, setValue })
 
       global.setTimeout = jest.fn((cb) => cb()) as any
       try {
-        let resp = await action(dispatch, getState, undefined)
+        const resp = await action(dispatch, getState, undefined)
         console.error(JSON.stringify(resp))
         expect(resp.payload).toEqual({ success: true, message: 'Changes were successfully applied!' })
         expect(global.setTimeout).toHaveBeenCalledTimes(1)
         expect(dispatch).toHaveBeenCalledTimes(4 + 2)
-        expect(setValue).toHaveBeenCalledTimes(2)
+        expect(setValue).toHaveBeenCalledTimes(3)
         expect(setValue).toHaveBeenCalledWith('orig_name', 'orgName')
         expect(setValue).toHaveBeenCalledWith('name', 'orgName')
       } catch (e) {
@@ -99,7 +91,7 @@ describe('async thunks', () => {
       setValue = jest.fn()
       global.setTimeout = jest.fn((cb) => cb()) as any
       try {
-        let resp = await action(dispatch, getState, undefined)
+        const resp = await action(dispatch, getState, undefined)
         expect(resp.payload).toEqual({ success: false, message: 'message' })
         expect(global.setTimeout).toHaveBeenCalledTimes(1)
         expect(dispatch).toHaveBeenCalledTimes(2 + 2)
@@ -125,8 +117,6 @@ describe('async thunks', () => {
     it('Updates the state correctly fulfilled', async () => {
       const loading = false
       let successMsg = 'message'
-      let errorMsg = ''
-      let errorState = false
 
       let state = reducer(initialState, {
         type: 'adminEditOrganization/editOrganization/fulfilled',
@@ -136,13 +126,11 @@ describe('async thunks', () => {
       expect(state).toEqual({
         ...initialState,
         loading,
-        value: { ...initialState.value, successMsg, errorMsg, errorState },
+        value: { ...initialState.value, successMsg },
       })
 
       // Error Case
       successMsg = ''
-      errorMsg = 'message'
-      errorState = true
 
       state = reducer(initialState, {
         type: 'adminEditOrganization/editOrganization/fulfilled',
@@ -152,7 +140,7 @@ describe('async thunks', () => {
       expect(state).toEqual({
         ...initialState,
         loading,
-        value: { ...initialState.value, successMsg, errorMsg, errorState },
+        value: { ...initialState.value, successMsg },
       })
     })
 
@@ -170,10 +158,11 @@ describe('functions', () => {
   it('updateStates', async () => {
     const setValue = jest.fn()
     const selectedOrgName = 'selectedOrgName'
+    const selectedOrgEmail = 'name@email.com'
 
-    updateStates(setValue, selectedOrgName)
+    updateStates(setValue, selectedOrgName, selectedOrgEmail)
 
-    expect(setValue).toHaveBeenCalledTimes(2)
+    expect(setValue).toHaveBeenCalledTimes(3)
     expect(setValue).toHaveBeenCalledWith('orig_name', selectedOrgName)
     expect(setValue).toHaveBeenCalledWith('name', selectedOrgName)
   })
@@ -184,8 +173,6 @@ describe('reducers', () => {
     loading: null,
     value: {
       successMsg: null,
-      errorState: null,
-      errorMsg: null,
     },
   }
 
@@ -203,8 +190,6 @@ describe('selectors', () => {
     loading: 'loading',
     value: {
       successMsg: 'successMsg',
-      errorState: 'errorState',
-      errorMsg: 'errorMsg',
     },
   }
   const state = { adminEditOrganization: initialState } as any
@@ -213,7 +198,5 @@ describe('selectors', () => {
     expect(selectLoading(state)).toEqual('loading')
 
     expect(selectSuccessMsg(state)).toEqual('successMsg')
-    expect(selectErrorState(state)).toEqual('errorState')
-    expect(selectErrorMsg(state)).toEqual('errorMsg')
   })
 })

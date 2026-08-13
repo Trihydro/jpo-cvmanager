@@ -1,4 +1,3 @@
-import React from 'react'
 import { confirmAlert } from 'react-confirm-alert'
 import 'react-confirm-alert/src/react-confirm-alert.css'
 import { useDispatch, useSelector } from 'react-redux'
@@ -17,6 +16,8 @@ import {
 import './css/SnmpwalkMenu.css'
 import { AnyAction, ThunkDispatch } from '@reduxjs/toolkit'
 import { RootState } from '../store'
+import { Button, Typography, useTheme } from '@mui/material'
+import RefreshIcon from '@mui/icons-material/Refresh'
 
 interface RsuFirmwareMenuProps {
   type: string
@@ -25,6 +26,7 @@ interface RsuFirmwareMenuProps {
 
 const RsuFirmwareMenu = (props: RsuFirmwareMenuProps) => {
   const dispatch: ThunkDispatch<RootState, void, AnyAction> = useDispatch()
+  const theme = useTheme()
   const firmwareUpgradeAvailable = useSelector(selectFirmwareUpgradeAvailable)
   const firmwareUpgradeName = useSelector(selectFirmwareUpgradeName)
   const firmwareUpgradeMsg = useSelector(selectFirmwareUpgradeMsg)
@@ -55,54 +57,69 @@ const RsuFirmwareMenu = (props: RsuFirmwareMenuProps) => {
   }
 
   return (
-    <div id="snmpdiv">
-      <h2 className="firmwareHeader">Firmware Upgrade</h2>
-
-      {props.type == 'single_rsu' && (
+    <div>
+      {props.type === 'single_rsu' && (
         <div>
           {firmwareUpgradeAvailable ? (
             <div>
-              <div id="firmwarediv">
-                <p id="firmwarenoticetext" role="status">
-                  A firmware upgrade is available!
-                </p>
-                <p id="firmwaresecondarytext">
-                  <b>Version: {firmwareUpgradeName}</b>
-                </p>
+              <div style={{ marginBottom: '15px' }}>
+                <Typography color="primary">A firmware upgrade is available!</Typography>
+                <Typography style={{ marginTop: '10px' }}>Version: {firmwareUpgradeName}</Typography>
               </div>
 
-              <button id="refreshbtn" onClick={() => confirmAlert(options)}>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() => confirmAlert(options)}
+                style={{
+                  marginRight: '20px',
+                }}
+              >
                 Run Firmware Upgrade
-              </button>
+              </Button>
             </div>
           ) : (
             <div>
-              <div id="firmwarediv">
+              <div id="firmwarediv" style={{ marginBottom: '15px' }}>
                 <p id="firmwaretext">Check for the latest available RSU firmware upgrades and install them</p>
-                {firmwareUpgradeMsg !== '' && (
-                  <div>
+                {firmwareUpgradeMsg && (
+                  <div
+                    style={{
+                      marginTop: '10px',
+                      fontWeight: 500,
+                    }}
+                  >
                     {firmwareUpgradeErr ? (
-                      <p id="warningtext" role="alert">
+                      <Typography color={theme.palette.error.light} role="alert" variant="subtitle1">
                         {firmwareUpgradeMsg}
-                      </p>
+                      </Typography>
                     ) : (
-                      <p id="successtext" role="status">
+                      <Typography color={theme.palette.success.light} role="status">
                         {firmwareUpgradeMsg}
-                      </p>
+                      </Typography>
                     )}
                   </div>
                 )}
               </div>
-
-              <button id="refreshbtn" onClick={() => dispatch(checkFirmwareUpgrade(props.rsuIpList))}>
+              <Button
+                className="museo-slab capital-case"
+                variant="outlined"
+                startIcon={<RefreshIcon />}
+                size="medium"
+                color="info"
+                onClick={() => dispatch(checkFirmwareUpgrade(props.rsuIpList))}
+                style={{
+                  marginRight: '20px',
+                }}
+              >
                 Check For Upgrade Availability
-              </button>
+              </Button>
             </div>
           )}
         </div>
       )}
 
-      {props.type == 'multi_rsu' && (
+      {props.type === 'multi_rsu' && (
         <div>
           <div id="firmwarediv">
             <p id="firmwaretext">
@@ -110,11 +127,40 @@ const RsuFirmwareMenu = (props: RsuFirmwareMenuProps) => {
               will be skipped. If the RSU is offline, it will be marked for an upgrade and will be upgraded when it
               comes back online.
             </p>
+            {firmwareUpgradeMsg && (
+              <div
+                style={{
+                  marginTop: '10px',
+                  fontWeight: 500,
+                }}
+              >
+                {firmwareUpgradeErr ? (
+                  <Typography color={theme.palette.error.light} role="alert" variant="subtitle1">
+                    {firmwareUpgradeMsg}
+                  </Typography>
+                ) : (
+                  <Typography color={theme.palette.success.light} role="status">
+                    {firmwareUpgradeMsg}
+                  </Typography>
+                )}
+              </div>
+            )}
           </div>
-
-          <button id="refreshbtn" onClick={() => confirmAlert(options)}>
-            Run Firmware Upgrades
-          </button>
+          <Button
+            className="museo-slab capital-case"
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            size="medium"
+            id="refreshbtn"
+            color="info"
+            onClick={() => confirmAlert(options)}
+            style={{
+              marginRight: '20px',
+              marginTop: '10px',
+            }}
+          >
+            Check For Upgrade Availability
+          </Button>
         </div>
       )}
     </div>

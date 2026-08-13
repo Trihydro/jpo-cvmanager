@@ -1,0 +1,30 @@
+import { styled } from '@mui/material'
+import { Link } from 'react-router-dom'
+import '../../styles/fonts/museo-slab.css'
+
+export const TabListContainer = styled('ol')(() => ({
+  fontFamily: '"museo-slab", Arial, Helvetica, sans-serif',
+  fontWeight: 500,
+  paddingLeft: 0,
+  margin: '8px 24px 0px 24px',
+}))
+
+interface TabItemStyledProps {
+  isActive?: boolean
+}
+
+export const TabItemStyled = styled(Link, {
+  shouldForwardProp: (prop) => prop !== 'isActive', // Prevent `isActive` from being passed to the DOM
+})<TabItemStyledProps>(({ theme, isActive }) => ({
+  display: 'inline-block',
+  listStyle: 'none',
+  padding: '9px 16px',
+  cursor: 'pointer',
+  color: theme.palette.text.secondary,
+  class: 'museo-slab',
+  textDecoration: 'none',
+  ...(isActive && {
+    color: theme.palette.primary.contrastText,
+    borderBottom: `2px solid ${theme.palette.primary.contrastText}`,
+  }),
+}))

@@ -1,50 +1,31 @@
-import React, { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Form } from 'react-bootstrap'
 import { useForm } from 'react-hook-form'
 import { ErrorMessage } from '@hookform/error-message'
-import { Multiselect, DropdownList } from 'react-widgets'
-import {
-  selectSuccessMsg,
-  selectApiData,
-  selectErrorState,
-  selectErrorMsg,
-  selectPrimaryRoutes,
-  selectSelectedRoute,
-  selectOtherRouteDisabled,
-  selectRsuModels,
-  selectSelectedModel,
-  selectSshCredentialGroups,
-  selectSelectedSshGroup,
-  selectSnmpCredentialGroups,
-  selectSelectedSnmpGroup,
-  selectSnmpVersions,
-  selectSelectedSnmpVersion,
-  selectOrganizations,
-  selectSelectedOrganizations,
-  selectSubmitAttempt,
-
-  // actions
-  getRsuInfo,
-  submitForm,
-  updateSelectedRoute,
-  setSelectedRoute,
-  setSelectedModel,
-  setSelectedSshGroup,
-  setSelectedSnmpGroup,
-  setSelectedSnmpVersion,
-  setSelectedOrganizations,
-} from './adminEditRsuSlice'
-import { useSelector, useDispatch } from 'react-redux'
 
 import '../adminRsuTab/Admin.css'
-import { AnyAction, ThunkDispatch } from '@reduxjs/toolkit'
-import { RootState } from '../../store'
-import { AdminRsu } from '../../types/Rsu'
-import { Link, useParams } from 'react-router-dom'
-import { selectTableData, updateTableData } from '../adminRsuTab/adminRsuTabSlice'
-import { Typography } from '@material-ui/core'
-import { ThemeProvider } from '@mui/material'
-import { theme } from '../../styles'
+import '../../styles/fonts/museo-slab.css'
+import { AdminRsu } from '../../models/Rsu'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import {
+  Checkbox,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  FormControl,
+  FormControlLabel,
+  Grid2,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+  Typography,
+} from '@mui/material'
+import toast from 'react-hot-toast'
+import { ErrorMessageText } from '../../styles/components/Messages'
+import { SideBarHeader } from '../../styles/components/SideBarHeader'
+import { useGetRsuAllowedSelectionsQuery, useGetRsuQuery, usePatchRsuMutation } from '../api/rsuApiSlice'
 
 export type AdminEditRsuFormType = {
   orig_ip: string
@@ -55,6 +36,7 @@ export type AdminEditRsuFormType = {
   }
   milepost: string | number
   primary_route: string
+  other_route: string
   serial_number: string
   model: string
   scms_id: string
@@ -62,37 +44,28 @@ export type AdminEditRsuFormType = {
   snmp_credential_group: string
   snmp_version_group: string
   organizations: string[]
-  organizations_to_add: string[]
-  organizations_to_remove: string[]
+  tim_deposit: boolean
+  snmp_monitoring: boolean
 }
 
 const AdminEditRsu = () => {
-  const dispatch: ThunkDispatch<RootState, void, AnyAction> = useDispatch()
-  const successMsg = useSelector(selectSuccessMsg)
-  const apiData = useSelector(selectApiData)
-  const errorState = useSelector(selectErrorState)
-  const errorMsg = useSelector(selectErrorMsg)
-  const primaryRoutes = useSelector(selectPrimaryRoutes)
-  const selectedRoute = useSelector(selectSelectedRoute)
-  const otherRouteDisabled = useSelector(selectOtherRouteDisabled)
-  const rsuModels = useSelector(selectRsuModels)
-  const selectedModel = useSelector(selectSelectedModel)
-  const sshCredentialGroups = useSelector(selectSshCredentialGroups)
-  const selectedSshGroup = useSelector(selectSelectedSshGroup)
-  const snmpCredentialGroups = useSelector(selectSnmpCredentialGroups)
-  const selectedSnmpGroup = useSelector(selectSelectedSnmpGroup)
-  const snmpVersions = useSelector(selectSnmpVersions)
-  const selectedSnmpVersion = useSelector(selectSelectedSnmpVersion)
-  const organizations = useSelector(selectOrganizations)
-  const selectedOrganizations = useSelector(selectSelectedOrganizations)
-  const submitAttempt = useSelector(selectSubmitAttempt)
-  const rsuTableData = useSelector(selectTableData)
+  const navigate = useNavigate()
+  const { rsuIp } = useParams<{ rsuIp: string }>()
+
+  const { data: rsuInfo, isLoading: isLoadingRsu } = useGetRsuQuery(rsuIp!)
+  const { data: rsuAllowedSelections, isLoading: isLoadingAllowedSelections } = useGetRsuAllowedSelectionsQuery()
+  const [patchRsu, { isLoading: isPatchingRsu }] = usePatchRsuMutation()
+
+  const [open, setOpen] = useState(true)
+  const [submitAttempt, setSubmitAttempt] = useState(false)
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     setValue,
+    watch,
+    reset,
   } = useForm<AdminEditRsuFormType>({
     defaultValues: {
       orig_ip: '',
@@ -103,340 +76,610 @@ const AdminEditRsu = () => {
       },
       milepost: '',
       primary_route: '',
+      other_route: '',
       serial_number: '',
       model: '',
       scms_id: '',
       ssh_credential_group: '',
       snmp_credential_group: '',
       snmp_version_group: '',
-      organizations_to_add: [],
-      organizations_to_remove: [],
+      organizations: [],
+      tim_deposit: false,
+      snmp_monitoring: false,
     },
   })
 
-  const { rsuIp } = useParams<{ rsuIp: string }>()
+  // Watch form values
+  const watchedPrimaryRoute = watch('primary_route')
+  const watchedModel = watch('model')
+  const watchedSshGroup = watch('ssh_credential_group')
+  const watchedSnmpGroup = watch('snmp_credential_group')
+  const watchedSnmpVersion = watch('snmp_version_group')
+  const watchedOrganizations = watch('organizations')
 
+  // Initialize form when RSU data loads
   useEffect(() => {
-    if ((rsuTableData ?? []).find((rsu: AdminRsu) => rsu.ip === rsuIp) && Object.keys(apiData).length == 0) {
-      dispatch(getRsuInfo(rsuIp))
+    if (rsuInfo) {
+      reset({
+        orig_ip: rsuInfo.ip,
+        ip: rsuInfo.ip,
+        geo_position: {
+          latitude: rsuInfo.geo_position.latitude.toString(),
+          longitude: rsuInfo.geo_position.longitude.toString(),
+        },
+        milepost: String(rsuInfo.milepost),
+        primary_route: rsuInfo.primary_route,
+        other_route: '',
+        serial_number: rsuInfo.serial_number,
+        model: rsuInfo.model,
+        scms_id: rsuInfo.scms_id,
+        ssh_credential_group: rsuInfo.ssh_credential_group,
+        snmp_credential_group: rsuInfo.snmp_credential_group,
+        snmp_version_group: rsuInfo.snmp_version_group,
+        organizations: rsuInfo.organizations,
+        tim_deposit: rsuInfo.tim_deposit ?? false,
+        snmp_monitoring: rsuInfo.snmp_monitoring ?? false,
+      })
     }
-  }, [dispatch, rsuIp, rsuTableData])
+  }, [rsuInfo, reset])
 
-  useEffect(() => {
-    if (apiData && Object.keys(apiData).length !== 0) {
-      setValue('orig_ip', apiData.rsu_data.ip)
-      setValue('ip', apiData.rsu_data.ip)
-      setValue('geo_position.latitude', apiData.rsu_data.geo_position.latitude.toString())
-      setValue('geo_position.longitude', apiData.rsu_data.geo_position.longitude.toString())
-      setValue('milepost', String(apiData.rsu_data.milepost))
-      setValue('serial_number', apiData.rsu_data.serial_number)
-      setValue('scms_id', apiData.rsu_data.scms_id)
+  const onSubmit = async (data: AdminEditRsuFormType) => {
+    setSubmitAttempt(true)
+
+    // Validate dropdowns
+    if (
+      !data.primary_route ||
+      !data.model ||
+      !data.ssh_credential_group ||
+      !data.snmp_credential_group ||
+      !data.snmp_version_group ||
+      data.organizations.length === 0
+    ) {
+      toast.error('Please fill in all required fields')
+      return
     }
-  }, [apiData, setValue])
 
-  useEffect(() => {
-    dispatch(updateSelectedRoute(selectedRoute))
-  }, [selectedRoute, dispatch])
+    const loadingToast = toast.loading('Updating RSU...')
 
-  useEffect(() => {
-    dispatch(updateTableData())
-  }, [dispatch])
+    try {
+      // Build patch object with only changed fields
+      const patch: Partial<AdminRsu> = {}
 
-  const onSubmit = (data: AdminEditRsuFormType) => {
-    dispatch(submitForm(data))
+      if (data.ip !== rsuInfo?.ip) patch.ip = data.ip
+      if (
+        data.geo_position.latitude !== rsuInfo?.geo_position.latitude.toString() ||
+        data.geo_position.longitude !== rsuInfo?.geo_position.longitude.toString()
+      ) {
+        patch.geo_position = {
+          latitude: data.geo_position.latitude,
+          longitude: data.geo_position.longitude,
+        }
+      }
+      const formMilepost = Number(data.milepost)
+      if (formMilepost !== rsuInfo?.milepost) patch.milepost = formMilepost
+      if (data.primary_route !== rsuInfo?.primary_route) {
+        patch.primary_route = data.primary_route === 'Other' ? data.other_route : data.primary_route
+      }
+      if (data.serial_number !== rsuInfo?.serial_number) patch.serial_number = data.serial_number
+      if (data.model !== rsuInfo?.model) patch.model = data.model
+      if (data.scms_id !== rsuInfo?.scms_id) patch.scms_id = data.scms_id
+      if (data.ssh_credential_group !== rsuInfo?.ssh_credential_group) {
+        patch.ssh_credential_group = data.ssh_credential_group
+      }
+      if (data.snmp_credential_group !== rsuInfo?.snmp_credential_group) {
+        patch.snmp_credential_group = data.snmp_credential_group
+      }
+      if (data.snmp_version_group !== rsuInfo?.snmp_version_group) {
+        patch.snmp_version_group = data.snmp_version_group
+      }
+
+      // Check if organizations changed
+      const orgsChanged =
+        data.organizations.length !== rsuInfo?.organizations.length ||
+        data.organizations.some((org) => !rsuInfo?.organizations.includes(org))
+
+      if (orgsChanged) {
+        patch.organizations = data.organizations
+      }
+
+      // Check if tim_deposit changed
+      if (data.tim_deposit !== (rsuInfo?.tim_deposit ?? false)) {
+        patch.tim_deposit = data.tim_deposit
+      }
+
+      // Check if snmp_monitoring changed
+      if (data.snmp_monitoring !== (rsuInfo?.snmp_monitoring ?? false)) {
+        patch.snmp_monitoring = data.snmp_monitoring
+      }
+
+      await patchRsu({ rsuIp: data.orig_ip, patch }).unwrap()
+      toast.success('RSU updated successfully', { id: loadingToast })
+      // Add a small delay to allow backend to finalize changes
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      setOpen(false)
+      navigate('/dashboard/admin/rsus')
+    } catch (error: any) {
+      toast.error(
+        'Failed to update RSU: ' + (error?.data?.message || error?.message || error?.data?.detail || 'Unknown error'),
+        {
+          id: loadingToast,
+        }
+      )
+    }
   }
 
+  const isLoading = isLoadingRsu || isLoadingAllowedSelections
+
   return (
-    <div>
-      {Object.keys(apiData ?? {}).length != 0 ? (
-        <Form onSubmit={handleSubmit(onSubmit)}>
-          <Form.Group className="mb-3" controlId="ip">
-            <Form.Label>RSU IP</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Enter RSU IP"
-              {...register('ip', {
-                required: "Please enter the RSU's IP address",
-                pattern: {
-                  value:
-                    /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
-                  message: 'Please enter a valid IP address',
-                },
-              })}
-            />
-            <ErrorMessage
-              errors={errors}
-              name="ip"
-              render={({ message }) => (
-                <p className="errorMsg" role="alert">
-                  {' '}
-                  {message}{' '}
-                </p>
-              )}
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3" controlId="geo_position.latitude">
-            <Form.Label>Latitude</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Enter RSU Latitude"
-              {...register('geo_position.latitude', {
-                required: 'Please enter the RSU latitude',
-                pattern: {
-                  value: /^(\+|-)?(?:90(?:(?:\.0{1,8})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,8})?))$/,
-                  message: 'Please enter a valid latitude',
-                },
-              })}
-            />
-            <ErrorMessage
-              errors={errors}
-              name="geo_position.latitude"
-              render={({ message }) => (
-                <p className="errorMsg" role="alert">
-                  {' '}
-                  {message}{' '}
-                </p>
-              )}
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3" controlId="geo_position.longitude">
-            <Form.Label>Longitude</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Enter RSU Longitude"
-              {...register('geo_position.longitude', {
-                required: 'Please enter the RSU longitude',
-                pattern: {
-                  value: /^(\+|-)?(?:180(?:(?:\.0{1,8})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,8})?))$/,
-                  message: 'Please enter a valid longitude',
-                },
-              })}
-            />
-            <ErrorMessage
-              errors={errors}
-              name="geo_position.longitude"
-              render={({ message }) => (
-                <p className="errorMsg" role="alert">
-                  {' '}
-                  {message}{' '}
-                </p>
-              )}
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3" controlId="milepost">
-            <Form.Label>Milepost</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Enter RSU Milepost"
-              {...register('milepost', {
-                required: 'Please enter the RSU milepost',
-                pattern: {
-                  value: /^\d*\.?\d*$/,
-                  message: 'Please enter a valid milepost',
-                },
-              })}
-            />
-            <ErrorMessage
-              errors={errors}
-              name="milepost"
-              render={({ message }) => (
-                <p className="errorMsg" role="alert">
-                  {' '}
-                  {message}{' '}
-                </p>
-              )}
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3" controlId="primary_route">
-            <Form.Label>Primary Route</Form.Label>
-            <DropdownList
-              className="form-dropdown"
-              dataKey="name"
-              textField="name"
-              data={primaryRoutes}
-              value={selectedRoute}
-              onChange={(value) => {
-                dispatch(setSelectedRoute(value.name))
+    <Dialog open={open}>
+      {!isLoading && rsuInfo && rsuAllowedSelections ? (
+        <>
+          <DialogContent sx={{ width: '600px', padding: '5px 10px' }}>
+            <SideBarHeader
+              onClick={() => {
+                setOpen(false)
+                navigate('..')
               }}
+              title="Edit RSU"
             />
-            {selectedRoute === '' && submitAttempt && (
-              <p className="error-msg" role="alert">
-                Must select a primary route
-              </p>
-            )}
-            {(() => {
-              if (selectedRoute === 'Other') {
-                return (
-                  <Form.Control
-                    type="text"
-                    placeholder="Enter Other Route"
-                    disabled={otherRouteDisabled}
-                    {...register('primary_route', {
-                      required: 'Please enter the other route',
+            <Form
+              id="edit-rsu-form"
+              onSubmit={handleSubmit(onSubmit)}
+              style={{ fontFamily: '"museo-slab", Arial, Helvetica, sans-serif' }}
+            >
+              <Form.Group controlId="ip">
+                <FormControl fullWidth margin="normal">
+                  <TextField
+                    label="RSU IP"
+                    placeholder="Enter RSU IP"
+                    color="info"
+                    variant="outlined"
+                    required
+                    {...register('ip', {
+                      required: "Please enter the RSU's IP address",
+                      pattern: {
+                        value:
+                          /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
+                        message: 'Please enter a valid IP address',
+                      },
                     })}
+                    slotProps={{
+                      inputLabel: {
+                        shrink: true,
+                      },
+                    }}
                   />
-                )
-              }
-            })()}
-          </Form.Group>
+                  <ErrorMessage
+                    errors={errors}
+                    name="ip"
+                    render={({ message }) => (
+                      <p className="errorMsg" role="alert">
+                        {message}
+                      </p>
+                    )}
+                  />
+                </FormControl>
+              </Form.Group>
+              <Grid2 container spacing={1}>
+                <Grid2 size={6}>
+                  <Form.Group controlId="geo_position.latitude">
+                    <FormControl fullWidth margin="normal">
+                      <TextField
+                        label="Latitude"
+                        placeholder="Enter RSU Latitude"
+                        color="info"
+                        variant="outlined"
+                        required
+                        {...register('geo_position.latitude', {
+                          required: 'Please enter the RSU latitude',
+                          pattern: {
+                            value: /^(\+|-)?(?:90(?:(?:\.0{1,8})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,8})?))$/,
+                            message: 'Please enter a valid latitude',
+                          },
+                        })}
+                        slotProps={{
+                          inputLabel: {
+                            shrink: true,
+                          },
+                        }}
+                      />
+                      <ErrorMessage
+                        errors={errors}
+                        name="geo_position.latitude"
+                        render={({ message }) => (
+                          <p className="errorMsg" role="alert">
+                            {message}
+                          </p>
+                        )}
+                      />
+                    </FormControl>
+                  </Form.Group>
+                </Grid2>
+                <Grid2 size={6}>
+                  <Form.Group controlId="geo_position.longitude">
+                    <FormControl fullWidth margin="normal">
+                      <TextField
+                        label="Longitude"
+                        placeholder="Enter RSU Longitude"
+                        color="info"
+                        variant="outlined"
+                        required
+                        {...register('geo_position.longitude', {
+                          required: 'Please enter the RSU longitude',
+                          pattern: {
+                            value:
+                              /^(\+|-)?(?:180(?:(?:\.0{1,8})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,8})?))$/,
+                            message: 'Please enter a valid longitude',
+                          },
+                        })}
+                        slotProps={{
+                          inputLabel: {
+                            shrink: true,
+                          },
+                        }}
+                      />
+                      <ErrorMessage
+                        errors={errors}
+                        name="geo_position.longitude"
+                        render={({ message }) => (
+                          <p className="errorMsg" role="alert">
+                            {message}
+                          </p>
+                        )}
+                      />
+                    </FormControl>
+                  </Form.Group>
+                </Grid2>
+                <Grid2 size={6}>
+                  <Form.Group controlId="milepost">
+                    <FormControl fullWidth margin="normal">
+                      <TextField
+                        label="Milepost"
+                        placeholder="Enter RSU Milepost"
+                        color="info"
+                        variant="outlined"
+                        required
+                        {...register('milepost', {
+                          required: 'Please enter the RSU milepost',
+                          pattern: {
+                            value: /^\d*\.?\d*$/,
+                            message: 'Please enter a valid number',
+                          },
+                        })}
+                        slotProps={{
+                          inputLabel: {
+                            shrink: true,
+                          },
+                        }}
+                      />
+                      <ErrorMessage
+                        errors={errors}
+                        name="milepost"
+                        render={({ message }) => (
+                          <p className="errorMsg" role="alert">
+                            {message}
+                          </p>
+                        )}
+                      />
+                    </FormControl>
+                  </Form.Group>
+                </Grid2>
+                <Grid2 size={6}>
+                  <Form.Group controlId="primary_route">
+                    <FormControl fullWidth margin="normal">
+                      <InputLabel htmlFor="primary_route">Primary Route</InputLabel>
+                      <Select
+                        id="primary_route"
+                        label="Primary Route"
+                        value={watchedPrimaryRoute || ''}
+                        required
+                        {...register('primary_route', { required: true })}
+                        onChange={(event) => {
+                          setValue('primary_route', event.target.value as string)
+                        }}
+                      >
+                        {rsuAllowedSelections.primary_routes?.map((route) => (
+                          <MenuItem key={route} value={route}>
+                            {route}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {!watchedPrimaryRoute && submitAttempt && (
+                        <ErrorMessageText role="alert">Must select a primary route</ErrorMessageText>
+                      )}
+                    </FormControl>
+                  </Form.Group>
+                  {watchedPrimaryRoute === 'Other' && (
+                    <FormControl fullWidth margin="normal">
+                      <TextField
+                        label="Other Route"
+                        placeholder="Enter Other Route"
+                        color="info"
+                        variant="outlined"
+                        required
+                        {...register('other_route', {
+                          required: watchedPrimaryRoute === 'Other' ? 'Please enter the other route' : false,
+                        })}
+                        slotProps={{
+                          inputLabel: {
+                            shrink: true,
+                          },
+                        }}
+                      />
+                      <ErrorMessage
+                        errors={errors}
+                        name="other_route"
+                        render={({ message }) => (
+                          <p className="errorMsg" role="alert">
+                            {message}
+                          </p>
+                        )}
+                      />
+                    </FormControl>
+                  )}
+                </Grid2>
+                <Grid2 size={7}>
+                  <Form.Group controlId="serial_number">
+                    <FormControl fullWidth margin="normal">
+                      <TextField
+                        label="Serial Number"
+                        placeholder="Enter RSU Serial Number"
+                        color="info"
+                        variant="outlined"
+                        required
+                        {...register('serial_number', {
+                          required: 'Please enter the RSU serial number',
+                        })}
+                        slotProps={{
+                          inputLabel: {
+                            shrink: true,
+                          },
+                        }}
+                      />
+                      {errors.serial_number && (
+                        <p className="errorMsg" role="alert">
+                          {errors.serial_number.message}
+                        </p>
+                      )}
+                    </FormControl>
+                  </Form.Group>
+                </Grid2>
+                <Grid2 size={5}>
+                  <Form.Group controlId="model">
+                    <FormControl fullWidth margin="normal">
+                      <InputLabel htmlFor="model">RSU Model</InputLabel>
+                      <Select
+                        id="model"
+                        label="RSU Model"
+                        value={watchedModel || ''}
+                        required
+                        {...register('model', { required: true })}
+                        onChange={(event) => {
+                          setValue('model', event.target.value as string)
+                        }}
+                      >
+                        {rsuAllowedSelections.rsu_models?.map((model) => (
+                          <MenuItem key={model} value={model}>
+                            {model}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {!watchedModel && submitAttempt && (
+                        <ErrorMessageText role="alert">Must select a RSU model</ErrorMessageText>
+                      )}
+                    </FormControl>
+                  </Form.Group>
+                </Grid2>
+              </Grid2>
 
-          <Form.Group className="mb-3" controlId="serial_number">
-            <Form.Label>Serial Number</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Enter RSU Serial Number"
-              {...register('serial_number', {
-                required: 'Please enter the RSU serial number',
-              })}
-            />
-            {errors.serial_number && (
-              <p className="errorMsg" role="alert">
-                {errors.serial_number.message}
-              </p>
-            )}
-          </Form.Group>
+              <Form.Group controlId="scms_id">
+                <FormControl fullWidth margin="normal">
+                  <TextField
+                    label="SCMS ID"
+                    placeholder="Enter RSU SCMS ID"
+                    color="info"
+                    variant="outlined"
+                    required
+                    {...register('scms_id', {
+                      required: 'Please enter the SCMS ID',
+                    })}
+                    slotProps={{
+                      inputLabel: {
+                        shrink: true,
+                      },
+                    }}
+                  />
+                  {errors.scms_id && (
+                    <p className="errorMsg" role="alert">
+                      {errors.scms_id.message}
+                    </p>
+                  )}
+                </FormControl>
+              </Form.Group>
 
-          <Form.Group className="mb-3" controlId="model">
-            <Form.Label>RSU Model</Form.Label>
-            <DropdownList
-              className="form-dropdown"
-              dataKey="name"
-              textField="name"
-              data={rsuModels}
-              value={selectedModel}
-              onChange={(value) => {
-                dispatch(setSelectedModel(value.name))
+              <Grid2 container spacing={1}>
+                <Grid2 size={6}>
+                  <Form.Group controlId="tim_deposit">
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          {...register('tim_deposit')}
+                          checked={watch('tim_deposit')}
+                          color="primary"
+                          onChange={(event) => {
+                            setValue('tim_deposit', event.target.checked)
+                          }}
+                        />
+                      }
+                      label="TIM Deposit"
+                    />
+                  </Form.Group>
+                </Grid2>
+                <Grid2 size={6}>
+                  <Form.Group controlId="snmp_monitoring">
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          {...register('snmp_monitoring')}
+                          checked={watch('snmp_monitoring')}
+                          color="primary"
+                          onChange={(event) => {
+                            setValue('snmp_monitoring', event.target.checked)
+                          }}
+                        />
+                      }
+                      label="SNMP Monitoring"
+                    />
+                  </Form.Group>
+                </Grid2>
+              </Grid2>
+
+              <Form.Group controlId="ssh_credential_group">
+                <FormControl fullWidth margin="normal">
+                  <InputLabel htmlFor="ssh_credential_group">SSH Credential Group</InputLabel>
+                  <Select
+                    id="ssh_credential_group"
+                    label="SSH Credential Group"
+                    value={watchedSshGroup || ''}
+                    required
+                    {...register('ssh_credential_group', { required: true })}
+                    onChange={(event) => {
+                      setValue('ssh_credential_group', event.target.value as string)
+                    }}
+                  >
+                    {rsuAllowedSelections.ssh_credential_groups?.map((group) => (
+                      <MenuItem key={group} value={group}>
+                        {group}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {!watchedSshGroup && submitAttempt && (
+                    <ErrorMessageText role="alert">Must select a SSH credential group</ErrorMessageText>
+                  )}
+                </FormControl>
+              </Form.Group>
+
+              <Grid2 container spacing={1}>
+                <Grid2 size={6}>
+                  <Form.Group controlId="snmp_credential_group">
+                    <FormControl fullWidth margin="normal">
+                      <InputLabel htmlFor="snmp_credential_group">SNMP Credential Group</InputLabel>
+                      <Select
+                        id="snmp_credential_group"
+                        label="SNMP Credential Group"
+                        value={watchedSnmpGroup || ''}
+                        required
+                        {...register('snmp_credential_group', { required: true })}
+                        onChange={(event) => {
+                          setValue('snmp_credential_group', event.target.value as string)
+                        }}
+                      >
+                        {rsuAllowedSelections.snmp_credential_groups?.map((group) => (
+                          <MenuItem key={group} value={group}>
+                            {group}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {!watchedSnmpGroup && submitAttempt && (
+                        <ErrorMessageText role="alert">Must select a SNMP credential group</ErrorMessageText>
+                      )}
+                    </FormControl>
+                  </Form.Group>
+                </Grid2>
+                <Grid2 size={6}>
+                  <Form.Group controlId="snmp_version_group">
+                    <FormControl fullWidth margin="normal">
+                      <InputLabel htmlFor="snmp_version_group">SNMP Protocol</InputLabel>
+                      <Select
+                        id="snmp_version_group"
+                        label="SNMP Protocol"
+                        value={watchedSnmpVersion || ''}
+                        required
+                        {...register('snmp_version_group', { required: true })}
+                        onChange={(event) => {
+                          setValue('snmp_version_group', event.target.value as string)
+                        }}
+                      >
+                        {rsuAllowedSelections.snmp_version_groups?.map((ver) => (
+                          <MenuItem key={ver} value={ver}>
+                            {ver}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {!watchedSnmpVersion && submitAttempt && (
+                        <ErrorMessageText role="alert">Must select a SNMP protocol</ErrorMessageText>
+                      )}
+                    </FormControl>
+                  </Form.Group>
+                </Grid2>
+              </Grid2>
+
+              <Form.Group controlId="organizations">
+                <FormControl fullWidth margin="normal">
+                  <InputLabel htmlFor="organizations">Organizations</InputLabel>
+                  <Select
+                    id="organizations"
+                    label="Organizations"
+                    multiple
+                    required
+                    value={watchedOrganizations || []}
+                    {...register('organizations', { required: true })}
+                    onChange={(event) => {
+                      const value = event.target.value as string[]
+                      setValue('organizations', value)
+                    }}
+                  >
+                    {rsuAllowedSelections.organizations?.map((org) => (
+                      <MenuItem key={org} value={org}>
+                        {org}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {watchedOrganizations?.length === 0 && submitAttempt && (
+                    <ErrorMessageText role="alert">Must select an organization</ErrorMessageText>
+                  )}
+                </FormControl>
+              </Form.Group>
+            </Form>
+          </DialogContent>
+          <DialogActions sx={{ padding: '20px', mt: 1 }}>
+            <Button
+              onClick={() => {
+                setOpen(false)
+                navigate('/dashboard/admin/rsus')
               }}
-            />
-            {selectedModel === '' && submitAttempt && (
-              <p className="error-msg" role="alert">
-                Must select a RSU model
-              </p>
-            )}
-          </Form.Group>
-
-          <Form.Group className="mb-3" controlId="scms_id">
-            <Form.Label>SCMS ID</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Enter SCMS ID"
-              {...register('scms_id', {
-                required: 'Please enter the SCMS ID',
-              })}
-            />
-            {errors.scms_id && (
-              <p className="errorMsg" role="alert">
-                {errors.scms_id.message}
-              </p>
-            )}
-          </Form.Group>
-
-          <Form.Group className="mb-3" controlId="ssh_credential_group">
-            <Form.Label>SSH Credential Group</Form.Label>
-            <DropdownList
-              className="form-dropdown"
-              dataKey="name"
-              textField="name"
-              data={sshCredentialGroups}
-              value={selectedSshGroup}
-              onChange={(value) => {
-                dispatch(setSelectedSshGroup(value.name))
-              }}
-            />
-            {selectedSshGroup === '' && submitAttempt && (
-              <p className="error-msg" role="alert">
-                Must select a SSH credential group
-              </p>
-            )}
-          </Form.Group>
-
-          <Form.Group className="mb-3" controlId="snmp_credential_group">
-            <Form.Label>SNMP Credential Group</Form.Label>
-            <DropdownList
-              className="form-dropdown"
-              dataKey="name"
-              textField="name"
-              data={snmpCredentialGroups}
-              value={selectedSnmpGroup}
-              onChange={(value) => {
-                dispatch(setSelectedSnmpGroup(value.name))
-              }}
-            />
-            {selectedSnmpGroup === '' && submitAttempt && (
-              <p className="error-msg" role="alert">
-                Must select a SNMP credential group
-              </p>
-            )}
-          </Form.Group>
-
-          <Form.Group className="mb-3" controlId="snmp_version_group">
-            <Form.Label>SNMP Version</Form.Label>
-            <DropdownList
-              className="form-dropdown"
-              dataKey="name"
-              textField="name"
-              data={snmpVersions}
-              value={selectedSnmpVersion}
-              onChange={(value) => {
-                dispatch(setSelectedSnmpVersion(value.name))
-              }}
-            />
-            {selectedSnmpVersion === '' && submitAttempt && (
-              <p className="error-msg" role="alert">
-                Must select a SNMP version
-              </p>
-            )}
-          </Form.Group>
-
-          <Form.Group className="mb-3" controlId="organizations">
-            <Form.Label>Organization</Form.Label>
-            <Multiselect
-              className="form-dropdown"
-              dataKey="name"
-              textField="name"
-              data={organizations}
-              placeholder="Select organizations"
-              value={selectedOrganizations}
-              onChange={(value) => {
-                dispatch(setSelectedOrganizations(value))
-              }}
-            />
-            {selectedOrganizations.length === 0 && submitAttempt && (
-              <p className="error-msg" role="alert">
-                Must select an organization
-              </p>
-            )}
-          </Form.Group>
-
-          {successMsg && (
-            <p className="success-msg" role="status">
-              {successMsg}
-            </p>
-          )}
-          {errorState && (
-            <p className="error-msg" role="alert">
-              Failed to apply changes due to error: {errorMsg}
-            </p>
-          )}
-
-          <div className="form-control">
-            <label></label>
-            <button type="submit" className="admin-button">
-              Apply Changes
-            </button>
-          </div>
-        </Form>
+              variant="outlined"
+              color="info"
+              style={{ position: 'absolute', bottom: 10, left: 10 }}
+              className="museo-slab capital-case"
+            >
+              Cancel
+            </Button>
+            <Button
+              form="edit-rsu-form"
+              type="submit"
+              variant="contained"
+              disabled={isPatchingRsu}
+              style={{ position: 'absolute', bottom: 10, right: 10 }}
+              className="museo-slab capital-case"
+            >
+              {isPatchingRsu ? 'Saving...' : 'Apply Changes'}
+            </Button>
+          </DialogActions>
+        </>
+      ) : isLoading ? (
+        <DialogContent sx={{ width: '600px', padding: '5px 10px' }}>
+          <Typography variant={'h4'}>Loading...</Typography>
+        </DialogContent>
       ) : (
-        <Typography variant={'h4'} style={{ color: '#fff' }}>
-          Unknown RSU IP address. Either this RSU does not exist, or you do not have access to it.{' '}
-          <Link to="../">RSUs</Link>
-        </Typography>
+        <DialogContent sx={{ width: '600px', padding: '5px 10px' }}>
+          <Typography variant={'h4'}>
+            Unknown RSU IP address. Either this RSU does not exist, or you do not have access to it.{' '}
+            <Link to="../">RSUs</Link>
+          </Typography>
+        </DialogContent>
       )}
-    </div>
+    </Dialog>
   )
 }
 

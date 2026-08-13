@@ -1,4 +1,9 @@
-import reducer from './userSlice'
+import reducer, {
+  selectIsAdminOrAbove,
+  selectIsOperatorOrAbove,
+  selectIsSuperUser,
+  selectIsUserOrAbove,
+} from './userSlice'
 import {
   // async thunks
   keycloakLogin,
@@ -17,7 +22,6 @@ import {
   selectName,
   selectEmail,
   selectSuperUser,
-  selectReceiveErrorEmails,
   selectTokenExpiration,
   selectLoginFailure,
   selectLoading,
@@ -41,7 +45,6 @@ describe('user reducer', () => {
         authLoginData: null,
         organization: undefined,
         loginFailure: false,
-        kcFailure: false,
         loginMessage: '',
         routeNotFound: false,
       },
@@ -56,7 +59,6 @@ describe('async thunks', () => {
       authLoginData: null,
       organization: null,
       loginFailure: undefined,
-      kcFailure: null,
       loginMessage: '',
       routeNotFound: false,
     },
@@ -78,14 +80,15 @@ describe('async thunks', () => {
       const getState = jest.fn()
       const kcToken = 'token'
       const action = keycloakLogin(kcToken)
-      const testData = JSON.stringify({ data: 'testingData' })
-      const data = { json: testData, status: 200 }
-      AuthApi.logIn = jest.fn().mockReturnValue(data)
       Date.now = jest.fn(() => new Date(Date.UTC(2022, 1, 1)).valueOf())
+      const testData = { data: 'testingData' }
+      const userData = { ...testData, name: 'undefined undefined' }
+      const data = { data: userData, token: kcToken, expires_at: Date.now() + 590000 }
+      AuthApi.logIn = jest.fn().mockReturnValue(data)
       try {
-        let resp = await action(dispatch, getState, undefined)
+        const resp = await action(dispatch, getState, undefined)
         expect(resp.payload).toEqual({
-          data: JSON.parse(data.json),
+          data: userData,
           token: kcToken,
           expires_at: Date.now() + 590000,
         })
@@ -152,7 +155,6 @@ describe('reducers', () => {
       organization: null,
       loginFailure: null,
       loginMessage: '',
-      kcFailure: null,
       routeNotFound: false,
     },
   }
@@ -232,16 +234,15 @@ describe('selectors', () => {
     loading: 'loading',
     value: {
       organization: {
-        role: 'role',
-        name: 'organizationName',
+        role: 'USER',
+        organization: 'organizationName',
       },
       authLoginData: {
         token: 'token',
         data: {
           name: 'name',
           email: 'email',
-          super_user: 'superUser',
-          receive_error_emails: 'receiveErrorEmails',
+          super_user: false,
         },
         expires_at: 'expires_at',
       },
@@ -253,15 +254,18 @@ describe('selectors', () => {
   it('selectors return the correct value', async () => {
     expect(selectAuthLoginData(state)).toEqual(initialState.value.authLoginData)
     expect(selectToken(state)).toEqual('token')
-    expect(selectRole(state)).toEqual('role')
+    expect(selectIsSuperUser(state)).toEqual(false)
+    expect(selectRole(state)).toEqual('USER')
     expect(selectOrganizationName(state)).toEqual('organizationName')
     expect(selectName(state)).toEqual('name')
     expect(selectEmail(state)).toEqual('email')
-    expect(selectSuperUser(state)).toEqual('superUser')
-    expect(selectReceiveErrorEmails(state)).toEqual('receiveErrorEmails')
+    expect(selectSuperUser(state)).toEqual(false)
     expect(selectTokenExpiration(state)).toEqual('expires_at')
     expect(selectLoginFailure(state)).toEqual('loginFailure')
     expect(selectLoading(state)).toEqual('loading')
+    expect(selectIsUserOrAbove(state)).toEqual(true)
+    expect(selectIsOperatorOrAbove(state)).toEqual(false)
+    expect(selectIsAdminOrAbove(state)).toEqual(false)
   })
 
   it('loadingGlobal selector returns the correct value', async () => {
@@ -273,5 +277,91 @@ describe('selectors', () => {
     } as any
     expect(selectLoadingGlobal(loadingState)).toEqual(false)
     expect(selectLoadingGlobal({ ...loadingState, user: { loading: true } })).toEqual(true)
+  })
+})
+
+describe('user roles', () => {
+  it('not super user, role user', async () => {
+    const initialState = {
+      value: {
+        organization: {
+          role: 'USER',
+        },
+        authLoginData: {
+          data: {
+            super_user: false,
+          },
+        },
+      },
+    }
+    const state = { user: initialState } as any
+
+    expect(selectIsSuperUser(state)).toEqual(false)
+    expect(selectIsUserOrAbove(state)).toEqual(true)
+    expect(selectIsOperatorOrAbove(state)).toEqual(false)
+    expect(selectIsAdminOrAbove(state)).toEqual(false)
+  })
+
+  it('not super user, role operator lowercase', async () => {
+    const initialState = {
+      value: {
+        organization: {
+          role: 'operator',
+        },
+        authLoginData: {
+          data: {
+            super_user: false,
+          },
+        },
+      },
+    }
+    const state = { user: initialState } as any
+
+    expect(selectIsSuperUser(state)).toEqual(false)
+    expect(selectIsUserOrAbove(state)).toEqual(true)
+    expect(selectIsOperatorOrAbove(state)).toEqual(true)
+    expect(selectIsAdminOrAbove(state)).toEqual(false)
+  })
+
+  it('not super user, role admin mixed case', async () => {
+    const initialState = {
+      value: {
+        organization: {
+          role: 'Admin',
+        },
+        authLoginData: {
+          data: {
+            super_user: false,
+          },
+        },
+      },
+    }
+    const state = { user: initialState } as any
+
+    expect(selectIsSuperUser(state)).toEqual(false)
+    expect(selectIsUserOrAbove(state)).toEqual(true)
+    expect(selectIsOperatorOrAbove(state)).toEqual(true)
+    expect(selectIsAdminOrAbove(state)).toEqual(true)
+  })
+
+  it('yes super role user', async () => {
+    const initialState = {
+      value: {
+        organization: {
+          role: 'USER',
+        },
+        authLoginData: {
+          data: {
+            super_user: true,
+          },
+        },
+      },
+    }
+    const state = { user: initialState } as any
+
+    expect(selectIsSuperUser(state)).toEqual(true)
+    expect(selectIsUserOrAbove(state)).toEqual(true)
+    expect(selectIsOperatorOrAbove(state)).toEqual(true)
+    expect(selectIsAdminOrAbove(state)).toEqual(true)
   })
 })

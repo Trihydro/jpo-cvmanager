@@ -81,6 +81,35 @@ spec:
       labels:
         app: cv-manager-api
     spec:
+      initContainers:
+        - name: wait-for-migrations
+          image: postgres:15-alpine
+          command:
+            - sh
+            - -c
+            - |
+              : "${PG_DB_NAME:?PG_DB_NAME must be set}"
+              until PGPASSWORD="$PG_DB_PASS" psql \
+                -h cv-manager-postgres-svc -p 5432 \
+                -U "$PG_DB_USER" -d "$PG_DB_NAME" \
+                -c "SELECT 1 FROM flyway_schema_history WHERE success = true LIMIT 1" > /dev/null 2>&1; do
+                echo "Waiting for Flyway migrations to complete..."
+                sleep 5
+              done
+          env:
+            # Fill in PG_DB_NAME to match the value used in the main container below
+            - name: PG_DB_NAME
+              value: ""
+            - name: PG_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: some-postgres-secret-user
+                  key: some-postgres-secret-key
+            - name: PG_DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: some-postgres-secret-password
+                  key: some-postgres-secret-key
       containers:
         - name: cv-manager-api
           imagePullPolicy: Always
@@ -132,13 +161,13 @@ spec:
               value: ""
             - name: MONGO_DB_NAME
               value: ""
-            - name: COUNTS_MSG_TYPES
+            - name: MONGO_PROCESSED_BSM_COLLECTION_NAME
               value: ""
-            - name: GEO_DB_NAME
+            - name: MONGO_PROCESSED_PSM_COLLECTION_NAME
               value: ""
-            - name: SSM_DB_NAME
+            - name: MONGO_SSM_COLLECTION_NAME
               value: ""
-            - name: SRM_DB_NAME
+            - name: MONGO_SRM_COLLECTION_NAME
               value: ""
             - name: WZDX_ENDPOINT
               value: ""
@@ -156,8 +185,6 @@ spec:
                 secretKeyRef:
                   name: some_email_secret_password
                   key: some_email_secret_key
-            - name: CSM_EMAILS_TO_SEND_TO
-              value: ""
             - name: CSM_TARGET_SMTP_SERVER_ADDRESS
               value: ""
             - name: CSM_TARGET_SMTP_SERVER_PORT
@@ -167,6 +194,10 @@ spec:
             - name: LOGGING_LEVEL
               value: ""
             - name: MAX_GEO_QUERY_RECORDS
+              value: ""
+            - name: ENVIRONMENT_NAME
+              value: ""
+            - name: LOGS_LINK
               value: ""
           volumeMounts:
             - name: cv-manager-service-key

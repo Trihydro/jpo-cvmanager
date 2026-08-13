@@ -21,11 +21,53 @@
         "up": {
           "detached": true,
           "build": true,
-          "services": ["cvmanager_keycloak", "cvmanager_postgres"]
+          "profiles": ["cvmanager_postgres", "cvmanager_keycloak"]
         },
         "files": ["${workspaceFolder}/docker-compose.yml"],
         "envFile": "${workspaceFolder}/.env"
       }
+    },
+    {
+      "label": "run-intersection",
+      "type": "docker-compose",
+      "dockerCompose": {
+        "up": {
+          "detached": true,
+          "build": true,
+          "profiles": ["intersection", "mongo_full"]
+        },
+        "files": ["${workspaceFolder}/docker-compose.yml"],
+        "envFile": "${workspaceFolder}/.env"
+      },
+      "dependsOn": ["run-keycloak-and-postgres"]
+    },
+    {
+      "label": "run-intersection-no-api",
+      "type": "docker-compose",
+      "dockerCompose": {
+        "up": {
+          "detached": true,
+          "build": true,
+          "profiles": ["mongo_full"]
+        },
+        "files": ["${workspaceFolder}/docker-compose.yml"],
+        "envFile": "${workspaceFolder}/.env"
+      },
+      "dependsOn": ["run-keycloak-and-postgres"]
+    },
+    {
+      "label": "run-full-conflictmonitor",
+      "type": "docker-compose",
+      "dockerCompose": {
+        "up": {
+          "detached": true,
+          "build": true,
+          "services": ["kafka_full", "kafka_connect_standalone", "conflictmonitor"]
+        },
+        "files": ["${workspaceFolder}/docker-compose.yml"],
+        "envFile": "${workspaceFolder}/.env"
+      },
+      "dependsOn": ["run-intersection"]
     }
   ]
 }

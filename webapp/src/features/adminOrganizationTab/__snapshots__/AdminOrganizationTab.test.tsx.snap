@@ -1,71 +1,18 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`should take a snapshot 1`] = `
 <div>
-  <div>
-    <div>
-      <h3
-        class="panel-header"
-      >
-        CV Manager Organizations
-        <button
-          class="plus_button"
-          title="Add Organization"
-        >
-          <svg
-            fill="currentColor"
-            height="20"
-            stroke="currentColor"
-            stroke-width="0"
-            viewBox="0 0 1024 1024"
-            width="20"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M696 480H544V328c0-4.4-3.6-8-8-8h-48c-4.4 0-8 3.6-8 8v152H328c-4.4 0-8 3.6-8 8v48c0 4.4 3.6 8 8 8h152v152c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V544h152c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8z"
-            />
-            <path
-              d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
-            />
-          </svg>
-        </button>
-        <button
-          class="plus_button"
-          title="Refresh Organizations"
-        >
-          <svg
-            fill="currentColor"
-            height="20"
-            stroke="currentColor"
-            stroke-width="0"
-            viewBox="0 0 512 512"
-            width="20"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M320 146s24.36-12-64-12a160 160 0 10160 160"
-              fill="none"
-              stroke-linecap="round"
-              stroke-miterlimit="10"
-              stroke-width="32"
-            />
-            <path
-              d="M256 58l80 80-80 80"
-              fill="none"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="32"
-            />
-          </svg>
-        </button>
-      </h3>
-    </div>
-    <div>
+  <div
+    style="background-color: rgb(255, 255, 255); height: fit-content; padding: 10px 0px;"
+  >
+    <div
+      style="display: flex; flex-direction: row; margin: 10px;"
+    >
       <div
-        class="MuiGrid-root MuiGrid-container css-mocked-MuiGrid-root"
+        class="MuiGrid2-root MuiGrid2-direction-xs-row css-mocked-MuiGrid2-root"
       >
         <div
-          class="MuiGrid-root MuiGrid-item css-mocked-MuiGrid-root"
+          class="MuiGrid2-root MuiGrid2-direction-xs-row MuiGrid2-grid-xs-0 css-mocked-MuiGrid2-root"
         >
           <div
             aria-autocomplete="list"
@@ -76,7 +23,7 @@ exports[`should take a snapshot 1`] = `
             aria-haspopup="listbox"
             aria-owns="rw_2_listbox"
             aria-readonly="false"
-            class="form-dropdown rw-dropdown-list rw-widget"
+            class="rw-dropdown-list rw-widget"
             data-intent="mouse"
             id="rw_1_input"
             role="combobox"
@@ -104,9 +51,7 @@ exports[`should take a snapshot 1`] = `
                 />
                 <span
                   class="rw-dropdown-list-value"
-                >
-                  [object Object]
-                </span>
+                />
               </div>
               <span
                 aria-hidden="true"
@@ -128,46 +73,47 @@ exports[`should take a snapshot 1`] = `
           </div>
         </div>
         <div
-          class="MuiGrid-root MuiGrid-item css-mocked-MuiGrid-root"
+          class="MuiGrid2-root MuiGrid2-direction-xs-row MuiGrid2-grid-xs-0 css-mocked-MuiGrid2-root"
         >
           <button
-            class="delete_button"
+            class="MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeMedium css-mocked-MuiButtonBase-root-MuiIconButton-root"
+            tabindex="0"
             title="Edit Organization"
+            type="button"
           >
             <svg
               aria-hidden="true"
               class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-mocked-MuiSvgIcon-root"
-              data-testid="EditIcon"
+              data-testid="EditOutlinedIcon"
               focusable="false"
               size="20"
-              style="color: white;"
               viewBox="0 0 24 24"
             >
               <path
-                d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+                d="m14.06 9.02.92.92L5.92 19H5v-.92zM17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83 3.75 3.75 1.83-1.83c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29m-3.6 3.19L3 17.25V21h3.75L17.81 9.94z"
               />
             </svg>
           </button>
         </div>
         <div
-          class="MuiGrid-root MuiGrid-item css-mocked-MuiGrid-root"
+          class="MuiGrid2-root MuiGrid2-direction-xs-row MuiGrid2-grid-xs-0 css-mocked-MuiGrid2-root"
         >
           <div>
             <button
-              class="delete_button"
+              class="MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeMedium css-mocked-MuiButtonBase-root-MuiIconButton-root"
+              tabindex="0"
               title="Delete Organization"
+              type="button"
             >
               <svg
                 aria-hidden="true"
                 class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-mocked-MuiSvgIcon-root"
-                data-testid="DeleteIcon"
+                data-testid="DeleteOutlineIcon"
                 focusable="false"
-                size="20"
-                style="color: white;"
                 viewBox="0 0 24 24"
               >
                 <path
-                  d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+                  d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM8 9h8v10H8zm7.5-5-1-1h-5l-1 1H5v2h14V4z"
                 />
               </svg>
             </button>
@@ -175,38 +121,148 @@ exports[`should take a snapshot 1`] = `
         </div>
       </div>
       <div
-        class="scroll-div-org-tab"
+        class="MuiGrid2-root MuiGrid2-direction-xs-row css-mocked-MuiGrid2-root"
       >
         <div
-          class="accordion"
+          class="MuiGrid2-root MuiGrid2-direction-xs-row MuiGrid2-grid-xs-0 css-mocked-MuiGrid2-root"
         >
-          <div
-            class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiAccordion-root MuiAccordion-rounded MuiAccordion-gutters accordion-content css-mocked-MuiPaper-root-MuiAccordion-root"
+          <button
+            class="MuiButtonBase-root MuiButton-root MuiButton-outlined MuiButton-outlinedInfo MuiButton-sizeSmall MuiButton-outlinedSizeSmall MuiButton-colorInfo MuiButton-root MuiButton-outlined MuiButton-outlinedInfo MuiButton-sizeSmall MuiButton-outlinedSizeSmall MuiButton-colorInfo museo-slab capital-case css-mocked-MuiButtonBase-root-MuiButton-root"
+            tabindex="0"
+            title="Refresh Organizations"
+            type="button"
           >
-            <div
+            <span
+              class="MuiButton-icon MuiButton-startIcon MuiButton-iconSizeSmall css-mocked-MuiButton-startIcon"
+            >
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-mocked-MuiSvgIcon-root"
+                data-testid="RefreshIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"
+                />
+              </svg>
+            </span>
+            Refresh
+          </button>
+        </div>
+        <div
+          class="MuiGrid2-root MuiGrid2-direction-xs-row MuiGrid2-grid-xs-0 css-mocked-MuiGrid2-root"
+        >
+          <button
+            class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeSmall MuiButton-containedSizeSmall MuiButton-colorPrimary MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeSmall MuiButton-containedSizeSmall MuiButton-colorPrimary museo-slab capital-case css-mocked-MuiButtonBase-root-MuiButton-root"
+            tabindex="0"
+            title="Add Organization"
+            type="button"
+          >
+            <span
+              class="MuiButton-icon MuiButton-startIcon MuiButton-iconSizeSmall css-mocked-MuiButton-startIcon"
+            >
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-mocked-MuiSvgIcon-root"
+                data-testid="AddCircleOutlineIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4zm-1-5C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8"
+                />
+              </svg>
+            </span>
+            New
+          </button>
+        </div>
+      </div>
+    </div>
+    <div
+      class="scroll-div-org-tab"
+    >
+      <div
+        class="accordion"
+      >
+        <div
+          class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation0 MuiAccordion-root MuiAccordion-rounded MuiAccordion-gutters accordion-content css-mocked-MuiPaper-root-MuiAccordion-root"
+          style="--Paper-shadow: none;"
+        >
+          <h3
+            class="MuiAccordion-heading css-mocked-MuiAccordion-heading"
+          >
+            <button
               aria-controls="panel1a-content"
               aria-expanded="false"
               class="MuiButtonBase-root MuiAccordionSummary-root MuiAccordionSummary-gutters css-mocked-MuiButtonBase-root-MuiAccordionSummary-root"
               id="panel1a-header"
-              role="button"
               tabindex="0"
+              type="button"
             >
-              <div
+              <span
                 class="MuiAccordionSummary-content MuiAccordionSummary-contentGutters css-mocked-MuiAccordionSummary-content"
               >
-                <p
-                  class="MuiTypography-root MuiTypography-body1 css-mocked-MuiTypography-root"
-                  style="font-size: 18px;"
+                <div
+                  style="display: flex; align-items: center; flex-grow: 1; gap: 16px;"
                 >
-                   RSUs
-                </p>
-              </div>
-              <div
+                  <h6
+                    class="MuiTypography-root MuiTypography-h6 css-mocked-MuiTypography-root"
+                  >
+                    RSUs
+                  </h6>
+                  <h6
+                    class="MuiTypography-root MuiTypography-subtitle1 css-mocked-MuiTypography-root"
+                  >
+                    TIM Deposit: 
+                    Disabled
+                  </h6>
+                  <h6
+                    class="MuiTypography-root MuiTypography-subtitle1 css-mocked-MuiTypography-root"
+                  >
+                    SNMP Monitoring: 
+                    Disabled
+                  </h6>
+                </div>
+                <div
+                  style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; max-width: 50%;"
+                >
+                  <button
+                    class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeSmall MuiButton-containedSizeSmall MuiButton-colorPrimary MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeSmall MuiButton-containedSizeSmall MuiButton-colorPrimary css-mocked-MuiButtonBase-root-MuiButton-root"
+                    tabindex="0"
+                    type="button"
+                  >
+                    Enable TIM Deposit
+                  </button>
+                  <button
+                    class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedError MuiButton-sizeSmall MuiButton-containedSizeSmall MuiButton-colorError MuiButton-root MuiButton-contained MuiButton-containedError MuiButton-sizeSmall MuiButton-containedSizeSmall MuiButton-colorError css-mocked-MuiButtonBase-root-MuiButton-root"
+                    tabindex="0"
+                    type="button"
+                  >
+                    Disable TIM Deposit
+                  </button>
+                  <button
+                    class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeSmall MuiButton-containedSizeSmall MuiButton-colorPrimary MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeSmall MuiButton-containedSizeSmall MuiButton-colorPrimary css-mocked-MuiButtonBase-root-MuiButton-root"
+                    tabindex="0"
+                    type="button"
+                  >
+                    Enable SNMP Monitoring
+                  </button>
+                  <button
+                    class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedError MuiButton-sizeSmall MuiButton-containedSizeSmall MuiButton-colorError MuiButton-root MuiButton-contained MuiButton-containedError MuiButton-sizeSmall MuiButton-containedSizeSmall MuiButton-colorError css-mocked-MuiButtonBase-root-MuiButton-root"
+                    tabindex="0"
+                    type="button"
+                  >
+                    Disable SNMP Monitoring
+                  </button>
+                </div>
+              </span>
+              <span
                 class="MuiAccordionSummary-expandIconWrapper css-mocked-MuiAccordionSummary-expandIconWrapper"
               >
                 <svg
                   aria-hidden="true"
-                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium expand css-mocked-MuiSvgIcon-root"
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-mocked-MuiSvgIcon-root"
                   data-testid="ExpandMoreIcon"
                   focusable="false"
                   viewBox="0 0 24 24"
@@ -215,61 +271,67 @@ exports[`should take a snapshot 1`] = `
                     d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
                   />
                 </svg>
-              </div>
-            </div>
+              </span>
+            </button>
+          </h3>
+          <div
+            class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-hidden css-mocked-MuiCollapse-root"
+            style="min-height: 0px;"
+          >
             <div
-              class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-hidden css-mocked-MuiCollapse-root"
-              style="min-height: 0px;"
+              class="MuiCollapse-wrapper MuiCollapse-vertical css-mocked-MuiCollapse-wrapper"
             >
               <div
-                class="MuiCollapse-wrapper MuiCollapse-vertical css-mocked-MuiCollapse-wrapper"
+                class="MuiCollapse-wrapperInner MuiCollapse-vertical css-mocked-MuiCollapse-wrapperInner"
               >
                 <div
-                  class="MuiCollapse-wrapperInner MuiCollapse-vertical css-mocked-MuiCollapse-wrapperInner"
+                  aria-labelledby="panel1a-header"
+                  class="MuiAccordion-region"
+                  id="panel1a-content"
+                  role="region"
                 >
                   <div
-                    aria-labelledby="panel1a-header"
-                    class="MuiAccordion-region"
-                    id="panel1a-content"
-                    role="region"
-                  >
-                    <div
-                      class="MuiAccordionDetails-root css-mocked-MuiAccordionDetails-root"
-                    />
-                  </div>
+                    class="MuiAccordionDetails-root css-mocked-MuiAccordionDetails-root"
+                  />
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div>
-          <div
-            class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiAccordion-root MuiAccordion-rounded MuiAccordion-gutters css-mocked-MuiPaper-root-MuiAccordion-root"
+      </div>
+      <div
+        class="accordion"
+      >
+        <div
+          class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation0 MuiAccordion-root MuiAccordion-rounded MuiAccordion-gutters accordion-content css-mocked-MuiPaper-root-MuiAccordion-root"
+          style="--Paper-shadow: none;"
+        >
+          <h3
+            class="MuiAccordion-heading css-mocked-MuiAccordion-heading"
           >
-            <div
+            <button
               aria-controls="panel1a-content"
               aria-expanded="false"
               class="MuiButtonBase-root MuiAccordionSummary-root MuiAccordionSummary-gutters css-mocked-MuiButtonBase-root-MuiAccordionSummary-root"
               id="panel1a-header"
-              role="button"
               tabindex="0"
+              type="button"
             >
-              <div
+              <span
                 class="MuiAccordionSummary-content MuiAccordionSummary-contentGutters css-mocked-MuiAccordionSummary-content"
               >
-                <p
-                  class="MuiTypography-root MuiTypography-body1 css-mocked-MuiTypography-root"
-                  style="font-size: 18px;"
+                <h6
+                  class="MuiTypography-root MuiTypography-h6 css-mocked-MuiTypography-root"
                 >
-                   Users
-                </p>
-              </div>
-              <div
+                  Intersections
+                </h6>
+              </span>
+              <span
                 class="MuiAccordionSummary-expandIconWrapper css-mocked-MuiAccordionSummary-expandIconWrapper"
               >
                 <svg
                   aria-hidden="true"
-                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium expand css-mocked-MuiSvgIcon-root"
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-mocked-MuiSvgIcon-root"
                   data-testid="ExpandMoreIcon"
                   focusable="false"
                   viewBox="0 0 24 24"
@@ -278,28 +340,95 @@ exports[`should take a snapshot 1`] = `
                     d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
                   />
                 </svg>
-              </div>
-            </div>
+              </span>
+            </button>
+          </h3>
+          <div
+            class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-hidden css-mocked-MuiCollapse-root"
+            style="min-height: 0px;"
+          >
             <div
-              class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-hidden css-mocked-MuiCollapse-root"
-              style="min-height: 0px;"
+              class="MuiCollapse-wrapper MuiCollapse-vertical css-mocked-MuiCollapse-wrapper"
             >
               <div
-                class="MuiCollapse-wrapper MuiCollapse-vertical css-mocked-MuiCollapse-wrapper"
+                class="MuiCollapse-wrapperInner MuiCollapse-vertical css-mocked-MuiCollapse-wrapperInner"
               >
                 <div
-                  class="MuiCollapse-wrapperInner MuiCollapse-vertical css-mocked-MuiCollapse-wrapperInner"
+                  aria-labelledby="panel1a-header"
+                  class="MuiAccordion-region"
+                  id="panel1a-content"
+                  role="region"
                 >
                   <div
-                    aria-labelledby="panel1a-header"
-                    class="MuiAccordion-region"
-                    id="panel1a-content"
-                    role="region"
-                  >
-                    <div
-                      class="MuiAccordionDetails-root css-mocked-MuiAccordionDetails-root"
-                    />
-                  </div>
+                    class="MuiAccordionDetails-root css-mocked-MuiAccordionDetails-root"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div
+          class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation0 MuiAccordion-root MuiAccordion-rounded MuiAccordion-gutters css-mocked-MuiPaper-root-MuiAccordion-root"
+          style="--Paper-shadow: none;"
+        >
+          <h3
+            class="MuiAccordion-heading css-mocked-MuiAccordion-heading"
+          >
+            <button
+              aria-controls="panel1a-content"
+              aria-expanded="false"
+              class="MuiButtonBase-root MuiAccordionSummary-root MuiAccordionSummary-gutters css-mocked-MuiButtonBase-root-MuiAccordionSummary-root"
+              id="panel1a-header"
+              tabindex="0"
+              type="button"
+            >
+              <span
+                class="MuiAccordionSummary-content MuiAccordionSummary-contentGutters css-mocked-MuiAccordionSummary-content"
+              >
+                <h6
+                  class="MuiTypography-root MuiTypography-h6 css-mocked-MuiTypography-root"
+                >
+                  Users
+                </h6>
+              </span>
+              <span
+                class="MuiAccordionSummary-expandIconWrapper css-mocked-MuiAccordionSummary-expandIconWrapper"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-mocked-MuiSvgIcon-root"
+                  data-testid="ExpandMoreIcon"
+                  focusable="false"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                  />
+                </svg>
+              </span>
+            </button>
+          </h3>
+          <div
+            class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-hidden css-mocked-MuiCollapse-root"
+            style="min-height: 0px;"
+          >
+            <div
+              class="MuiCollapse-wrapper MuiCollapse-vertical css-mocked-MuiCollapse-wrapper"
+            >
+              <div
+                class="MuiCollapse-wrapperInner MuiCollapse-vertical css-mocked-MuiCollapse-wrapperInner"
+              >
+                <div
+                  aria-labelledby="panel1a-header"
+                  class="MuiAccordion-region"
+                  id="panel1a-content"
+                  role="region"
+                >
+                  <div
+                    class="MuiAccordionDetails-root css-mocked-MuiAccordionDetails-root"
+                  />
                 </div>
               </div>
             </div>

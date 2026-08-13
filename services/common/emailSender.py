@@ -1,5 +1,6 @@
 import logging
-import smtplib, ssl
+import smtplib
+import ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -21,25 +22,21 @@ class EmailSender:
         username,
         password,
         pretty=False,
-        tlsEnabled=False,
-        authEnabled=False,
+        tlsEnabled=True,
+        authEnabled=True,
     ):
         try:
             # prepare email
             toSend = ""
             if pretty:
-                toSend = self.formatPretty(
-                    sender, recipient, subject, message
-                )
+                toSend = self.formatPretty(sender, recipient, subject, message)
             else:
-                toSend = self.format(
-                    recipient, subject, message, replyEmail
-                )
+                toSend = self.format(recipient, subject, message, replyEmail)
 
-            if tlsEnabled == "true":
+            if tlsEnabled:
                 self.server.starttls(context=self.context)  # start TLS encryption
                 self.server.ehlo()  # say hello
-            if authEnabled == "true":
+            if authEnabled:
                 self.server.login(username, password)
 
             # send email
@@ -58,7 +55,12 @@ Subject: %s
 %s
 
 Please reply to %s.
-""" % (recipient, subject, message, replyEmail)
+""" % (
+            recipient,
+            subject,
+            message,
+            replyEmail,
+        )
         return toReturn
 
     def formatPretty(self, sender, recipient, subject, html_message):

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import reducer from './adminOrganizationTabSlice'
 import {
   // async thunks
@@ -18,8 +19,8 @@ import {
   selectSelectedOrg,
   selectRsuTableData,
   selectUserTableData,
-  selectErrorState,
-  selectErrorMsg,
+  selectTimDeposit,
+  selectSnmpMonitoring,
 } from './adminOrganizationTabSlice'
 import apiHelper from '../../apis/api-helper'
 import EnvironmentVars from '../../EnvironmentVars'
@@ -33,11 +34,10 @@ describe('admin organization tab reducer', () => {
         activeDiv: 'organization_table',
         title: 'Organizations',
         orgData: [],
-        selectedOrg: {},
+        selectedOrg: undefined,
         rsuTableData: [],
         userTableData: [],
-        errorState: false,
-        errorMsg: '',
+        intersectionTableData: [],
       },
     })
   })
@@ -52,9 +52,8 @@ describe('async thunks', () => {
       orgData: null,
       selectedOrg: null,
       rsuTableData: null,
+      intersectionTableData: null,
       userTableData: null,
-      errorState: null,
-      errorMsg: null,
     },
   }
 
@@ -68,7 +67,7 @@ describe('async thunks', () => {
 
   describe('getOrgData', () => {
     it('returns and calls the api correctly', async () => {
-      let dispatch = jest.fn()
+      const dispatch = jest.fn()
       const getState = jest.fn().mockReturnValue({
         user: {
           value: {
@@ -78,7 +77,7 @@ describe('async thunks', () => {
       })
       const orgName = 'orgName'
       const specifiedOrg = 'specifiedOrg'
-      let all = false
+      const all = false
       const action = getOrgData({ orgName, all, specifiedOrg })
 
       apiHelper._getDataWithCodes = jest.fn().mockReturnValue({ status: 200, message: 'message' })
@@ -114,11 +113,9 @@ describe('async thunks', () => {
 
     it('Updates the state correctly fulfilled all', async () => {
       const loading = false
-      let errorMsg = ''
-      let errorState = false
       let specifiedOrg = 'org2'
       const orgData = [{ id: 0, name: 'org1', rsu_count: 24, user_count: 12 }]
-      let all = true
+      const all = true
       const data = {
         org_data: [
           {
@@ -136,7 +133,7 @@ describe('async thunks', () => {
       expect(state).toEqual({
         ...initialState,
         loading,
-        value: { ...initialState.value, errorMsg, errorState, orgData },
+        value: { ...initialState.value, orgData },
       })
 
       // test with no specifiedOrg
@@ -149,23 +146,25 @@ describe('async thunks', () => {
       expect(state).toEqual({
         ...initialState,
         loading,
-        value: { ...initialState.value, errorMsg, errorState, orgData, selectedOrg: orgData[0] },
+        value: { ...initialState.value, orgData, selectedOrg: orgData[0] },
       })
     })
 
     it('Updates the state correctly fulfilled not all', async () => {
       const loading = false
-      let errorMsg = ''
-      let errorState = false
-      let all = false
+      const all = false
       const data = {
         org_data: {
           org_users: 'org_users',
-          org_rsus: 'org_rsus',
+          org_rsus: [
+            { tim_deposit: true, snmp_monitoring: true },
+            { tim_deposit: false, snmp_monitoring: false },
+          ],
+          org_intersections: 'org_intersections',
         },
       }
 
-      let state = reducer(initialState, {
+      const state = reducer(initialState, {
         type: 'adminOrganizationTab/getOrgData/fulfilled',
         payload: { all, data, message: 'message', success: true },
       })
@@ -175,18 +174,15 @@ describe('async thunks', () => {
         loading,
         value: {
           ...initialState.value,
-          errorMsg,
-          errorState,
           rsuTableData: data.org_data.org_rsus,
           userTableData: data.org_data.org_users,
+          intersectionTableData: data.org_data.org_intersections,
         },
       })
     })
 
     it('Updates the state correctly fulfilled unsuccessful', async () => {
       const loading = false
-      const errorMsg = 'message'
-      const errorState = true
 
       const state = reducer(initialState, {
         type: 'adminOrganizationTab/getOrgData/fulfilled',
@@ -196,7 +192,7 @@ describe('async thunks', () => {
       expect(state).toEqual({
         ...initialState,
         loading,
-        value: { ...initialState.value, errorMsg, errorState },
+        value: { ...initialState.value },
       })
     })
 
@@ -223,7 +219,7 @@ describe('async thunks', () => {
       const action = deleteOrg(org_name)
 
       apiHelper._deleteData = jest.fn().mockReturnValue({ status: 200, message: 'message' })
-      let resp = await action(dispatch, getState, undefined)
+      await action(dispatch, getState, undefined)
       expect(apiHelper._deleteData).toHaveBeenCalledWith({
         url: EnvironmentVars.adminOrg,
         token: 'token',
@@ -233,7 +229,7 @@ describe('async thunks', () => {
 
       dispatch = jest.fn()
       apiHelper._deleteData = jest.fn().mockReturnValue({ status: 500, message: 'message' })
-      resp = await action(dispatch, getState, undefined)
+      await action(dispatch, getState, undefined)
       expect(apiHelper._deleteData).toHaveBeenCalledWith({
         url: EnvironmentVars.adminOrg,
         token: 'token',
@@ -245,7 +241,7 @@ describe('async thunks', () => {
 
   describe('editOrg', () => {
     it('returns and calls the api correctly', async () => {
-      let dispatch = jest.fn()
+      const dispatch = jest.fn()
       const getState = jest.fn().mockReturnValue({
         user: {
           value: {
@@ -269,6 +265,8 @@ describe('async thunks', () => {
           users_to_remove: [],
           rsus_to_add: [],
           rsus_to_remove: [],
+          intersections_to_add: [],
+          intersections_to_remove: [],
           ...json,
         }),
       })
@@ -286,6 +284,8 @@ describe('async thunks', () => {
           users_to_remove: [],
           rsus_to_add: [],
           rsus_to_remove: [],
+          intersections_to_add: [],
+          intersections_to_remove: [],
           ...json,
         }),
       })
@@ -305,8 +305,6 @@ describe('async thunks', () => {
 
     it('Updates the state correctly fulfilled', async () => {
       const loading = false
-      let errorMsg = ''
-      let errorState = false
 
       let state = reducer(initialState, {
         type: 'adminOrganizationTab/editOrg/fulfilled',
@@ -316,12 +314,10 @@ describe('async thunks', () => {
       expect(state).toEqual({
         ...initialState,
         loading,
-        value: { ...initialState.value, errorMsg, errorState },
+        value: { ...initialState.value },
       })
 
       // Error Case
-      errorMsg = 'message'
-      errorState = true
 
       state = reducer(initialState, {
         type: 'adminOrganizationTab/editOrg/fulfilled',
@@ -331,7 +327,7 @@ describe('async thunks', () => {
       expect(state).toEqual({
         ...initialState,
         loading,
-        value: { ...initialState.value, errorMsg, errorState },
+        value: { ...initialState.value },
       })
     })
 
@@ -354,9 +350,8 @@ describe('reducers', () => {
       orgData: null,
       selectedOrg: null,
       rsuTableData: null,
+      intersectionTableData: null,
       userTableData: null,
-      errorState: null,
-      errorMsg: null,
     },
   }
 
@@ -429,10 +424,11 @@ describe('selectors', () => {
       title: 'title',
       orgData: 'orgData',
       selectedOrg: 'selectedOrg',
-      rsuTableData: 'rsuTableData',
+      rsuTableData: [
+        { tim_deposit: true, snmp_monitoring: true },
+        { tim_deposit: false, snmp_monitoring: false },
+      ],
       userTableData: 'userTableData',
-      errorState: 'errorState',
-      errorMsg: 'errorMsg',
     },
   }
   const state = { adminOrganizationTab: initialState } as any
@@ -443,9 +439,47 @@ describe('selectors', () => {
     expect(selectTitle(state)).toEqual('title')
     expect(selectOrgData(state)).toEqual('orgData')
     expect(selectSelectedOrg(state)).toEqual('selectedOrg')
-    expect(selectRsuTableData(state)).toEqual('rsuTableData')
+    expect(selectRsuTableData(state)).toEqual(initialState.value.rsuTableData)
     expect(selectUserTableData(state)).toEqual('userTableData')
-    expect(selectErrorState(state)).toEqual('errorState')
-    expect(selectErrorMsg(state)).toEqual('errorMsg')
+    expect(selectTimDeposit(state)).toEqual('Mixed')
+    expect(selectSnmpMonitoring(state)).toEqual('Mixed')
+  })
+
+  it('selectTimDeposit and selectSnmpMonitoring return correct values for different RSU data', async () => {
+    const stateEnabled = {
+      adminOrganizationTab: {
+        value: {
+          rsuTableData: [
+            { tim_deposit: true, snmp_monitoring: true },
+            { tim_deposit: true, snmp_monitoring: true },
+          ],
+        },
+      },
+    } as any
+    expect(selectTimDeposit(stateEnabled)).toEqual('Enabled')
+    expect(selectSnmpMonitoring(stateEnabled)).toEqual('Enabled')
+
+    const stateDisabled = {
+      adminOrganizationTab: {
+        value: {
+          rsuTableData: [
+            { tim_deposit: false, snmp_monitoring: false },
+            { tim_deposit: false, snmp_monitoring: false },
+          ],
+        },
+      },
+    } as any
+    expect(selectTimDeposit(stateDisabled)).toEqual('Disabled')
+    expect(selectSnmpMonitoring(stateDisabled)).toEqual('Disabled')
+
+    const stateEmpty = {
+      adminOrganizationTab: {
+        value: {
+          rsuTableData: [],
+        },
+      },
+    } as any
+    expect(selectTimDeposit(stateEmpty)).toEqual('Disabled')
+    expect(selectSnmpMonitoring(stateEmpty)).toEqual('Disabled')
   })
 })

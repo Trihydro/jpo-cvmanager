@@ -1,6 +1,6 @@
 import logging
-import os
 from datetime import datetime
+import count_metric_environment
 
 
 def diff_to_color(val):
@@ -39,7 +39,7 @@ def generate_table_row(rsu_ip, data, row_style, message_type_list):
 
 
 def generate_count_table(rsu_dict, message_type_list):
-    logging.info(f"Creating count table...")
+    logging.info("Creating count table...")
 
     # If the RSU dictionary is completely empty, return nothing to indicate an issue has occurred somewhere
     if not rsu_dict:
@@ -62,13 +62,26 @@ def generate_count_table(rsu_dict, message_type_list):
             in_count = value["counts"][type]["in"]
             out_count = value["counts"][type]["out"]
 
-            # Normalize the diff_percent depending on message types that are deduplicated to 1/hour
-            x = 3600 if type.lower() == "map" or type.lower() == "tim" else 1
-            value["counts"][type]["diff_percent"] = (
-                abs(out_count / -(-(in_count / x) // 1) - 1) * 100
-                if in_count != 0
-                else (5 if out_count > in_count else 0)
-            )
+            if type.lower() == "bsm" or type.lower() == "tim":
+                # For unique deduplication situations, don't validate counts unless zero
+                # Assign the percentage difference between the in and out counts as pass or
+                # fail since no validation is occurring
+                # 6 being 6% and 0 being 0% difference. The 6% is enough to flag the table cell value
+                value["counts"][type]["diff_percent"] = (
+                    6
+                    if (in_count != 0 and out_count == 0) or (out_count > in_count)
+                    else 0
+                )
+            else:
+                # Normalize the diff_percent depending on message types that are deduplicated to 1/hour
+                x = 3600 if type.lower() == "map" else 1
+                # Assign the calculated percentage difference between the in and out counts
+                # 6 (6%) is enough to flag a table cell value
+                value["counts"][type]["diff_percent"] = (
+                    abs(out_count / -(-(in_count / x) // 1) - 1) * 100
+                    if in_count != 0
+                    else (6 if out_count > in_count else 0)
+                )
 
         html += generate_table_row(rsu_ip, value, row_style, message_type_list)
 
@@ -77,14 +90,14 @@ def generate_count_table(rsu_dict, message_type_list):
     return html
 
 
-def generate_email_body(rsu_dict, start_dt, end_dt, message_type_list):
+def generate_email_body(org_name, rsu_dict, start_dt, end_dt, message_type_list):
     start = datetime.strftime(start_dt, "%Y-%m-%d 00:00:00")
     end = datetime.strftime(end_dt, "%Y-%m-%d 00:00:00")
 
     # DEPLOYMENT_TITLE is a contextual title for where these counts apply. ie. "GCP prod"
     # This is generalized to support any deployment environment
     html = (
-        f'<h2>{str(os.environ["DEPLOYMENT_TITLE"]).upper()} Count Report {start} UTC - {end} UTC</h2>'
+        f"<h2>{org_name} {count_metric_environment.DEPLOYMENT_TITLE} Count Report {start} UTC - {end} UTC</h2>"
         "<p>This is an automated email to report yesterday's ODE message counts for J2735 messages going in and out of the ODE. "
         "In counts are the number of encoded messages received by the ODE from the load balancer. "
         "Out counts are the number of decoded messages that have come out of the ODE in JSON form and "
