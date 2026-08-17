@@ -1,15 +1,7 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`should take a snapshot 1`] = `
 <div>
-  <div
-    id="snmpdiv"
-  >
-    <h2
-      class="firmwareHeader"
-    >
-      Firmware Upgrade
-    </h2>
-  </div>
+  <div />
 </div>
 `;

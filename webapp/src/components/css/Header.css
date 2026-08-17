@@ -1,15 +1,14 @@
+@import 'https://use.typekit.net/ioz0eth.css';
+
 #header {
-  background-color: #333;
-  color: white;
   text-align: left;
   z-index: 100;
   width: 100%;
-  height: 100px;
+  padding: 8px 24px;
 }
 
 #frontpagelogo {
-  height: 100px;
-  width: 250px;
+  height: 90px;
 }
 
 #frontgrid {
@@ -17,18 +16,11 @@
 }
 
 #frontpage {
-  background-color: #333;
-  color: white;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'museo-slab', Arial, Helvetica, sans-serif;
   font-size: 30px;
   position: absolute;
   min-width: 100%;
   min-height: 100%;
-}
-
-#logo {
-  padding: 5px;
-  align-items: center;
 }
 
 #header-text {
@@ -39,87 +31,23 @@
 
 #keycloakbtndiv {
   margin-top: 40px;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'museo-slab', Arial, Helvetica, sans-serif;
   cursor: pointer;
   border-radius: 3px;
 }
 
-.keycloak-button {
-  background-color: #b55e12;
-  color: #fff;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.keycloak-button:hover {
-  background-color: #a45611;
-}
-
 #login {
-  padding: 10px 32px;
+  padding: 10px 0px;
   margin-left: 100px;
-  position: fixed;
+  position: absolute;
   right: 10px;
 }
 
 #loginMessage {
-  color: white;
   font-size: 25px;
   padding: 30px;
 }
 
-#logout {
-  border: none;
-  color: black;
-  padding: 13px 20px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 15px;
-  margin: 4px 2px;
-  cursor: pointer;
-  border-radius: 3px;
-  right: 10px;
-  background: lightgray;
-}
-
-#userInfoGrid {
-  padding: 30px;
-  height: 100px;
-}
-
-#nameText {
-  font-size: 25px;
+.user-info-btn {
   text-align: right;
-  margin-top: 5px;
-}
-
-#emailText {
-  font-size: 18px;
-  text-align: right;
-}
-
-#roleText {
-  font-size: 18px;
-  text-align: right;
-}
-
-#helpLink {
-  color: white;
-  margin-left: 1.5em;
-  margin-top: 0.5em;
-}
-
-#organizationDropdown {
-  margin-top: 10px;
-  width: 100%;
-  font-family: Arial, Helvetica, sans-serif;
-  font-weight: bold;
-  font-size: 16px;
-  text-align: right;
-  color: #e98125;
-  background-color: #333;
 }

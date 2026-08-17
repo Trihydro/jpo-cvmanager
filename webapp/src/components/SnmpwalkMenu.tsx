@@ -3,38 +3,48 @@ import SnmpwalkItem from './SnmpwalkItem'
 import { useSelector, useDispatch } from 'react-redux'
 import { confirmAlert } from 'react-confirm-alert'
 import { Options } from './AdminDeletionOptions'
-import { selectRsuManufacturer, selectRsuIpv4 } from '../generalSlices/rsuSlice'
+import { selectRsuIpv4 } from '../generalSlices/rsuSlice'
 import {
   selectMsgFwdConfig,
-  selectErrorState,
+  selectMsgFwdConfigType,
 
   // Actions
-  refreshSnmpFwdConfig,
+  getCachedSnmpFwdConfigsFromDatabase, getRsuMsgConfigsFromRsu,
 } from '../generalSlices/configSlice'
-import Button from '@mui/material/Button'
-import DeleteIcon from '@mui/icons-material/Delete'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import './css/SnmpwalkMenu.css'
 import {
   // Actions
   deleteSnmpSet,
 } from '../generalSlices/configSlice'
-import { IconButton, ThemeProvider, Tooltip, createTheme } from '@mui/material'
+import { Button, Tooltip } from '@mui/material'
 import { AnyAction, ThunkDispatch } from '@reduxjs/toolkit'
 import { RootState } from '../store'
+import toast from 'react-hot-toast'
 
 const SnmpwalkMenu = () => {
   const dispatch: ThunkDispatch<RootState, void, AnyAction> = useDispatch()
 
   const msgFwdConfig = useSelector(selectMsgFwdConfig)
-  const errorState = useSelector(selectErrorState)
+  const msgFwdConfigType = useSelector(selectMsgFwdConfigType)
+
+  const isConfigEmpty = React.useMemo(() => {
+    if (!msgFwdConfig) return true
+    if (Object.hasOwn(msgFwdConfig, 'rsuXmitMsgFwdingTable') && Object.hasOwn(msgFwdConfig, 'rsuReceivedMsgTable')) {
+      const txEmpty = !Object.hasOwn(msgFwdConfig, 'rsuXmitMsgFwdingTable') ||
+        Object.keys(msgFwdConfig.rsuXmitMsgFwdingTable ?? {}).length === 0
+      const rxEmpty = !Object.hasOwn(msgFwdConfig, 'rsuReceivedMsgTable') ||
+        Object.keys(msgFwdConfig.rsuReceivedMsgTable ?? {}).length === 0
+      return txEmpty && rxEmpty
+    }
+    return Object.keys(msgFwdConfig).length === 0
+  }, [msgFwdConfig])
 
   const rsuIp = useSelector(selectRsuIpv4)
-  const rsuManufacturer = useSelector(selectRsuManufacturer)
 
   useEffect(() => {
     // Refresh Data
-    dispatch(refreshSnmpFwdConfig(rsuIp))
+    dispatch(getCachedSnmpFwdConfigsFromDatabase(rsuIp))
   }, [rsuIp, dispatch])
 
   const handleDelete = (countsMsgType: string, ip: string) => {
@@ -48,7 +58,13 @@ const SnmpwalkMenu = () => {
               snmpMsgType: countsMsgType,
               destIp: ip,
             })
-          )
+          ).then((data: any) => {
+            if (data.payload.changeSuccess) {
+              toast.success('Successfully deleted SNMP forwarding')
+            } else {
+              toast.error('Failed to delete SNMP forwarding: ' + data.payload.errorState)
+            }
+          })
         },
       },
       {
@@ -66,141 +82,86 @@ const SnmpwalkMenu = () => {
   }
 
   return (
-    <div id="snmpdiv">
-      <ThemeProvider theme={theme}>
-        <div id="msgfwddiv">
-          <h2 id="snmpheader">Message Forwarding</h2>
-          <Tooltip title="Refresh Message Forwarding">
-            <IconButton
-              onClick={() => {
-                dispatch(refreshSnmpFwdConfig(rsuIp))
-              }}
-            >
-              <RefreshIcon htmlColor="#b55e12" />
-            </IconButton>
-          </Tooltip>
-        </div>
-
-        <div>
-          {Object.hasOwn(msgFwdConfig, 'rsuXmitMsgFwdingTable') &&
-          Object.hasOwn(msgFwdConfig, 'rsuReceivedMsgTable') ? (
-            <div>
-              <h2 id="snmptxheader">TX Forward Table</h2>
-              {Object.keys(msgFwdConfig.rsuXmitMsgFwdingTable).map((index) => (
-                <div key={'msgFwd-' + index}>
-                  <Button
-                    className="deletebutton"
-                    onClick={() =>
-                      handleDelete(
-                        msgFwdConfig.rsuXmitMsgFwdingTable[index]['Message Type'],
-                        msgFwdConfig.rsuXmitMsgFwdingTable[index]['IP']
-                      )
-                    }
-                    startIcon={<DeleteIcon />}
-                  >
-                    Delete
-                  </Button>
-                  <SnmpwalkItem
-                    key={'snmptxitem-' + index}
-                    content={msgFwdConfig.rsuXmitMsgFwdingTable[index]}
-                    index={index}
-                  />
-                </div>
-              ))}
-
-              <h2 id="snmprxheader">RX Forward Table</h2>
-              {Object.keys(msgFwdConfig.rsuReceivedMsgTable).map((index) => (
-                <div>
-                  <Button
-                    className="deletebutton"
-                    onClick={() =>
-                      handleDelete(
-                        msgFwdConfig.rsuReceivedMsgTable[index]['Message Type'],
-                        msgFwdConfig.rsuReceivedMsgTable[index]['IP']
-                      )
-                    }
-                    startIcon={<DeleteIcon />}
-                  >
-                    Delete
-                  </Button>
-                  <SnmpwalkItem
-                    key={'snmprxitem-' + index}
-                    content={msgFwdConfig.rsuReceivedMsgTable[index]}
-                    index={index}
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div>
-              {Object.keys(msgFwdConfig).map((index) => (
-                <div>
-                  <Button
-                    className="deletebutton"
-                    onClick={() => handleDelete(msgFwdConfig[index]['Message Type'], msgFwdConfig[index]['IP'])}
-                    startIcon={<DeleteIcon />}
-                  >
-                    Delete
-                  </Button>
-                  <SnmpwalkItem key={'snmpitem-' + index} content={msgFwdConfig[index]} index={index} />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {errorState !== '' ? (
-          <p id="warningtext" role="alert">
-            {errorState}
-          </p>
-        ) : (
-          <div />
+    <div>
+      <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+        {isConfigEmpty && (
+          <h5 className="museo-slab">No message forwarding configurations were found. This may indicate that none are configured or that there was an error retrieving them. Verify that this RSU is configured and refresh.</h5>
         )}
-      </ThemeProvider>
+      </div>
+      <div>
+        {Object.hasOwn(msgFwdConfig, 'rsuXmitMsgFwdingTable') && Object.hasOwn(msgFwdConfig, 'rsuReceivedMsgTable') ? (
+          <div>
+            <h2 id="snmptxheader">TX Forward Table</h2>
+            {Object.keys(msgFwdConfig.rsuXmitMsgFwdingTable ?? {}).map((index) => (
+              <div key={'msgFwd-' + index}>
+                <SnmpwalkItem
+                  key={'snmptxitem-' + index}
+                  content={msgFwdConfig.rsuXmitMsgFwdingTable[index]}
+                  handleDelete={handleDelete}
+                  index={index}
+                />
+              </div>
+            ))}
+
+            <h2 id="snmprxheader">RX Forward Table</h2>
+            {Object.keys(msgFwdConfig.rsuReceivedMsgTable ?? {}).map((index) => (
+              <div>
+                <SnmpwalkItem
+                  key={'snmprxitem-' + index}
+                  content={msgFwdConfig.rsuReceivedMsgTable[index]}
+                  handleDelete={handleDelete}
+                  index={index}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div>
+            {Object.keys(msgFwdConfig).map((index) => (
+              <div>
+                <SnmpwalkItem
+                  key={'snmpitem-' + index}
+                  content={msgFwdConfig[index]}
+                  handleDelete={handleDelete}
+                  index={index}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div id="msgfwddiv">
+        <Tooltip title="Refresh Message Forwarding">
+          <Button
+            startIcon={<RefreshIcon />}
+            variant="outlined"
+            onClick={() => {
+              dispatch(getRsuMsgConfigsFromRsu(rsuIp)).then((data: any) => {
+                if (getRsuMsgConfigsFromRsu.rejected.match(data)) {
+                  toast.error('Failed to fetch RSU message forwarding configuration, loading cached data')
+                  dispatch(getCachedSnmpFwdConfigsFromDatabase(rsuIp))
+                } else if (getRsuMsgConfigsFromRsu.fulfilled.match(data)) {
+                  toast.success('Successfully fetched RSU message forwarding configuration')
+                }
+              })
+            }}
+            size="large"
+            sx={{
+              marginTop: '20px',
+            }}
+            color="info"
+            className="museo-slab capital-case"
+          >
+            Refresh Message Forwarding
+          </Button>
+        </Tooltip>
+      </div>
+      <br />
+      <h3 className="museo-slab">
+        Source: {msgFwdConfigType === 'database' ? 'Cached (Database)' : 'Live (RSU)'}
+      </h3>
     </div>
   )
 }
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#d16d15',
-      light: '#0e2052',
-      contrastTextColor: '#0e2052',
-    },
-    secondary: {
-      main: '#d16d15',
-      light: '#0e2052',
-      contrastTextColor: '#0e2052',
-    },
-    text: {
-      primary: '#ffffff',
-      secondary: '#ffffff',
-      disabled: '#ffffff',
-      hint: '#ffffff',
-    },
-    action: {
-      disabledBackground: 'rgba(209, 109, 21, 0.2)',
-      disabled: '#ffffff',
-    },
-  },
-  components: {
-    MuiSvgIcon: {
-      styleOverrides: {
-        root: {
-          color: '#d16d15',
-        },
-      },
-    },
-  },
-  typography: {
-    allVariants: {
-      color: '#ffffff',
-    },
-    button: {
-      textTransform: 'none',
-    },
-  },
-})
 
 export default SnmpwalkMenu

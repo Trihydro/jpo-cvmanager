@@ -1,61 +1,61 @@
 import React from 'react'
 import './Menu.css'
-import { useEffect } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
-import { selectRole } from '../../generalSlices/userSlice'
-import { selectCountList, selectSelectedRsu } from '../../generalSlices/rsuSlice'
+import { useSelector } from 'react-redux'
+import { selectSelectedRsu } from '../../generalSlices/rsuSlice'
 import { selectConfigList } from '../../generalSlices/configSlice'
-import { selectDisplayCounts, selectView, setDisplay, setSortedCountList } from './menuSlice'
-import { SecureStorageManager } from '../../managers'
+import { selectDisplayCounts, selectDisplayRsuErrors } from './menuSlice'
 import DisplayCounts from './DisplayCounts'
+import DisplayRsuErrors from './DisplayRsuErrors'
 import ConfigureRSU from './ConfigureRSU'
-import { AnyAction, ThunkDispatch } from '@reduxjs/toolkit'
-import { RootState } from '../../store'
+import { headerTabHeight } from '../../styles/index'
+import { useTheme } from '@mui/material'
+import { selectIsOperatorOrAbove } from '../../generalSlices/userSlice'
 
 const menuStyle: React.CSSProperties = {
-  background: '#0e2052',
   textAlign: 'left',
   position: 'absolute',
   zIndex: 90,
-  height: 'calc(100vh - 135px)', // : "calc(100vh - 100px)",
-  width: '420px',
-  top: '135px', // : "100px",
-  right: '0%',
-  overflow: 'auto',
+  height: 'fit-content',
+  top: `${headerTabHeight + 91}px`,
+  right: '25px',
+  borderRadius: '4px',
 }
 
 const Menu = () => {
-  const dispatch: ThunkDispatch<RootState, void, AnyAction> = useDispatch()
-  const userRole = useSelector(selectRole)
-  const countList = useSelector(selectCountList)
+  const theme = useTheme()
   const selectedRsu = useSelector(selectSelectedRsu)
   const selectedRsuList = useSelector(selectConfigList)
   const displayCounts = useSelector(selectDisplayCounts)
-  const view = useSelector(selectView)
-
-  useEffect(() => {
-    dispatch(setSortedCountList(countList))
-  }, [countList, dispatch])
+  const displayRsuErrors = useSelector(selectDisplayRsuErrors)
+  const isOperatorOrAbove = useSelector(selectIsOperatorOrAbove)
 
   return (
     <div>
-      {view === 'buttons' && !selectedRsu && selectedRsuList?.length === 0 && (
-        <div>
-          <button id="toggle" onClick={() => dispatch(setDisplay('tab'))}>
-            Display Counts
-          </button>
-        </div>
-      )}
-      {view === 'tab' && displayCounts === true && !selectedRsu && selectedRsuList?.length === 0 && (
-        <div style={menuStyle} id="sideBarBlock" className="visibleProp">
-          <button id="toggle" onClick={() => dispatch(setDisplay('buttons'))}>
-            X
-          </button>
+      {displayCounts === true && !selectedRsu && selectedRsuList?.length === 0 && (
+        <div
+          style={{
+            ...menuStyle,
+            backgroundColor: theme.palette.custom.mapLegendBackground,
+            width: '400px',
+            maxHeight: `calc(100vh - ${headerTabHeight + 185}px)`,
+            overflowY: 'auto',
+            scrollbarColor: `${theme.palette.text.primary} ${theme.palette.background.paper}`,
+          }}
+          className="visibleProp map-control-container"
+        >
           <DisplayCounts />
         </div>
       )}
-      {SecureStorageManager.getUserRole() === 'admin' && (selectedRsu || selectedRsuList?.length > 0) && (
-        <div style={menuStyle} id="sideBarBlock" className="visibleProp">
+      {displayRsuErrors === true && !selectedRsu && selectedRsuList?.length === 0 && (
+        <div style={{ ...menuStyle, width: '570px' }} className="visibleProp map-control-container">
+          <DisplayRsuErrors />
+        </div>
+      )}
+      {isOperatorOrAbove && (selectedRsu || selectedRsuList?.length > 0) && (
+        <div
+          style={{ ...menuStyle, backgroundColor: theme.palette.custom.mapLegendBackground, width: '400px' }}
+          className="visibleProp map-control-container"
+        >
           <ConfigureRSU />
         </div>
       )}

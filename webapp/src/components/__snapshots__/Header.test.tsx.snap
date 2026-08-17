@@ -1,24 +1,27 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`<Header /> should take a snapshot 1`] = `
+exports[`<Header /> > should take a snapshot 1`] = `
 <div>
   <div>
     <div
+      class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 css-mocked-MuiPaper-root"
       id="frontpage"
+      style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12);"
     >
       <div
-        class="MuiGrid-root MuiGrid-container MuiGrid-direction-xs-column MuiGrid-align-items-xs-center"
+        class="MuiGrid2-root MuiGrid2-container MuiGrid2-direction-xs-column css-mocked-MuiGrid2-root"
         id="frontgrid"
       >
         <div
-          class="MuiGrid-root MuiGrid-container MuiGrid-align-items-xs-center MuiGrid-justify-content-xs-center"
+          class="MuiGrid2-root MuiGrid2-container MuiGrid2-direction-xs-row css-mocked-MuiGrid2-root"
         >
           <img
             alt="Logo"
             id="frontpagelogo"
-            src="logo.png"
+            src="/icons/logo_light.png"
           />
           <h1
+            class="museo-slab"
             id="header-text"
           >
              CV Manager
@@ -33,15 +36,20 @@ exports[`<Header /> should take a snapshot 1`] = `
           id="keycloakbtndiv"
         >
           <button
-            class="keycloak-button"
+            class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary css-mocked-MuiButtonBase-root-MuiButton-root"
+            tabindex="0"
+            type="button"
           >
             Logout User
           </button>
         </div>
         <br />
-        <div>
+        <div
+          class="contactWrapper"
+        >
           <button
-            class="showbutton"
+            class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary css-mocked-MuiButtonBase-root-MuiButton-root"
+            tabindex="0"
             type="button"
           >
             Contact Support
@@ -51,9 +59,12 @@ exports[`<Header /> should take a snapshot 1`] = `
     </div>
   </div>
   <br />
-  <div>
+  <div
+    class="contactWrapper"
+  >
     <button
-      class="showbutton"
+      class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary css-mocked-MuiButtonBase-root-MuiButton-root"
+      tabindex="0"
       type="button"
     >
       Contact Support

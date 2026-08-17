@@ -1,62 +1,36 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import { selectToken } from '../../generalSlices/userSlice'
-import EnvironmentVars from '../../EnvironmentVars'
-import apiHelper from '../../apis/api-helper'
 import { RootState } from '../../store'
-import { AdminRsu } from '../../types/Rsu'
 import {
   AdminOrgRsuDeleteMultiple,
   AdminOrgRsuDeleteSingle,
   AdminOrgRsuWithId,
   AdminOrgTabRsuAddMultiple,
 } from './AdminOrganizationTabRsuTypes'
-import { adminOrgPatch, editOrg, selectSelectedOrgName } from '../adminOrganizationTab/adminOrganizationTabSlice'
+import { adminOrgPatch, editOrg } from '../adminOrganizationTab/adminOrganizationTabSlice'
+import {
+  ORGANIZATION_API_AVAILABLE_RSU_LIST_TAG,
+  ORGANIZATION_API_RSU_LIST_TAG,
+  ORGANIZATION_API_RSU_TAG,
+  organizationApiSlice,
+} from '../api/organizationApiSlice'
 
 const initialState = {
-  availableRsuList: [] as AdminOrgRsuWithId[],
   selectedRsuList: [] as AdminOrgRsuWithId[],
 }
 
-export const getRsuDataByIp = async (rsu_ip: string, token: string) => {
-  const data = await apiHelper._getDataWithCodes({
-    url: EnvironmentVars.adminRsu,
-    token,
-    query_params: { rsu_ip },
-  })
-
-  return data
-}
-
-export const getRsuData = createAsyncThunk(
-  'adminOrganizationTabRsu/getRsuData',
-  async (orgName: string, { getState, dispatch }) => {
-    const currentState = getState() as RootState
-    const token = selectToken(currentState)
-
-    const data = await getRsuDataByIp('all', token)
-
-    switch (data.status) {
-      case 200:
-        return { success: true, message: '', data: data.body, orgName }
-      default:
-        return { success: false, message: data.message }
-    }
-  },
-  { condition: (_, { getState }) => selectToken(getState() as RootState) != undefined }
-)
-
 export const rsuDeleteSingle = createAsyncThunk(
   'adminOrganizationTabRsu/rsuDeleteSingle',
-  async (payload: AdminOrgRsuDeleteSingle, { getState, dispatch }) => {
-    const { rsu, selectedOrg, updateTableData } = payload
-    const currentState = getState() as RootState
-    const token = selectToken(currentState)
+  async (payload: AdminOrgRsuDeleteSingle, { dispatch }) => {
+    const { rsu, selectedOrg, selectedOrgEmail, updateTableData } = payload
 
-    let promises = []
-    const rsuData = (await getRsuDataByIp(rsu.ip, token)).body
-    if (rsuData?.rsu_data?.organizations?.length > 1) {
+    const promises = []
+    const rsuData = (await dispatch(organizationApiSlice.endpoints.getRsuOrganizations.initiate(rsu.ip)))?.data ?? []
+
+    if (rsuData.length > 1) {
       const patchJson: adminOrgPatch = {
         name: selectedOrg,
+        email: selectedOrgEmail,
         rsus_to_remove: [rsu.ip],
       }
       promises.push(dispatch(editOrg(patchJson)))
@@ -65,36 +39,63 @@ export const rsuDeleteSingle = createAsyncThunk(
         'Cannot remove RSU ' + rsu.ip + ' from ' + selectedOrg + ' because it must belong to at least one organization.'
       )
     }
-    Promise.all(promises).then(() => {
-      dispatch(refresh({ selectedOrg, updateTableData }))
-    })
+    // Invalidate RTK Query cache
+    dispatch(
+      organizationApiSlice.util.invalidateTags([
+        ORGANIZATION_API_RSU_LIST_TAG,
+        ORGANIZATION_API_AVAILABLE_RSU_LIST_TAG,
+        { type: ORGANIZATION_API_RSU_TAG, id: rsu.ip },
+      ])
+    )
+
+    const res = await Promise.all(promises)
+    dispatch(refresh({ selectedOrg, updateTableData }))
+
+    if ((res[0].payload as any).success) {
+      return { success: true, message: 'RSU deleted successfully' }
+    } else {
+      return { success: false, message: 'Failed to delete RSU' }
+    }
   },
   { condition: (_, { getState }) => selectToken(getState() as RootState) != undefined }
 )
 
 export const rsuDeleteMultiple = createAsyncThunk(
   'adminOrganizationTabRsu/rsuDeleteMultiple',
-  async (payload: AdminOrgRsuDeleteMultiple, { getState, dispatch }) => {
-    const { rows, selectedOrg, updateTableData } = payload
-    const currentState = getState() as RootState
-    const token = selectToken(currentState)
+  async (payload: AdminOrgRsuDeleteMultiple, { dispatch }) => {
+    const { rows, selectedOrg, selectedOrgEmail, updateTableData } = payload
 
     const invalidRsus = []
     const patchJson: adminOrgPatch = {
       name: selectedOrg,
+      email: selectedOrgEmail,
       rsus_to_remove: [],
     }
     for (const row of rows) {
-      const rsuData = (await getRsuDataByIp(row.ip, token)).body
-      if (rsuData?.rsu_data?.organizations?.length > 1) {
+      const rsuData = (await dispatch(organizationApiSlice.endpoints.getRsuOrganizations.initiate(row.ip)))?.data ?? []
+      console.error('RSU Data for', row.ip, rsuData)
+      if (rsuData.length > 1) {
         patchJson.rsus_to_remove.push(row.ip)
       } else {
         invalidRsus.push(row.ip)
       }
     }
     if (invalidRsus.length === 0) {
-      await dispatch(editOrg(patchJson))
+      const res = await dispatch(editOrg(patchJson))
       dispatch(refresh({ selectedOrg, updateTableData }))
+      if ((res.payload as any).success) {
+        const rsuTags = rows.map((row) => ({ type: ORGANIZATION_API_RSU_TAG, id: row.ip }))
+        dispatch(
+          organizationApiSlice.util.invalidateTags([
+            ORGANIZATION_API_RSU_LIST_TAG,
+            ORGANIZATION_API_AVAILABLE_RSU_LIST_TAG,
+            ...rsuTags,
+          ])
+        )
+        return { success: true, message: 'RSU(s) deleted successfully' }
+      } else {
+        return { success: false, message: 'Failed to delete RSU(s)' }
+      }
     } else {
       alert(
         'Cannot remove RSU(s) ' +
@@ -110,18 +111,32 @@ export const rsuDeleteMultiple = createAsyncThunk(
 
 export const rsuAddMultiple = createAsyncThunk(
   'adminOrganizationTabRsu/rsuAddMultiple',
-  async (payload: AdminOrgTabRsuAddMultiple, { getState, dispatch }) => {
-    const { rsuList, selectedOrg, updateTableData } = payload
+  async (payload: AdminOrgTabRsuAddMultiple, { dispatch }) => {
+    const { rsuList, selectedOrg, selectedOrgEmail, updateTableData } = payload
 
     const patchJson: adminOrgPatch = {
       name: selectedOrg,
+      email: selectedOrgEmail,
       rsus_to_add: [],
     }
     for (const row of rsuList) {
       patchJson.rsus_to_add.push(row.ip)
     }
-    await dispatch(editOrg(patchJson))
+    const res = await dispatch(editOrg(patchJson))
     dispatch(refresh({ selectedOrg, updateTableData }))
+    if ((res.payload as any).success) {
+      const rsuTags = rsuList.map((rsu) => ({ type: ORGANIZATION_API_RSU_TAG, id: rsu.ip }))
+      dispatch(
+        organizationApiSlice.util.invalidateTags([
+          ORGANIZATION_API_RSU_LIST_TAG,
+          ORGANIZATION_API_AVAILABLE_RSU_LIST_TAG,
+          ...rsuTags,
+        ])
+      )
+      return { success: true, message: 'RSU(s) added successfully' }
+    } else {
+      return { success: false, message: 'Failed to add RSU(s)' }
+    }
   },
   { condition: (_, { getState }) => selectToken(getState() as RootState) != undefined }
 )
@@ -137,7 +152,6 @@ export const refresh = createAsyncThunk(
   ) => {
     const { selectedOrg, updateTableData } = payload
     updateTableData(selectedOrg)
-    dispatch(getRsuData(selectedOrg))
   },
   { condition: (_, { getState }) => selectToken(getState() as RootState) != undefined }
 )
@@ -154,45 +168,15 @@ export const adminOrganizationTabRsuSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder
-      .addCase(getRsuData.pending, (state) => {
-        state.loading = true
-      })
-      .addCase(getRsuData.fulfilled, (state, action) => {
-        state.loading = false
-        if (action.payload.success) {
-          const rsuData = action.payload.data
-          let availableRsuList = [] as AdminOrgRsuWithId[]
-          let counter = 0
-          if (rsuData?.rsu_data) {
-            for (const rsu of rsuData.rsu_data) {
-              const rsuOrgs = rsu?.organizations
-              if (!rsuOrgs.includes(action.payload.orgName)) {
-                let tempValue = {
-                  id: counter,
-                  ip: rsu.ip,
-                } as AdminOrgRsuWithId
-                availableRsuList.push(tempValue)
-                counter += 1
-              }
-            }
-          }
-          state.value.availableRsuList = availableRsuList
-        }
-      })
-      .addCase(getRsuData.rejected, (state) => {
-        state.loading = false
-      })
-      .addCase(refresh.fulfilled, (state) => {
-        state.value.selectedRsuList = []
-      })
+    builder.addCase(refresh.fulfilled, (state) => {
+      state.value.selectedRsuList = []
+    })
   },
 })
 
 export const { setSelectedRsuList } = adminOrganizationTabRsuSlice.actions
 
 export const selectLoading = (state: RootState) => state.adminOrganizationTabRsu.loading
-export const selectAvailableRsuList = (state: RootState) => state.adminOrganizationTabRsu.value.availableRsuList
 export const selectSelectedRsuList = (state: RootState) => state.adminOrganizationTabRsu.value.selectedRsuList
 
 export default adminOrganizationTabRsuSlice.reducer

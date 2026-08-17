@@ -1,16 +1,52 @@
 name: cv-manager
 
-on: [pull_request, push]
+on:
+  push:
+    branches:
+      - develop
+      - cdot-release*
+  pull_request:
+    branches:
+      - "**" # Run on PRs to any branch
 
 jobs:
+  test_change_limit:
+    if: vars.MAX_CHANGED_FILES && github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ${{ github.event.repository.name }}
+        uses: actions/checkout@v4
+
+      - name: Get changed files
+        id: changed-files
+        uses: step-security/changed-files@v46
+
+      - name: Check for large changes
+        env:
+          ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+        run: |
+          # Check the number of changed files in the pull request
+          CHANGED_FILES_COUNT=$(echo "$ALL_CHANGED_FILES" | wc -w)
+
+          echo "Max allowed changed files: ${{ vars.MAX_CHANGED_FILES }}, Changed files in PR: $CHANGED_FILES_COUNT"
+
+          if [ "$CHANGED_FILES_COUNT" -gt "${{ vars.MAX_CHANGED_FILES }}" ]; then
+            echo "Error: Pull request has more than ${{ vars.MAX_CHANGED_FILES }} changed files. Please reduce the size of your changes."
+            exit 1
+          else
+            echo "Pull request size is within the acceptable limit."
+          fi
+
   build_api:
+    needs: test_change_limit
+    if: ${{ always() && !cancelled() }}
     runs-on: ubuntu-latest
     container:
       image: python:3.12.2
       options: --user root
     steps:
       - name: Checkout ${{ github.event.repository.name }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Dependencies
         run: |
@@ -21,7 +57,7 @@ jobs:
         run: python3 -m pip install -r $GITHUB_WORKSPACE/services/requirements.txt
 
       - name: Run Tests and Generate Coverage
-        continue-on-error: true
+        continue-on-error: false
         run: |
           # Set PYTHONPATH and navigate to the tests directory
           export PYTHONPATH=$PYTHONPATH:/usr/lib/python3/dist-packages
@@ -32,41 +68,42 @@ jobs:
           python3 -m coverage xml --omit="/opt/*,/root/*,/tmp/*,/usr/*,/var/*,**/__init__.py"
 
       - name: Archive Code Coverage Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build_api
-          path: services/cov.xml
+          path: services/coverage.xml
 
-      - name: Find cov.xml
+      - name: Find coverage.xml
         shell: bash
         run: |
-          find "$GITHUB_WORKSPACE/services" -name "cov.xml"
+          find "$GITHUB_WORKSPACE/services" -name "coverage.xml"
 
   webapp:
+    needs: test_change_limit
+    if: ${{ always() && !cancelled() }}
     runs-on: ubuntu-latest
     container:
-      image: node:16.16.0
+      image: node:22
       options: --user root
       env:
         CI: true
+        TZ: America/Denver
     steps:
       - name: Checkout ${{ github.event.repository.name }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Build Web Application
-        continue-on-error: true
+        continue-on-error: false
         run: |
           # Navigate to the webapp directory and perform necessary setup
           cd $GITHUB_WORKSPACE/webapp
-          npm install -g nodemon
-          npm init -y
-          npm install --force
+          npm ci
 
           # Run tests with coverage and suppress failures
-          npm test -- --coverage || true
+          npm test -- --coverage
 
       - name: Archive Code Coverage Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: webapp
           path: webapp/coverage/*
@@ -76,41 +113,241 @@ jobs:
         run: |
           find "$GITHUB_WORKSPACE" -name "lcov.info"
 
+  build_keycloak_provider:
+    needs: test_change_limit
+    if: ${{ always() && !cancelled() }}
+    runs-on: ubuntu-latest
+    container:
+      image: maven:3.9.9-eclipse-temurin-21
+      options: --user root
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: "adopt"
+          java-version: "21"
+
+      - name: Build and Test with Maven
+        run: |
+          cd $GITHUB_WORKSPACE/resources/keycloak/custom-user-provider
+          mvn clean install
+
+      - name: Archive Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: keycloak-user-provider-test-results
+          path: $GITHUB_WORKSPACE/resources/keycloak/custom-user-provider/target/surefire-reports
+
+  build_rsu_info_bridge:
+    needs: test_change_limit
+    if: ${{ always() && !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "25"
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-rsu-info-bridge-${{ hashFiles('**/services/rsu-info-bridge/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-rsu-info-bridge-
+            ${{ runner.os }}-maven-
+
+      - name: Build and Test with Maven
+        run: |
+          cd $GITHUB_WORKSPACE/services/rsu-info-bridge
+          ./mvnw clean verify
+
+      - name: Archive Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: rsu-info-bridge-test-results
+          path: $GITHUB_WORKSPACE/services/rsu-info-bridge/target/surefire-reports
+
+  build_intersection_api:
+    needs: test_change_limit
+    if: ${{ always() && !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 22
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "22"
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-${{ hashFiles('**/settings.xml') }}-${{ runner.os }}-java-22
+          restore-keys: |
+            ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-${{ runner.os }}-java-22
+            ${{ runner.os }}-maven-${{ runner.os }}-java-22
+            ${{ runner.os }}-maven
+
+      - name: Install Dependencies
+        env:
+          MAVEN_GITHUB_TOKEN: ${{ secrets.MAVEN_GITHUB_TOKEN }}
+          MAVEN_GITHUB_ORG: ${{ github.repository_owner }}
+        run: |
+          cd $GITHUB_WORKSPACE/services/intersection-api/api
+          mvn clean install -DskipTests -s ./settings.xml
+          mvn dependency:go-offline -s ./settings.xml
+
+      - name: Run tests
+        env:
+          MAVEN_GITHUB_TOKEN: ${{ secrets.MAVEN_GITHUB_TOKEN }}
+          MAVEN_GITHUB_ORG: ${{ github.repository_owner }}
+        run: |
+          cd $GITHUB_WORKSPACE/services/intersection-api/api
+          mvn verify -s ./settings.xml
+
+      - name: Archive Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: intersection-api-test-results
+          path: $GITHUB_WORKSPACE/services/intersection-api/api/target/surefire-reports
+
+      - name: Clean up
+        run: |
+          rm -rf $GITHUB_WORKSPACE/services/intersection-api/api/target
+
+  build_flyway_image:
+    needs: [test_change_limit, validate_migrations]
+    if: ${{ !cancelled() && needs.validate_migrations.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/cvmanager-flyway
+          tags: |
+            type=sha
+            type=ref,event=branch
+
+      - name: Build and push Flyway image
+        uses: docker/build-push-action@v6
+        with:
+          context: resources/db/
+          file: resources/db/Dockerfile
+          push: ${{ github.event_name == 'push' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  validate_migrations:
+    needs: test_change_limit
+    if: ${{ always() && !cancelled() }}
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:15-3.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout ${{ github.event.repository.name }}
+        uses: actions/checkout@v4
+
+      - name: Run Flyway migrations
+        run: |
+          docker run --rm \
+            --network host \
+            -v "$GITHUB_WORKSPACE/resources/db/migration:/flyway/sql" \
+            -v "$GITHUB_WORKSPACE/resources/db/flyway.toml:/flyway/conf/flyway.toml" \
+            flyway/flyway:10-alpine \
+            -url=jdbc:postgresql://localhost:5432/postgres \
+            -user=postgres \
+            -password=postgres \
+            migrate
+
+      - name: Verify migration state
+        run: |
+          docker run --rm \
+            --network host \
+            -v "$GITHUB_WORKSPACE/resources/db/migration:/flyway/sql" \
+            -v "$GITHUB_WORKSPACE/resources/db/flyway.toml:/flyway/conf/flyway.toml" \
+            flyway/flyway:10-alpine \
+            -url=jdbc:postgresql://localhost:5432/postgres \
+            -user=postgres \
+            -password=postgres \
+            info
+
   sonar:
+    if: github.event.pull_request.base.repo.owner.login == 'usdot-jpo-ode'
     needs: [build_api, webapp]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Download code coverage results
-        uses: actions/download-artifact@v3
-        continue-on-error: true
+        uses: actions/download-artifact@v4
+        continue-on-error: false
         with:
           name: build_api
-          path: services/cov.xml
+          path: services/coverage.xml
 
       - name: Download Code Coverage Results
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: webapp
           path: webapp
 
-      - name: Find cov.xml
+      - name: Find coverage.xml
         shell: bash
         run: |
-          find "$GITHUB_WORKSPACE" -name "cov.xml"
+          find "$GITHUB_WORKSPACE" -name "coverage.xml"
 
       - name: Find lcov.info
         shell: bash
         run: |
           find "$GITHUB_WORKSPACE" -name "lcov.info"
 
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: "temurin"
+          java-version: "17"
 
       - name: Setup SonarScanner
         uses: warchant/setup-sonar-scanner@v7
@@ -127,10 +364,10 @@ jobs:
           sonar.projectBaseDir=$GITHUB_WORKSPACE
           sonar.projectKey=usdot-jpo-ode_jpo-cvmanager
           sonar.projectName=jpo-cvmanager
-          sonar.python.coverage.reportPaths=$GITHUB_WORKSPACE/services/cov.xml
+          sonar.python.coverage.reportPaths=$GITHUB_WORKSPACE/services/coverage.xml
           sonar.python.version=3.12.2
           api.sonar.projectBaseDir=$GITHUB_WORKSPACE/services
-          api.sonar.sources=addons/images/geo_msg_query,addons/images/count_metric,addons/images/firmware_manager,addons/images/iss_health_check,addons/images/rsu_status_check,api/src,common/pgquery.py
+          api.sonar.sources=addons/images/count_metric,addons/images/firmware_manager,addons/images/iss_health_check,addons/images/rsu_status_check,api/src,common/pgquery.py
           api.sonar.tests=addons/tests,api/tests,common/tests
           webapp.sonar.projectBaseDir=$GITHUB_WORKSPACE/webapp
           webapp.sonar.sources=src

@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react'
-import { SelectedSrm } from '../types/Srm'
+import { useEffect } from 'react'
+import { SelectedSrm } from '../models/Srm'
 
-import './css/SsmSrmItem.css'
+import { Button, Divider, Paper, Typography } from '@mui/material'
 
 export type SsmSrmItemProps = {
   elem: SelectedSrm
@@ -17,21 +17,29 @@ const SsmSrmItem = (props: SsmSrmItemProps) => {
   }, [setSelectedSrm])
 
   return (
-    <div id={props.elem['type'] === 'srmTx' ? 'srmitemdiv' : 'ssmitemdiv'}>
-      <p className="ssmsrmitemtext">{props.elem['time']}</p>
-      <p className="ssmsrmitemtext">{props.elem['requestId']}</p>
-      <p className="ssmsrmitemtext">{props.elem['role']}</p>
-      <p className="ssmsrmitemtext">{props.elem['status']}</p>
-      {props.elem['type'] === 'srmTx' ? (
-        <button className="btnActive" onClick={() => props.setSelectedSrm(props.elem)}>
-          View
-        </button>
-      ) : (
-        <button className="btnDisabled" disabled={true}>
-          View
-        </button>
-      )}
-    </div>
+    <Paper
+      style={{
+        display: 'flex',
+        justifyContent: 'space-evenly',
+        alignItems: 'center',
+        textAlign: 'center',
+        padding: '10px',
+      }}
+    >
+      <Divider />
+      <Typography variant="h4">{props.elem['type'] === 'srmTx' ? 'SRM' : 'SSM'}</Typography>
+      <Typography>{props.elem['time']}</Typography>
+      <Typography>{props.elem['requestId']}</Typography>
+      <Typography>{props.elem['role']}</Typography>
+      <Typography>{props.elem['status']}</Typography>
+      <Button
+        variant="contained"
+        onClick={() => props.setSelectedSrm(props.elem)}
+        disabled={props.elem['type'] !== 'srmTx'}
+      >
+        View
+      </Button>
+    </Paper>
   )
 }
 

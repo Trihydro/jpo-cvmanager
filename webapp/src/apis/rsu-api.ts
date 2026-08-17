@@ -1,41 +1,44 @@
 import EnvironmentVars from '../EnvironmentVars'
-import { WZDxWorkZoneFeed } from '../types/wzdx/WzdxWorkZoneFeed42'
+import { WZDxWorkZoneFeed } from '../models/wzdx/WzdxWorkZoneFeed42'
 import apiHelper from './api-helper'
+import { authApiHelper } from './intersections/api-helper-cviz'
 import {
   ApiMsgRespWithCodes,
-  GeoMsgDataPostBody,
   GetRsuCommandResp,
-  GetRsuUserAuthResp,
-  IssScmsStatus,
   RsuCommandPostBody,
   RsuCounts,
   RsuInfo,
-  RsuMapInfo,
-  RsuMapInfoIpList,
+  RsuInfoList,
   RsuMsgFwdConfigs,
   RsuOnlineStatusRespMultiple,
   RsuOnlineStatusRespSingle,
   SsmSrmData,
-} from './rsu-api-types'
+} from '../models/RsuApi'
 
 class RsuApi {
   // External Methods
   getRsuInfo = async (
     token: string,
     org: string,
-    url_ext: string = '',
+    url_ext = '',
     query_params: Record<string, string> = {}
-  ): Promise<RsuInfo> =>
-    apiHelper._getData({
-      url: EnvironmentVars.rsuInfoEndpoint + url_ext,
+  ): Promise<RsuInfoList> => {
+    const response = await authApiHelper.invokeApi({
+      path: `${EnvironmentVars.rsuInfoPath}${url_ext}`,
+      queryParams: query_params,
       token,
-      query_params,
-      additional_headers: { Organization: org },
+      headers: { Organization: org },
+      toastOnFailure: false,
+      tag: 'rsu',
     })
+
+    const rsuArray = Array.isArray(response) ? (response as RsuInfo[]) : []
+    return { rsuList: rsuArray }
+  }
   getRsuOnline = async (
     token: string,
     org: string,
-    url_ext: string = '',
+    url_ext = '',
     query_params: Record<string, string> = {}
   ): Promise<RsuOnlineStatusRespMultiple | RsuOnlineStatusRespSingle> =>
     apiHelper._getData({
@@ -43,11 +46,12 @@ class RsuApi {
       token,
       query_params,
       additional_headers: { Organization: org },
+      tag: 'rsu',
     })
   getRsuCounts = async (
     token: string,
     org: string,
-    url_ext: string = '',
+    url_ext = '',
     query_params: Record<string, string> = {}
   ): Promise<RsuCounts> =>
     apiHelper._getData({
@@ -55,11 +59,12 @@ class RsuApi {
       token,
       query_params,
       additional_headers: { Organization: org },
+      tag: 'rsu',
     })
-  getRsuMsgFwdConfigs = async (
+  getCachedRsuMsgFwdConfigsFromDatabase = async (
     token: string,
     org: string,
-    url_ext: string = '',
+    url_ext = '',
     query_params: Record<string, string> = {}
   ): Promise<RsuMsgFwdConfigs> =>
     apiHelper._getData({
@@ -67,23 +72,25 @@ class RsuApi {
       token,
       query_params,
       additional_headers: { Organization: org },
+      tag: 'rsu',
     })
-  getRsuAuth = async (
+  getRsuMsgConfigsFromRsu = async (
     token: string,
     org: string,
-    url_ext: string = '',
+    url_ext = '',
     query_params: Record<string, string> = {}
-  ): Promise<GetRsuUserAuthResp> =>
+  ): Promise<RsuMsgFwdConfigs> =>
     apiHelper._getData({
-      url: EnvironmentVars.authEndpoint + url_ext,
+      url: EnvironmentVars.rsuMsgFwdFetchEndpoint + url_ext,
       token,
       query_params,
       additional_headers: { Organization: org },
+      tag: 'rsu',
     })
   getRsuCommand = async (
     token: string,
     org: string,
-    url_ext: string = '',
+    url_ext = '',
     query_params: Record<string, string> = {}
   ): Promise<GetRsuCommandResp> =>
     apiHelper._getData({
@@ -91,53 +98,28 @@ class RsuApi {
       token,
       query_params,
       additional_headers: { Organization: org },
+      tag: 'rsu',
     })
-  getRsuMapInfo = async (
-    token: string,
-    org: string,
-    url_ext: string = '',
-    query_params: Record<string, string> = {}
-  ): Promise<RsuMapInfo | RsuMapInfoIpList> =>
-    apiHelper._getData({
-      url: EnvironmentVars.rsuMapInfoEndpoint + url_ext,
-      token,
-      query_params,
-      additional_headers: { Organization: org },
-    })
-  getSsmSrmData = async (
-    token: string,
-    url_ext: string = '',
-    query_params: Record<string, string> = {}
-  ): Promise<SsmSrmData> =>
+  getSsmSrmData = async (token: string, url_ext = '', query_params: Record<string, string> = {}): Promise<SsmSrmData> =>
     apiHelper._getData({
       url: EnvironmentVars.ssmSrmEndpoint + url_ext,
       token,
       query_params,
-    })
-  getIssScmsStatus = async (
-    token: string,
-    org: string,
-    url_ext: string = '',
-    query_params: Record<string, string> = {}
-  ): Promise<IssScmsStatus> =>
-    apiHelper._getData({
-      url: EnvironmentVars.issScmsStatusEndpoint + url_ext,
-      token,
-      query_params,
-      additional_headers: { Organization: org },
+      tag: 'rsu',
     })
 
   // WZDx
-  getWzdxData = async (token: string, url_ext: string = '', query_params = {}): Promise<WZDxWorkZoneFeed> =>
+  getWzdxData = async (token: string, url_ext = '', query_params = {}): Promise<WZDxWorkZoneFeed> =>
     apiHelper._getData({
       url: EnvironmentVars.wzdxEndpoint + url_ext,
       token,
       query_params,
+      tag: 'wzdx',
     })
 
   // POST
-  postGeoMsgData = async (token: string, body: Object, url_ext: string = ''): Promise<ApiMsgRespWithCodes<any>> =>
-    apiHelper._postData({ url: EnvironmentVars.geoMsgDataEndpoint + url_ext, body, token })
+  postGeoMsgData = async (token: string, body: string, url_ext = ''): Promise<ApiMsgRespWithCodes<any>> =>
+    apiHelper._postData({ url: EnvironmentVars.geoMsgDataEndpoint + url_ext, body, token, tag: 'rsu' })
 
   // POST
   postRsuData = async (
@@ -151,24 +133,18 @@ class RsuApi {
       body: JSON.stringify(body),
       token,
       additional_headers: { Organization: org },
+      tag: 'rsu',
     })
   }
 
   // POST
-  postRsuGeo = async (token: string, org: string, body: Object, url_ext: string): Promise<ApiMsgRespWithCodes<any>> => {
+  postRsuGeo = async (token: string, org: string, body: string, url_ext: string): Promise<ApiMsgRespWithCodes<any>> => {
     return await apiHelper._postData({
       url: EnvironmentVars.rsuGeoQueryEndpoint + url_ext,
       body,
       token,
       additional_headers: { Organization: org },
-    })
-  }
-
-  // POST
-  postContactSupport = async (json: Object): Promise<ApiMsgRespWithCodes<any>> => {
-    return await apiHelper._postData({
-      url: EnvironmentVars.contactSupport,
-      body: JSON.stringify(json),
+      tag: 'rsu',
     })
   }
 }

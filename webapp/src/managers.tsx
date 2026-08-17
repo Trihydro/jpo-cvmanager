@@ -17,13 +17,20 @@ const LocalStorageManager = {
   removeAuthData: () => {
     return localStorage.removeItem(AUTH_DATA_LOCAL_STORAGE_KEY)
   },
+  getIsSuperUser: () => {
+    let authData = null
+    if (localStorage.getItem(AUTH_DATA_LOCAL_STORAGE_KEY) !== 'undefined') {
+      authData = JSON.parse(localStorage.getItem(AUTH_DATA_LOCAL_STORAGE_KEY))
+    }
+    return UserManager.isSuperUser(authData)
+  },
 }
 
 const UserManager = {
   getOrganization: (authLoginData: AuthLoginData, organizationName: string) => {
     let updatedOrg = null
-    for (var i = 0; i < authLoginData.data.organizations.length; i++) {
-      if (organizationName === authLoginData.data.organizations[i].name) {
+    for (let i = 0; i < authLoginData.data.organizations.length; i++) {
+      if (organizationName === authLoginData.data.organizations[i].organization) {
         updatedOrg = authLoginData.data.organizations[i]
       }
     }
@@ -32,6 +39,7 @@ const UserManager = {
   isLoginActive: (authLoginData: AuthLoginData): boolean => {
     return authLoginData != undefined && Date.now() < authLoginData.expires_at
   },
+  isSuperUser: (authLoginData: AuthLoginData): boolean => authLoginData?.data?.super_user ?? false,
 }
 
 const SecureStorageManager = {
@@ -44,11 +52,8 @@ const SecureStorageManager = {
       return authData['role']
     }
   },
-  setUserRole: (authData) => {
-    return secureLocalStorage.setItem(
-      AUTH_DATA_SECURE_STORAGE_KEY,
-      JSON.stringify(authData['data']['organizations'][0])
-    )
+  setUserRole: (organization) => {
+    return secureLocalStorage.setItem(AUTH_DATA_SECURE_STORAGE_KEY, JSON.stringify(organization))
   },
   removeUserRole: () => {
     return secureLocalStorage.removeItem(AUTH_DATA_SECURE_STORAGE_KEY)

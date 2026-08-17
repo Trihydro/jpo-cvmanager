@@ -1,0 +1,91 @@
+@import 'https://use.typekit.net/ioz0eth.css';
+
+#toggle {
+  border: none;
+  padding: 1px 10px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 15px;
+  margin-left: 100px;
+  position: absolute;
+  z-index: 100;
+  margin-top: 10px;
+  right: 10px;
+}
+
+.ssmSrmContainer {
+  width: '100%';
+  top: 220px;
+  left: 0px;
+  overflow-y: auto;
+  text-align: center;
+}
+
+#ssmsrmDataHeader {
+  font-family: 'museo-slab', Arial, Helvetica, sans-serif;
+  font-weight: bolder;
+  margin: 15px;
+  margin-top: 25px;
+}
+
+#ssmSrmHeaderContainer {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  text-align: center;
+  padding: 4px;
+}
+
+#countsContainer {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  text-align: center;
+  margin-top: 15px;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+#countsHeader {
+  font-family: 'museo-slab', Arial, Helvetica, sans-serif;
+  font-weight: bolder;
+  margin: 10px;
+}
+
+#countsData {
+  font-family: 'museo-slab', Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  width: 90px;
+  padding: 5px;
+  margin-bottom: 20px;
+}
+
+#ssmTimeHeader {
+  font-family: 'museo-slab', Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  width: 100px;
+  margin-left: 20px;
+}
+
+#requestHeader {
+  font-family: 'museo-slab', Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  width: 100px;
+  margin-left: 20px;
+}
+
+#roleHeader {
+  font-family: 'museo-slab', Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  width: 90px;
+  margin-left: 40px;
+}
+
+#ssmSrmHeader {
+  font-family: 'museo-slab', Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  width: 100px;
+}

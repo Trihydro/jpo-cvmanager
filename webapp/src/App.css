@@ -1,16 +1,53 @@
+@import 'https://use.typekit.net/ioz0eth.css';
+
+@font-face {
+  font-family: 'Trebuchet MS';
+  src: local('Trebuchet MS'), url('./fonts/Trebuchet\ MS.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Trebuchet MS';
+  src: local('Trebuchet MS'), url('./fonts/Trebuchet\ MS\ Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Trebuchet MS';
+  src: local('Trebuchet MS'), url('./fonts/Trebuchet\ MS\ Italic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Trebuchet MS';
+  src: local('Trebuchet MS'), url('./fonts/Trebuchet\ MS\ Bold\ Italic.ttf') format('truetype');
+  font-weight: bold;
+  font-style: italic;
+}
+
 * {
   margin: 0;
   padding: 0;
 }
 
+body {
+  overflow-y: hidden;
+}
+
 #masterdiv {
-  background-color: #333;
   width: 100%;
   height: 100%;
 }
 
 header {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'museo-slab', Arial, Helvetica, sans-serif;
+}
+
+p {
+  font-family: 'Trebuchet MS', Arial, Helvetica, sans-serif;
 }
 
 .popop-h2 {
@@ -30,54 +67,24 @@ header {
 
 .tabs {
   width: 100%;
-  background-color: #333;
-}
-
-.tab-list {
-  font-family: Arial, Helvetica, sans-serif;
-  font-weight: 550;
-  border-bottom: 1px solid #0e2052;
-  padding-left: 0;
-  background-color: #0e2052;
-  color: white;
-}
-
-.tab-list-item {
-  display: inline-block;
-  list-style: none;
-  margin-bottom: -1px;
-  padding: 0.5rem 0.75rem;
-  cursor: pointer;
-  color: white;
-  text-decoration: none;
-}
-
-.tab-list-active {
-  font-family: Arial, Helvetica, sans-serif;
-  font-weight: 550;
-  background-color: #b55e12;
-  color: white;
-  border: solid #b55e12;
-  border-width: 1px 1px 0 1px;
-  border-top: 0.5px solid #ffffff;
-}
-
-#content-grid {
-  background-color: #333;
 }
 
 #unauthMap {
   width: 100%;
 }
 
-table,
-th,
-td {
-  border: 1px solid black;
-  border-collapse: collapse;
-  min-width: 200px;
+.capital-case {
+  text-transform: capitalize;
 }
 
-.form-label {
-  color: white;
+.museo-slab {
+  font-family: 'museo-slab', Arial, Helvetica, sans-serif;
+}
+
+.capitalize {
+  text-transform: uppercase;
+}
+
+.trebuchet {
+  font-family: 'Trebuchet MS', Arial, Helvetica, sans-serif;
 }

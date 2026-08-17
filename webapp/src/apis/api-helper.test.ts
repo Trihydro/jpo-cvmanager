@@ -50,8 +50,14 @@ it('Test fetch with codes request Error', async () => {
   expect(actualResponse).toEqual(null)
 })
 
+it('Test fetch with non-ok response', async () => {
+  fetchMock.mockResponseOnce('NOT OK', { status: 400 })
+  const actualResponse = await ApiHelper._getData({ url: 'https://test.com', token: 'testToken' })
+  expect(actualResponse).toEqual(null)
+})
+
 it('Test post request', async () => {
-  let expectedResponse = { data: 'Test JSON' }
+  const expectedResponse = { data: 'Test JSON' }
   fetchMock.mockResponseOnce(JSON.stringify(expectedResponse))
   let actualResponse = await ApiHelper._postData({ url: 'https://test.com', token: 'testToken', body: {} })
   expect(actualResponse.body).toEqual(expectedResponse)

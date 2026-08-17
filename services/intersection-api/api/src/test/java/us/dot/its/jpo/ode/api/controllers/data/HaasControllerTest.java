@@ -1,0 +1,91 @@
+package us.dot.its.jpo.ode.api.controllers.data;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.Test;
+import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import org.springframework.context.annotation.Import;
+import us.dot.its.jpo.ode.api.TestcontainersConfiguration;
+import us.dot.its.jpo.ode.api.accessors.haas.HaasLocationDataRepository;
+import us.dot.its.jpo.ode.api.models.LimitedGeoJsonResponse;
+import us.dot.its.jpo.ode.api.models.haas.HaasLocation;
+import us.dot.its.jpo.ode.api.models.haas.HaasLocationResult;
+import us.dot.its.jpo.ode.api.models.keycloak.CvManagerAuthToken;
+import us.dot.its.jpo.ode.api.services.PermissionService;
+import us.dot.its.jpo.ode.mockdata.MockHaasGenerator;
+
+@SpringBootTest
+@ActiveProfiles("integration-test")
+@AutoConfigureMockMvc
+@Import(TestcontainersConfiguration.class)
+public class HaasControllerTest {
+
+    @MockitoBean
+    private HaasController controller;
+
+    @MockitoBean
+    HaasLocationDataRepository haasLocationDataRepository;
+
+    @MockitoBean
+    PermissionService permissionService;
+
+    @Mock
+    private CvManagerAuthToken authToken;
+
+    @Test
+    public void testGetLocations() {
+        HaasLocation location = MockHaasGenerator.getHaasLocations().getFirst();
+
+        List<HaasLocation> locations = new ArrayList<>();
+        locations.add(location);
+
+        doReturn(authToken).when(permissionService).getCvManagerAuthToken();
+        doReturn(true).when(authToken).isSuperUser();
+
+        HaasLocationResult mockResult = new HaasLocationResult(locations, false);
+        when(haasLocationDataRepository.findWithLimit(true, null, null, 1000))
+                .thenReturn(mockResult);
+
+        ResponseEntity<LimitedGeoJsonResponse> result = controller
+                .getLocations(true, null, null, false, 1000);
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(result.getBody().getData().getFeatures()).hasSize(1);
+        assertThat(result.getBody().getMetadata().isTruncated()).isFalse();
+    }
+
+    @Test
+    public void testGetLocationsWithTruncation() {
+        HaasLocation location = MockHaasGenerator.getHaasLocations().getFirst();
+
+        List<HaasLocation> locations = new ArrayList<>();
+        locations.add(location);
+
+        doReturn(authToken).when(permissionService).getCvManagerAuthToken();
+        doReturn(true).when(authToken).isSuperUser();
+
+        HaasLocationResult mockResult = new HaasLocationResult(locations, true);
+        when(haasLocationDataRepository.findWithLimit(true, null, null, 1))
+                .thenReturn(mockResult);
+
+        ResponseEntity<LimitedGeoJsonResponse> result = controller
+                .getLocations(true, null, null, false, 1);
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(result.getBody().getData().getFeatures()).hasSize(1);
+        assertThat(result.getBody().getMetadata().isTruncated()).isTrue();
+        assertThat(result.getBody().getMetadata().getLimit()).isEqualTo(1);
+        assertThat(result.getBody().getMetadata().getReturnedCount()).isEqualTo(1);
+    }
+}

@@ -1,13 +1,15 @@
-import React from 'react'
-import { render, screen, fireEvent, queryByAttribute } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import Map from './Map'
 import { Provider } from 'react-redux'
-import { RootState, setupStore } from '../store'
+import { ThemeProvider } from '@mui/material'
+import { testTheme } from '../styles'
+import { setupStore } from '../store'
 import { replaceChaoticIds } from '../utils/test-utils'
 
 it('snapshot bsmCoordinates wzdx', () => {
   const initialState = {
     rsu: {
+      loading: false,
       value: {
         rsuCounts: {},
         mapList: [],
@@ -22,6 +24,7 @@ it('snapshot bsmCoordinates wzdx', () => {
       },
     },
     wzdx: {
+      loading: false,
       value: {
         features: [
           {
@@ -47,16 +50,17 @@ it('snapshot bsmCoordinates wzdx', () => {
         ],
       },
     },
-  } as any
+  }
   const { container } = render(
-    <Provider store={setupStore(initialState)}>
-      <Map auth={false} />
-    </Provider>
+    <ThemeProvider theme={testTheme}>
+      <Provider store={setupStore(initialState)}>
+        <Map />
+      </Provider>
+    </ThemeProvider>
   )
 
   fireEvent.click(screen.queryByText('RSU Viewer'))
   fireEvent.click(screen.queryByText('Heatmap'))
-  fireEvent.click(screen.queryByText('V2X Msg Viewer'))
   fireEvent.click(screen.queryByText('WZDx Viewer'))
 
   expect(replaceChaoticIds(container)).toMatchSnapshot()
@@ -69,6 +73,7 @@ it('snapshot bsmData clicked', () => {
         bsmCoordinates: [],
         rsuCounts: {},
         mapList: [],
+        rsuData: [],
         bsmStart: '2023-05-10T03:24:00',
         bsmFilterStep: 60, // 1 hour
         bsmFilterOffset: 24 * 4, // 4 days
@@ -93,11 +98,13 @@ it('snapshot bsmData clicked', () => {
         addConfigPoint: false,
       },
     },
-  } as any
+  }
   const { container } = render(
-    <Provider store={setupStore(initialState)}>
-      <Map auth={false} />
-    </Provider>
+    <ThemeProvider theme={testTheme}>
+      <Provider store={setupStore(initialState)}>
+        <Map />
+      </Provider>
+    </ThemeProvider>
   )
 
   expect(replaceChaoticIds(container)).toMatchSnapshot()

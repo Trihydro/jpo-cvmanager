@@ -1,13 +1,11 @@
-import React from 'react'
-
 export type RsuMarkerProps = {
   displayType: string
   onlineStatus?: string
-  scmsStatus?: string
+  scmsStatus?: boolean | null
 }
 
 function RsuMarker(props: RsuMarkerProps) {
-  var circleStyle = {
+  const circleStyle = {
     padding: 5,
     display: 'inline-block',
     borderRadius: '50%',
@@ -22,8 +20,8 @@ function RsuMarker(props: RsuMarkerProps) {
     else if (props.onlineStatus === 'offline') circleStyle.backgroundColor = '#E94F37'
     else circleStyle.backgroundColor = '#B0B0B0'
   } else if (props.displayType === 'scms') {
-    if (props.scmsStatus === '1') circleStyle.backgroundColor = '#A1D363'
-    else if (props.scmsStatus === '0') circleStyle.backgroundColor = '#E94F37'
+    if (props.scmsStatus === true) circleStyle.backgroundColor = '#A1D363'
+    else if (props.scmsStatus === false) circleStyle.backgroundColor = '#E94F37'
     else circleStyle.backgroundColor = '#B0B0B0'
   } else {
     circleStyle.backgroundColor = '#B0B0B0'

@@ -1,6 +1,5 @@
-import React, { useEffect } from 'react'
-import Grid from '@material-ui/core/Grid'
-import logo from '../images/logo.png'
+import React, { useMemo, useState } from 'react'
+import Grid2 from '@mui/material/Grid2'
 import { useSelector, useDispatch } from 'react-redux'
 import EnvironmentVars from '../EnvironmentVars'
 import {
@@ -9,12 +8,10 @@ import {
   selectEmail,
   selectAuthLoginData,
   selectLoginFailure,
-  selectKcFailure,
 
   // actions
   logout,
   changeOrganization,
-  setKcFailure,
   selectLoginMessage,
 } from '../generalSlices/userSlice'
 import { useKeycloak } from '@react-keycloak/web'
@@ -24,9 +21,24 @@ import './css/Header.css'
 import ContactSupportMenu from './ContactSupportMenu'
 import { AnyAction, ThunkDispatch } from '@reduxjs/toolkit'
 import { RootState } from '../store'
+import {
+  Button,
+  Divider,
+  FormControl,
+  FormControlLabel,
+  Menu,
+  Paper,
+  Radio,
+  RadioGroup,
+  Typography,
+  useTheme,
+  Box,
+} from '@mui/material'
+import { ArrowDropDown } from '@mui/icons-material'
 
 const Header = () => {
   const dispatch: ThunkDispatch<RootState, void, AnyAction> = useDispatch()
+  const theme = useTheme()
   const { keycloak } = useKeycloak()
 
   const authLoginData = useSelector(selectAuthLoginData)
@@ -34,85 +46,157 @@ const Header = () => {
   const userName = useSelector(selectName)
   const userEmail = useSelector(selectEmail)
   const loginFailure = useSelector(selectLoginFailure)
-  const kcFailure = useSelector(selectKcFailure)
   const loginMessage = useSelector(selectLoginMessage)
 
-  useEffect(() => {
-    const kcFailureDelay = 500000
-    const kcFailureTimer = setTimeout(() => {
-      if (!keycloak?.authenticated) {
-        console.debug('Login failure logic: User is not authenticated with Keycloak')
-        dispatch(setKcFailure(true))
-      } else {
-        console.debug('Login failure logic: User is now authenticated with Keycloak')
-        dispatch(setKcFailure(false))
-      }
-    }, kcFailureDelay)
+  const [anchorElem, setAnchorElem] = useState<null | HTMLElement>(null)
+  const open = Boolean(anchorElem)
 
-    return () => clearTimeout(kcFailureTimer)
-  }, [keycloak, keycloak?.authenticated, dispatch])
+  const iconPath = useMemo(() => {
+    return theme.palette.mode === 'dark' ? '/icons/logo_dark.png' : '/icons/logo_light.png'
+  }, [theme.palette.mode])
 
   const handleUserLogout = () => {
-    console.debug('handleUserLogout')
     dispatch(logout())
     keycloak?.logout()
   }
 
-  console.log(authLoginData, keycloak?.authenticated)
+  const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorElem(event.currentTarget)
+  }
+
+  const handleMenuClose = () => {
+    setAnchorElem(null)
+  }
 
   return (
     <div>
       {authLoginData && keycloak?.authenticated ? (
-        <header id="header">
-          <Grid container alignItems="center" style={{ height: 'fit-content' }}>
-            <img id="logo" src={logo} alt="Logo" />
-            <h1 id="header-text">{EnvironmentVars.DOT_NAME} CV Manager</h1>
-            <div id="login">
-              <Grid container alignItems="center">
-                <Grid id="userInfoGrid">
-                  <h3 id="nameText">{userName}</h3>
-                  <h3 id="emailText">{userEmail}</h3>
-                  <select
-                    id="organizationDropdown"
-                    value={organizationName}
-                    onChange={(event) => dispatch(changeOrganization(event.target.value))}
+        <Paper id="header" elevation={0}>
+          <Grid2 container alignItems="center">
+            <Grid2 display="flex">
+              <img id="logo" src={iconPath} alt="Logo" height="34px" />
+            </Grid2>
+            <Grid2 size="grow">
+              <h2 id="header-text" className="museo-slab">
+                {EnvironmentVars.DOT_NAME} CV Manager
+              </h2>
+            </Grid2>
+            <Grid2>
+              <Button
+                id="userInfoButton"
+                aria-controls={open ? 'user-menu' : undefined}
+                aria-haspopup="true"
+                aria-expanded={open ? 'true' : undefined}
+                variant="text"
+                color="primary"
+                endIcon={<ArrowDropDown color="info" sx={{ marginLeft: 1 }} />}
+                onClick={handleMenuOpen}
+                className="user-info-btn"
+              >
+                <Box display="flex" flexDirection="column" alignItems="start">
+                  <Typography fontSize="small" color={theme.palette.text.primary} className="capital-case museo-slab">
+                    {userName}
+                  </Typography>
+                  <Typography fontSize="small" color={theme.palette.text.primary} className="capital-case museo-slab">
+                    {organizationName}
+                  </Typography>
+                </Box>
+              </Button>
+              <Menu
+                id="user-menu"
+                anchorEl={anchorElem}
+                open={open}
+                onClose={handleMenuClose}
+                MenuListProps={{
+                  'aria-labelledby': 'userInfoButton',
+                }}
+                sx={{
+                  '& .MuiPaper-root': {
+                    backgroundColor: theme.palette.background.default,
+                  },
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignContent: 'center',
+                    justifyContent: 'center',
+                    padding: '10px',
+                  }}
+                >
+                  <FormControl sx={{ mt: 0.2, minWidth: 200 }} size="small">
+                    <Typography
+                      className="capitalize trebuchet"
+                      sx={{ margin: '10px', fontSize: '12px' }}
+                      color="textSecondary"
+                    >
+                      Organizations
+                    </Typography>
+                    <RadioGroup
+                      id="organizationRadioGroup"
+                      onChange={(event) => dispatch(changeOrganization(event.target.value))}
+                      defaultValue={organizationName}
+                    >
+                      {(authLoginData?.data?.organizations ?? []).map((permission) => (
+                        <FormControlLabel
+                          key={permission.organization}
+                          label={permission.organization}
+                          control={<Radio size="small" />}
+                          value={permission.organization}
+                          sx={{
+                            '& .MuiTypography-root': {
+                              color:
+                                permission.organization === organizationName
+                                  ? theme.palette.text.primary
+                                  : theme.palette.text.secondary,
+                              fontFamily: 'Trebuchet MS, Arial, Helvetica, sans-serif',
+                            },
+                            marginLeft: '10px',
+                          }}
+                        />
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                  <Divider sx={{ margin: '10px' }} />
+                  <Typography className="trebuchet" color="textSecondary" sx={{ margin: '10px', fontSize: '12px' }}>
+                    {userEmail}
+                  </Typography>
+                  <Button
+                    className="museo-slab"
+                    variant="outlined"
+                    color="info"
+                    onClick={handleUserLogout}
+                    sx={{ width: 'fit-content', marginLeft: '10px' }}
                   >
-                    {(authLoginData?.data?.organizations ?? []).map((permission) => (
-                      <option key={permission.name + 'Option'} value={permission.name}>
-                        {permission.name} ({permission.role})
-                      </option>
-                    ))}
-                  </select>
-                </Grid>
-                <button id="logout" onClick={() => handleUserLogout()}>
-                  Logout
-                </button>
-              </Grid>
-            </div>
-          </Grid>
-        </header>
+                    Logout
+                  </Button>
+                </div>
+              </Menu>
+            </Grid2>
+          </Grid2>
+        </Paper>
       ) : (
-        <div id="frontpage">
-          <Grid container id="frontgrid" alignItems="center" direction="column">
-            <Grid container justifyContent="center" alignItems="center">
-              <img id="frontpagelogo" src={logo} alt="Logo" />
-              <h1 id="header-text">{EnvironmentVars.DOT_NAME} CV Manager</h1>
-            </Grid>
+        <Paper id="frontpage">
+          <Grid2 container id="frontgrid" alignItems="center" direction="column">
+            <Grid2 container justifyContent="center" alignItems="center">
+              <img id="frontpagelogo" src={iconPath} alt="Logo" />
+              <h1 id="header-text" className="museo-slab">
+                {EnvironmentVars.DOT_NAME} CV Manager
+              </h1>
+            </Grid2>
             {loginFailure && <h3 id="loginMessage">{loginMessage}</h3>}
             <div id="keycloakbtndiv">
               {loginFailure && (
-                <button className="keycloak-button" onClick={() => handleUserLogout()}>
+                <Button variant="contained" onClick={() => handleUserLogout()}>
                   Logout User
-                </button>
+                </Button>
               )}
             </div>
-            {kcFailure && <h3 id="loginMessage">Application Authentication Error!</h3>}
-
             <br />
-
             {loginFailure && <ContactSupportMenu />}
-          </Grid>
-        </div>
+          </Grid2>
+        </Paper>
       )}
     </div>
   )
