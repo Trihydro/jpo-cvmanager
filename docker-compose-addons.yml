@@ -7,7 +7,7 @@ services:
       context: ./services
       dockerfile: Dockerfile.count_metric
     image: count_metric:latest
-    restart: on-failure:3
+    restart: on-failure:10
     environment:
       ENABLE_EMAILER: ${ENABLE_EMAILER:-}
       DEPLOYMENT_TITLE: ${DEPLOYMENT_TITLE:-}

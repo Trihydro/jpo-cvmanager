@@ -174,10 +174,10 @@ services:
         KEYCLOAK_LOGIN_THEME_NAME: ${KEYCLOAK_LOGIN_THEME_NAME:-sample_theme}.jar
     image: jpo_cvmanager_keycloak:latest
     restart: always
-    depends_on:
-      cvmanager_postgres:
-        required: false
-        condition: service_started
+    # depends_on:
+    #   cvmanager_postgres:
+    #     required: false
+    #     condition: service_started
     # ports:
     #   - '8084:8080'
     #   - '9000:9000'
@@ -191,11 +191,12 @@ services:
       KC_LOG_LEVEL: ${KC_LOG_LEVEL:-INFO}
       KC_DB: postgres
       KC_DB_SCHEMA: keycloak
-      KC_DB_URL_HOST: cvmanager_postgres
+      # KC_DB_URL_HOST: cvmanager_postgres
       KC_DB_URL_DATABASE: postgres
       KC_DB_URL_PORT: 5432
-      KC_DB_USERNAME: ${PG_DB_USER:-postgres}
-      KC_DB_PASSWORD: ${PG_DB_PASS:-postgres}
+      KC_DB_URL: jdbc:postgresql://${PG_DB_KEYCLOAK_HOST}/${PG_DB_KEYCLOAK_NAME}
+      KC_DB_USERNAME: ${PG_DB_KEYCLOAK_USER}
+      KC_DB_PASSWORD: ${PG_DB_KEYCLOAK_PASS}
       KC_HOSTNAME: ${KEYCLOAK_ENDPOINT:-http://${DOCKER_HOST_IP:?error}:8084}
       KEYCLOAK_API_CLIENT_SECRET_KEY: ${KEYCLOAK_API_CLIENT_SECRET_KEY:-keycloak-secret-key}
       KEYCLOAK_SA_COUNT_METRIC_CLIENT_SECRET_KEY: ${KEYCLOAK_SA_COUNT_METRIC_CLIENT_SECRET_KEY:-sa-count-metric-secret-key}
@@ -230,9 +231,9 @@ services:
       FLYWAY_URL: jdbc:postgresql://cvmanager_postgres:5432/${PG_DB_NAME:-postgres}
       FLYWAY_USER: ${PG_DB_USER:-postgres}
       FLYWAY_PASSWORD: ${PG_DB_PASS:-postgres}
-    depends_on:
-      cvmanager_postgres:
-        condition: service_healthy
+    # depends_on:
+    #   cvmanager_postgres:
+    #     condition: service_healthy
     restart: no
 
 volumes:
