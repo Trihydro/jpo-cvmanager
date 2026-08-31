@@ -5,6 +5,34 @@ include:
   - docker-compose-obu-ota-server.yml
 
 services:
+  cvmanager_nginx_proxy:
+      profiles:
+        - basic
+        - webapp
+        - cvmanager_nginx_proxy
+      build:
+        context: ./resources/nginx
+      image: cvmanager_nginx_proxy:latest
+      restart: unless-stopped
+      ports:
+        - 80:80
+        - 8444:443
+      environment:
+        NGINX_ENVSUBST_OUTPUT_DIR: /etc/nginx
+        SERVER_HOST: ${WEBAPP_DOMAIN}
+      volumes:
+        - ./resources/nginx/nginx-ssl.conf:/etc/nginx/templates/nginx.conf.template
+        - ./resources/nginx/gen_dhparam.sh:/docker-entrypoint.d/gen_dhparam.sh
+        - ./resources/nginx/ssl:/etc/ssl
+      depends_on:
+        - cvmanager_webapp
+        - cvmanager_keycloak
+        - cvmanager_api
+      logging:
+        options:
+          max-size: '10m'
+          max-file: '5'
+
   cvmanager_api:
     profiles:
       - basic

@@ -35,6 +35,8 @@ services:
       KAFKA_BIGQUERY_TABLENAME: ${KAFKA_BIGQUERY_TABLENAME:-}
 
       LOGGING_LEVEL: ${COUNTS_LOGGING_LEVEL:-}
+    volumes:
+      - ./services/resources/ca:/etc/ssl/ca
     logging:
       options:
         max-size: '10m'
@@ -68,6 +70,8 @@ services:
       PG_DB_PASS: ${PG_DB_PASS:-postgres}
 
       LOGGING_LEVEL: ${RSU_STATUS_LOGGING_LEVEL:-}
+    volumes:
+      - ./services/resources/ca:/etc/ssl/ca
     logging:
       options:
         max-size: '10m'
@@ -107,6 +111,7 @@ services:
       LOGGING_LEVEL: ${ISS_LOGGING_LEVEL:-}
     volumes:
       - ./resources/google/${GOOGLE_ACCESS_KEY_NAME:-}:/home/gcp_key.json
+      - ./services/resources/ca:/etc/ssl/ca
     logging:
       options:
         max-size: '10m'
