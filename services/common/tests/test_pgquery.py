@@ -96,7 +96,8 @@ def test_init_socket_connection_engine():
 @patch("common.common_environment.PG_DB_PASS", "pass")
 @patch("common.common_environment.PG_DB_NAME", "my_database")
 @patch("common.common_environment.PG_DB_HOST", "my_hostname:3000")
-def test_init_connection_engine_target_tcp():
+@patch("common.pgquery.event.listens_for", return_value=lambda fn: fn)
+def test_init_connection_engine_target_tcp(mock_listens_for):
     # mock return values for function dependencies
     pgquery.init_tcp_connection_engine = MagicMock(return_value="my_engine1")
     pgquery.init_socket_connection_engine = MagicMock(return_value="my_engine2")
@@ -137,7 +138,8 @@ def test_init_connection_engine_target_tcp():
     "common.common_environment.INSTANCE_CONNECTION_NAME",
     "myproject:us-central1:myinstance",
 )
-def test_init_connection_engine_target_socket():
+@patch("common.pgquery.event.listens_for", return_value=lambda fn: fn)
+def test_init_connection_engine_target_socket(mock_listens_for):
     # mock return values for function dependencies
     pgquery.init_tcp_connection_engine = MagicMock(return_value="my_engine1")
     pgquery.init_socket_connection_engine = MagicMock(return_value="my_engine2")

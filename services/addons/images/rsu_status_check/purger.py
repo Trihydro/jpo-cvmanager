@@ -6,7 +6,7 @@ from common import common_environment
 
 
 def get_all_rsus():
-    query = "SELECT to_jsonb(row) FROM (SELECT rsu_id FROM public.rsus) AS row ORDER BY rsu_id"
+    query = "SELECT to_jsonb(row) FROM (SELECT rsu_id FROM rsus) AS row ORDER BY rsu_id"
     data = pgquery.query_db(query)
 
     rsu_obj = {}
@@ -24,7 +24,7 @@ def get_last_online_rsu_records(rsu_dict):
         "SELECT a.ping_id, a.rsu_id, a.timestamp "
         "FROM ("
         "SELECT pd.ping_id, pd.rsu_id, pd.timestamp, ROW_NUMBER() OVER (PARTITION BY pd.rsu_id order by pd.timestamp DESC) AS row_id "
-        "FROM public.ping AS pd "
+        "FROM ping AS pd "
         "WHERE pd.result = '1'"
         ") AS a "
         "WHERE a.row_id <= 1 ORDER BY rsu_id"
@@ -66,7 +66,7 @@ def purge_ping_data(stale_period):
             if value["timestamp"] < stale_point:
                 # Create query to delete all records of the stale ping data besides the latest record
                 purge_query = (
-                    "DELETE FROM public.ping "
+                    "DELETE FROM ping "
                     f"WHERE rsu_id = {str(key)} AND ping_id != {str(value["ping_id"])}"
                 )
 
@@ -74,7 +74,7 @@ def purge_ping_data(stale_period):
         if purge_query == "":
             # Create query to delete all records before the stale_point
             purge_query = (
-                "DELETE FROM public.ping "
+                "DELETE FROM ping "
                 f"WHERE rsu_id = {str(key)} AND timestamp < '{stale_point_str}'::timestamp"
             )
 

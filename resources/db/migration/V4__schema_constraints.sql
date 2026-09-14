@@ -6,7 +6,7 @@
 -- filters by keycloak_id. Without a UNIQUE constraint the column had no
 -- uniqueness enforcement and no index, making those operations sequential
 -- scans and allowing duplicate keycloak_id values to be inserted.
-ALTER TABLE public.users
+ALTER TABLE users
     ADD CONSTRAINT users_keycloak_id UNIQUE (keycloak_id);
 
 -- ============================================================
@@ -27,9 +27,9 @@ BEGIN
                    PARTITION BY from_id, to_id
                    ORDER BY firmware_upgrade_rule_id
                ) AS rn
-        FROM public.firmware_upgrade_rules
+        FROM firmware_upgrade_rules
     )
-    DELETE FROM public.firmware_upgrade_rules
+    DELETE FROM firmware_upgrade_rules
     WHERE firmware_upgrade_rule_id IN (
         SELECT firmware_upgrade_rule_id FROM duplicates WHERE rn > 1
     );
@@ -37,7 +37,7 @@ BEGIN
     RAISE NOTICE 'firmware_upgrade_rules: removed % duplicate row(s) before adding UNIQUE constraint', removed_count;
 END $$;
 
-ALTER TABLE public.firmware_upgrade_rules
+ALTER TABLE firmware_upgrade_rules
     ADD CONSTRAINT firmware_upgrade_rules_from_to_unique UNIQUE (from_id, to_id);
 
 -- ============================================================
@@ -49,10 +49,10 @@ ALTER TABLE public.firmware_upgrade_rules
 -- is deleted has no operational meaning and blocks re-insertion of an RSU
 -- with the same rsu_id. CASCADE removes the child automatically when the
 -- parent RSU is deleted.
-ALTER TABLE public.rsu_options
+ALTER TABLE rsu_options
     DROP CONSTRAINT IF EXISTS fk_rsu_id,
     ADD CONSTRAINT fk_rsu_id FOREIGN KEY (rsu_id)
-        REFERENCES public.rsus (rsu_id)
+        REFERENCES rsus (rsu_id)
         ON UPDATE NO ACTION
         ON DELETE CASCADE;
 
@@ -63,10 +63,10 @@ ALTER TABLE public.rsu_options
 -- 1:1 structural extension of rsus. Same rationale as rsu_options above:
 -- the row has no meaning without its parent RSU, and without CASCADE a
 -- pending delete is blocked by the child row.
-ALTER TABLE public.consecutive_firmware_upgrade_failures
+ALTER TABLE consecutive_firmware_upgrade_failures
     DROP CONSTRAINT IF EXISTS fk_rsu_id,
     ADD CONSTRAINT fk_rsu_id FOREIGN KEY (rsu_id)
-        REFERENCES public.rsus (rsu_id)
+        REFERENCES rsus (rsu_id)
         ON UPDATE NO ACTION
         ON DELETE CASCADE;
 
@@ -77,10 +77,10 @@ ALTER TABLE public.consecutive_firmware_upgrade_failures
 -- SNMP forwarding config rows are RSU-specific. There is no meaningful
 -- forwarding configuration without an owning RSU, and without CASCADE a
 -- delete of an RSU that has active forwarding entries is blocked entirely.
-ALTER TABLE public.snmp_msgfwd_config
+ALTER TABLE snmp_msgfwd_config
     DROP CONSTRAINT IF EXISTS fk_rsu_id,
     ADD CONSTRAINT fk_rsu_id FOREIGN KEY (rsu_id)
-        REFERENCES public.rsus (rsu_id)
+        REFERENCES rsus (rsu_id)
         ON UPDATE NO ACTION
         ON DELETE CASCADE;
 
@@ -91,10 +91,10 @@ ALTER TABLE public.snmp_msgfwd_config
 -- Retry exhaustion records are tied to a specific RSU. The composite primary
 -- key includes rsu_id, so a row cannot be reassigned to another RSU; CASCADE
 -- is the only meaningful behaviour on RSU deletion.
-ALTER TABLE public.max_retry_limit_reached_instances
+ALTER TABLE max_retry_limit_reached_instances
     DROP CONSTRAINT IF EXISTS fk_rsu_id,
     ADD CONSTRAINT fk_rsu_id FOREIGN KEY (rsu_id)
-        REFERENCES public.rsus (rsu_id)
+        REFERENCES rsus (rsu_id)
         ON UPDATE NO ACTION
         ON DELETE CASCADE;
 
@@ -119,9 +119,9 @@ BEGIN
                    PARTITION BY rsu_id, organization_id
                    ORDER BY rsu_organization_id
                ) AS rn
-        FROM public.rsu_organization
+        FROM rsu_organization
     )
-    DELETE FROM public.rsu_organization
+    DELETE FROM rsu_organization
     WHERE rsu_organization_id IN (
         SELECT rsu_organization_id FROM duplicates WHERE rn > 1
     );
@@ -129,16 +129,16 @@ BEGIN
     RAISE NOTICE 'rsu_organization: removed % duplicate row(s) before adding UNIQUE constraint', removed_count;
 END $$;
 
-ALTER TABLE public.rsu_organization
+ALTER TABLE rsu_organization
     ADD CONSTRAINT rsu_organization_unique UNIQUE (rsu_id, organization_id);
 
 -- An RSU may belong to multiple organizations (shared-jurisdiction model,
 -- e.g. a Region 1 RSU is also visible to CDOT). CASCADE on rsu_id is safe:
 -- deleting an RSU legitimately removes all of its organization memberships.
-ALTER TABLE public.rsu_organization
+ALTER TABLE rsu_organization
     DROP CONSTRAINT IF EXISTS fk_rsu_id,
     ADD CONSTRAINT fk_rsu_id FOREIGN KEY (rsu_id)
-        REFERENCES public.rsus (rsu_id)
+        REFERENCES rsus (rsu_id)
         ON UPDATE NO ACTION
         ON DELETE CASCADE;
 
@@ -148,10 +148,10 @@ ALTER TABLE public.rsu_organization
 -- delete an organization that would orphan an RSU (check_orphan_rsus) and then
 -- removes the membership rows explicitly. A CASCADE here would let any other
 -- code path bypass that orphan check at the database level.
-ALTER TABLE public.rsu_organization
+ALTER TABLE rsu_organization
     DROP CONSTRAINT IF EXISTS fk_organization_id,
     ADD CONSTRAINT fk_organization_id FOREIGN KEY (organization_id)
-        REFERENCES public.organizations (organization_id)
+        REFERENCES organizations (organization_id)
         ON UPDATE NO ACTION
         ON DELETE RESTRICT;
 
@@ -163,17 +163,17 @@ ALTER TABLE public.rsu_organization
 -- A junction row linking an RSU to an intersection has no meaning once either
 -- parent is deleted. CASCADE on both FKs prevents orphaned rows and allows
 -- RSU or intersection deletion without requiring manual cleanup first.
-ALTER TABLE public.rsu_intersection
+ALTER TABLE rsu_intersection
     DROP CONSTRAINT IF EXISTS fk_rsu_id,
     ADD CONSTRAINT fk_rsu_id FOREIGN KEY (rsu_id)
-        REFERENCES public.rsus (rsu_id)
+        REFERENCES rsus (rsu_id)
         ON UPDATE NO ACTION
         ON DELETE CASCADE;
 
-ALTER TABLE public.rsu_intersection
+ALTER TABLE rsu_intersection
     DROP CONSTRAINT IF EXISTS fk_intersection_id,
     ADD CONSTRAINT fk_intersection_id FOREIGN KEY (intersection_id)
-        REFERENCES public.intersections (intersection_id)
+        REFERENCES intersections (intersection_id)
         ON UPDATE NO ACTION
         ON DELETE CASCADE;
 
@@ -191,9 +191,9 @@ BEGIN
                    PARTITION BY user_id, organization_id
                    ORDER BY user_organization_id
                ) AS rn
-        FROM public.user_organization
+        FROM user_organization
     )
-    DELETE FROM public.user_organization
+    DELETE FROM user_organization
     WHERE user_organization_id IN (
         SELECT user_organization_id FROM duplicates WHERE rn > 1
     );
@@ -201,18 +201,18 @@ BEGIN
     RAISE NOTICE 'user_organization: removed % duplicate row(s) before adding UNIQUE constraint', removed_count;
 END $$;
 
-ALTER TABLE public.user_organization
+ALTER TABLE user_organization
     ADD CONSTRAINT user_organization_unique UNIQUE (user_id, organization_id);
 
 -- CASCADE on user_id: the Keycloak custom user provider's removeUser operation
--- deletes directly from public.users without first removing user_organization
+-- deletes directly from users without first removing user_organization
 -- rows. Without CASCADE the delete fails for any user that has organization
 -- memberships. user_email_notification already uses CASCADE on user_id for the
 -- same reason; this aligns user_organization with that existing pattern.
-ALTER TABLE public.user_organization
+ALTER TABLE user_organization
     DROP CONSTRAINT IF EXISTS fk_user_id,
     ADD CONSTRAINT fk_user_id FOREIGN KEY (user_id)
-        REFERENCES public.users (user_id)
+        REFERENCES users (user_id)
         ON UPDATE NO ACTION
         ON DELETE CASCADE;
 
@@ -226,10 +226,10 @@ ALTER TABLE public.user_organization
 -- role_id is deliberately left RESTRICT: roles are reference data that are
 -- never deleted, and the RESTRICT FK actively prevents a role still assigned
 -- to any user from being removed.
-ALTER TABLE public.user_organization
+ALTER TABLE user_organization
     DROP CONSTRAINT IF EXISTS fk_organization_id,
     ADD CONSTRAINT fk_organization_id FOREIGN KEY (organization_id)
-        REFERENCES public.organizations (organization_id)
+        REFERENCES organizations (organization_id)
         ON UPDATE NO ACTION
         ON DELETE RESTRICT;
 
@@ -247,9 +247,9 @@ BEGIN
                    PARTITION BY intersection_id, organization_id
                    ORDER BY intersection_organization_id
                ) AS rn
-        FROM public.intersection_organization
+        FROM intersection_organization
     )
-    DELETE FROM public.intersection_organization
+    DELETE FROM intersection_organization
     WHERE intersection_organization_id IN (
         SELECT intersection_organization_id FROM duplicates WHERE rn > 1
     );
@@ -257,16 +257,16 @@ BEGIN
     RAISE NOTICE 'intersection_organization: removed % duplicate row(s) before adding UNIQUE constraint', removed_count;
 END $$;
 
-ALTER TABLE public.intersection_organization
+ALTER TABLE intersection_organization
     ADD CONSTRAINT intersection_organization_unique UNIQUE (intersection_id, organization_id);
 
 -- An intersection may belong to multiple organizations. CASCADE on
 -- intersection_id is safe: deleting an intersection legitimately removes all
 -- of its organization memberships.
-ALTER TABLE public.intersection_organization
+ALTER TABLE intersection_organization
     DROP CONSTRAINT IF EXISTS fk_intersection_id,
     ADD CONSTRAINT fk_intersection_id FOREIGN KEY (intersection_id)
-        REFERENCES public.intersections (intersection_id)
+        REFERENCES intersections (intersection_id)
         ON UPDATE NO ACTION
         ON DELETE CASCADE;
 
@@ -276,10 +276,10 @@ ALTER TABLE public.intersection_organization
 -- (check_orphan_intersections) and then removes the membership rows
 -- explicitly. A CASCADE here would let any other code path bypass that orphan
 -- check at the database level.
-ALTER TABLE public.intersection_organization
+ALTER TABLE intersection_organization
     DROP CONSTRAINT IF EXISTS fk_organization_id,
     ADD CONSTRAINT fk_organization_id FOREIGN KEY (organization_id)
-        REFERENCES public.organizations (organization_id)
+        REFERENCES organizations (organization_id)
         ON UPDATE NO ACTION
         ON DELETE RESTRICT;
 
@@ -294,12 +294,12 @@ ALTER TABLE public.intersection_organization
 -- correct it before the constraint is applied.
 DO $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM public.rsus WHERE milepost < 0) THEN
+    IF EXISTS (SELECT 1 FROM rsus WHERE milepost < 0) THEN
         RAISE EXCEPTION 'rsus: one or more rows have milepost < 0 — correct the data before applying this migration';
     END IF;
 END $$;
 
-ALTER TABLE public.rsus
+ALTER TABLE rsus
     ADD CONSTRAINT rsus_milepost_non_negative CHECK (milepost >= 0);
 
 -- ============================================================
@@ -314,16 +314,16 @@ ALTER TABLE public.rsus
 DO $$
 DECLARE null_count integer;
 BEGIN
-    UPDATE public.users SET first_name = '' WHERE first_name IS NULL;
+    UPDATE users SET first_name = '' WHERE first_name IS NULL;
     GET DIAGNOSTICS null_count = ROW_COUNT;
     RAISE NOTICE 'users: backfilled % NULL first_name value(s) to empty string', null_count;
 
-    UPDATE public.users SET last_name = '' WHERE last_name IS NULL;
+    UPDATE users SET last_name = '' WHERE last_name IS NULL;
     GET DIAGNOSTICS null_count = ROW_COUNT;
     RAISE NOTICE 'users: backfilled % NULL last_name value(s) to empty string', null_count;
 END $$;
 
-ALTER TABLE public.users
+ALTER TABLE users
     ALTER COLUMN first_name SET NOT NULL,
     ALTER COLUMN last_name  SET NOT NULL;
 
@@ -339,14 +339,14 @@ ALTER TABLE public.users
 DO $$
 BEGIN
     IF EXISTS (
-        SELECT 1 FROM public.roles
+        SELECT 1 FROM roles
         WHERE name NOT IN ('admin', 'operator', 'user')
     ) THEN
         RAISE EXCEPTION 'roles: unexpected role name found — only admin, operator, user are allowed';
     END IF;
 END $$;
 
-ALTER TABLE public.roles
+ALTER TABLE roles
     ADD CONSTRAINT roles_name_allowed CHECK (name IN ('admin', 'operator', 'user'));
 
 -- ============================================================
@@ -359,12 +359,12 @@ ALTER TABLE public.roles
 DO $$
 BEGIN
     IF EXISTS (
-        SELECT 1 FROM public.intersections
+        SELECT 1 FROM intersections
         WHERE intersection_number !~ '^[0-9]+$'
     ) THEN
         RAISE EXCEPTION 'intersections: one or more rows have a non-numeric intersection_number — correct the data before applying this migration';
     END IF;
 END $$;
 
-ALTER TABLE public.intersections
+ALTER TABLE intersections
     ADD CONSTRAINT intersection_number_numeric CHECK (intersection_number ~ '^[0-9]+$');

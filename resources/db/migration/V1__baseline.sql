@@ -11,14 +11,14 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE SCHEMA IF NOT EXISTS keycloak;
 
-CREATE SEQUENCE public.manufacturers_manufacturer_id_seq
+CREATE SEQUENCE manufacturers_manufacturer_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.manufacturers
+CREATE TABLE IF NOT EXISTS manufacturers
 (
    manufacturer_id integer NOT NULL DEFAULT nextval('manufacturers_manufacturer_id_seq'::regclass),
    name character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -26,14 +26,14 @@ CREATE TABLE IF NOT EXISTS public.manufacturers
    CONSTRAINT manufacturers_name UNIQUE (name)
 );
 
-CREATE SEQUENCE public.rsu_models_rsu_model_id_seq
+CREATE SEQUENCE rsu_models_rsu_model_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.rsu_models
+CREATE TABLE IF NOT EXISTS rsu_models
 (
    rsu_model_id integer NOT NULL DEFAULT nextval('rsu_models_rsu_model_id_seq'::regclass),
    name character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -42,19 +42,19 @@ CREATE TABLE IF NOT EXISTS public.rsu_models
    CONSTRAINT rsu_models_pkey PRIMARY KEY (rsu_model_id),
    CONSTRAINT rsu_models_name UNIQUE (name),
    CONSTRAINT fk_manufacturer FOREIGN KEY (manufacturer)
-      REFERENCES public.manufacturers (manufacturer_id) MATCH SIMPLE
+      REFERENCES manufacturers (manufacturer_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE SEQUENCE public.firmware_images_firmware_id_seq
+CREATE SEQUENCE firmware_images_firmware_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.firmware_images
+CREATE TABLE IF NOT EXISTS firmware_images
 (
    firmware_id integer NOT NULL DEFAULT nextval('firmware_images_firmware_id_seq'::regclass),
    name character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -66,42 +66,42 @@ CREATE TABLE IF NOT EXISTS public.firmware_images
    CONSTRAINT firmware_images_install_package UNIQUE (install_package),
    CONSTRAINT firmware_images_version UNIQUE (version),
    CONSTRAINT fk_model FOREIGN KEY (model)
-      REFERENCES public.rsu_models (rsu_model_id) MATCH SIMPLE
+      REFERENCES rsu_models (rsu_model_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE SEQUENCE public.firmware_upgrade_rules_firmware_upgrade_rule_id_seq
+CREATE SEQUENCE firmware_upgrade_rules_firmware_upgrade_rule_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.firmware_upgrade_rules
+CREATE TABLE IF NOT EXISTS firmware_upgrade_rules
 (
    firmware_upgrade_rule_id integer NOT NULL DEFAULT nextval('firmware_upgrade_rules_firmware_upgrade_rule_id_seq'::regclass),
    from_id integer NOT NULL,
    to_id integer NOT NULL,
    CONSTRAINT firmware_upgrade_rules_pkey PRIMARY KEY (firmware_upgrade_rule_id),
    CONSTRAINT fk_from_id FOREIGN KEY (from_id)
-      REFERENCES public.firmware_images (firmware_id) MATCH SIMPLE
+      REFERENCES firmware_images (firmware_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_to_id FOREIGN KEY (to_id)
-      REFERENCES public.firmware_images (firmware_id) MATCH SIMPLE
+      REFERENCES firmware_images (firmware_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE SEQUENCE public.organizations_organization_id_seq
+CREATE SEQUENCE organizations_organization_id_seq
     INCREMENT 1
     START 1
     MINVALUE 1
     MAXVALUE 2147483647
     CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.organizations
+CREATE TABLE IF NOT EXISTS organizations
 (
     organization_id integer NOT NULL DEFAULT nextval('organizations_organization_id_seq'::regclass),
     name character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -110,14 +110,14 @@ CREATE TABLE IF NOT EXISTS public.organizations
     CONSTRAINT organizations_name UNIQUE (name)
 );
 
-CREATE SEQUENCE public.rsu_credentials_credential_id_seq
+CREATE SEQUENCE rsu_credentials_credential_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.rsu_credentials
+CREATE TABLE IF NOT EXISTS rsu_credentials
 (
    credential_id integer NOT NULL DEFAULT nextval('rsu_credentials_credential_id_seq'::regclass),
    username character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -132,14 +132,14 @@ CREATE TABLE IF NOT EXISTS public.rsu_credentials
       ON DELETE NO ACTION
 );
 
-CREATE SEQUENCE public.snmp_credentials_snmp_credential_id_seq
+CREATE SEQUENCE snmp_credentials_snmp_credential_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.snmp_credentials
+CREATE TABLE IF NOT EXISTS snmp_credentials
 (
    snmp_credential_id integer NOT NULL DEFAULT nextval('snmp_credentials_snmp_credential_id_seq'::regclass),
    username character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -155,14 +155,14 @@ CREATE TABLE IF NOT EXISTS public.snmp_credentials
    ON DELETE NO ACTION
 );
 
-CREATE SEQUENCE public.snmp_protocols_snmp_protocol_id_seq
+CREATE SEQUENCE snmp_protocols_snmp_protocol_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.snmp_protocols
+CREATE TABLE IF NOT EXISTS snmp_protocols
 (
    snmp_protocol_id integer NOT NULL DEFAULT nextval('snmp_protocols_snmp_protocol_id_seq'::regclass),
    protocol_code character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -171,14 +171,14 @@ CREATE TABLE IF NOT EXISTS public.snmp_protocols
    CONSTRAINT snmp_protocols_nickname UNIQUE (nickname)
 );
 
-CREATE SEQUENCE public.rsus_rsu_id_seq
+CREATE SEQUENCE rsus_rsu_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.rsus
+CREATE TABLE IF NOT EXISTS rsus
 (
    rsu_id integer NOT NULL DEFAULT nextval('rsus_rsu_id_seq'::regclass),
    geography geography NOT NULL,
@@ -199,51 +199,51 @@ CREATE TABLE IF NOT EXISTS public.rsus
    CONSTRAINT rsu_serial_number UNIQUE (serial_number),
    CONSTRAINT rsu_iss_scms_id UNIQUE (iss_scms_id),
    CONSTRAINT fk_model FOREIGN KEY (model)
-      REFERENCES public.rsu_models (rsu_model_id) MATCH SIMPLE
+      REFERENCES rsu_models (rsu_model_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_credential_id FOREIGN KEY (credential_id)
-      REFERENCES public.rsu_credentials (credential_id) MATCH SIMPLE
+      REFERENCES rsu_credentials (credential_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_snmp_credential_id FOREIGN KEY (snmp_credential_id)
-      REFERENCES public.snmp_credentials (snmp_credential_id) MATCH SIMPLE
+      REFERENCES snmp_credentials (snmp_credential_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_snmp_protocol_id FOREIGN KEY (snmp_protocol_id)
-      REFERENCES public.snmp_protocols (snmp_protocol_id) MATCH SIMPLE
+      REFERENCES snmp_protocols (snmp_protocol_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_firmware_version FOREIGN KEY (firmware_version)
-      REFERENCES public.firmware_images (firmware_id) MATCH SIMPLE
+      REFERENCES firmware_images (firmware_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_target_firmware_version FOREIGN KEY (target_firmware_version)
-      REFERENCES public.firmware_images (firmware_id) MATCH SIMPLE
+      REFERENCES firmware_images (firmware_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE TABLE IF NOT EXISTS public.rsu_options
+CREATE TABLE IF NOT EXISTS rsu_options
 (
    rsu_id integer NOT NULL,
    tim_deposit boolean NOT NULL DEFAULT FALSE,
    snmp_monitoring boolean NOT NULL DEFAULT FALSE,
    CONSTRAINT rsu_options_pkey PRIMARY KEY (rsu_id),
    CONSTRAINT fk_rsu_id FOREIGN KEY (rsu_id)
-      REFERENCES public.rsus (rsu_id) MATCH SIMPLE
+      REFERENCES rsus (rsu_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE SEQUENCE public.ping_ping_id_seq
+CREATE SEQUENCE ping_ping_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.ping
+CREATE TABLE IF NOT EXISTS ping
 (
    ping_id integer NOT NULL DEFAULT nextval('ping_ping_id_seq'::regclass),
    timestamp timestamp without time zone NOT NULL,
@@ -251,19 +251,19 @@ CREATE TABLE IF NOT EXISTS public.ping
    rsu_id integer NOT NULL,
    CONSTRAINT ping_pkey PRIMARY KEY (ping_id),
    CONSTRAINT fk_rsu_id FOREIGN KEY (rsu_id)
-      REFERENCES public.rsus (rsu_id) MATCH SIMPLE
+      REFERENCES rsus (rsu_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE SEQUENCE public.roles_role_id_seq
+CREATE SEQUENCE roles_role_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.roles
+CREATE TABLE IF NOT EXISTS roles
 (
    role_id integer NOT NULL DEFAULT nextval('roles_role_id_seq'::regclass),
    name character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -271,14 +271,14 @@ CREATE TABLE IF NOT EXISTS public.roles
    CONSTRAINT roles_name UNIQUE (name)
 );
 
-CREATE SEQUENCE public.users_user_id_seq
+CREATE SEQUENCE users_user_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.users
+CREATE TABLE IF NOT EXISTS users
 (
    user_id integer NOT NULL DEFAULT nextval('users_user_id_seq'::regclass),
    keycloak_id UUID NOT NULL DEFAULT uuid_generate_v4(),
@@ -291,14 +291,14 @@ CREATE TABLE IF NOT EXISTS public.users
    CONSTRAINT users_email UNIQUE (email)
 );
 
-CREATE SEQUENCE public.user_organization_user_organization_id_seq
+CREATE SEQUENCE user_organization_user_organization_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.user_organization
+CREATE TABLE IF NOT EXISTS user_organization
 (
    user_organization_id integer NOT NULL DEFAULT nextval('user_organization_user_organization_id_seq'::regclass),
    user_id integer NOT NULL,
@@ -306,55 +306,55 @@ CREATE TABLE IF NOT EXISTS public.user_organization
    role_id integer NOT NULL,
    CONSTRAINT user_organization_pkey PRIMARY KEY (user_organization_id),
    CONSTRAINT fk_user_id FOREIGN KEY (user_id)
-      REFERENCES public.users (user_id) MATCH SIMPLE
+      REFERENCES users (user_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_organization_id FOREIGN KEY (organization_id)
-      REFERENCES public.organizations (organization_id) MATCH SIMPLE
+      REFERENCES organizations (organization_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_role_id FOREIGN KEY (role_id)
-      REFERENCES public.roles (role_id) MATCH SIMPLE
+      REFERENCES roles (role_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE SEQUENCE public.rsu_organization_rsu_organization_id_seq
+CREATE SEQUENCE rsu_organization_rsu_organization_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.rsu_organization
+CREATE TABLE IF NOT EXISTS rsu_organization
 (
    rsu_organization_id integer NOT NULL DEFAULT nextval('rsu_organization_rsu_organization_id_seq'::regclass),
    rsu_id integer NOT NULL,
    organization_id integer NOT NULL,
    CONSTRAINT rsu_organization_pkey PRIMARY KEY (rsu_organization_id),
    CONSTRAINT fk_rsu_id FOREIGN KEY (rsu_id)
-      REFERENCES public.rsus (rsu_id) MATCH SIMPLE
+      REFERENCES rsus (rsu_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_organization_id FOREIGN KEY (organization_id)
-      REFERENCES public.organizations (organization_id) MATCH SIMPLE
+      REFERENCES organizations (organization_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE VIEW public.rsu_organization_name AS
+CREATE VIEW rsu_organization_name AS
 SELECT ro.rsu_id, org.name
-FROM public.rsu_organization AS ro
-JOIN public.organizations AS org ON ro.organization_id = org.organization_id;
+FROM rsu_organization AS ro
+JOIN organizations AS org ON ro.organization_id = org.organization_id;
 
-CREATE SEQUENCE public.iss_keys_iss_key_id_seq
+CREATE SEQUENCE iss_keys_iss_key_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.iss_keys
+CREATE TABLE IF NOT EXISTS iss_keys
 (
    iss_key_id integer NOT NULL DEFAULT nextval('iss_keys_iss_key_id_seq'::regclass),
    common_name character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -362,14 +362,14 @@ CREATE TABLE IF NOT EXISTS public.iss_keys
    CONSTRAINT iss_keys_pkey PRIMARY KEY (iss_key_id)
 );
 
-CREATE SEQUENCE public.scms_health_scms_health_id_seq
+CREATE SEQUENCE scms_health_scms_health_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.scms_health
+CREATE TABLE IF NOT EXISTS scms_health
 (
    scms_health_id integer NOT NULL DEFAULT nextval('scms_health_scms_health_id_seq'::regclass),
    timestamp timestamp without time zone NOT NULL,
@@ -378,19 +378,19 @@ CREATE TABLE IF NOT EXISTS public.scms_health
    rsu_id integer NOT NULL,
    CONSTRAINT scms_health_pkey PRIMARY KEY (scms_health_id),
    CONSTRAINT fk_rsu_id FOREIGN KEY (rsu_id)
-      REFERENCES public.rsus (rsu_id) MATCH SIMPLE
+      REFERENCES rsus (rsu_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE SEQUENCE public.rsu_health_rsu_health_id_seq
+CREATE SEQUENCE rsu_health_rsu_health_id_seq
     INCREMENT 1
     START 1
     MINVALUE 1
     MAXVALUE 2147483647
     CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.rsu_health
+CREATE TABLE IF NOT EXISTS rsu_health
 (
     rsu_health_id integer NOT NULL DEFAULT nextval('rsu_health_rsu_health_id_seq'::regclass),
     timestamp timestamp without time zone NOT NULL,
@@ -398,19 +398,19 @@ CREATE TABLE IF NOT EXISTS public.rsu_health
     rsu_id integer NOT NULL,
     CONSTRAINT rsu_health_pkey PRIMARY KEY (rsu_health_id),
     CONSTRAINT fk_rsu_id FOREIGN KEY (rsu_id)
-        REFERENCES public.rsus (rsu_id) MATCH SIMPLE
+        REFERENCES rsus (rsu_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
 );
 
-CREATE SEQUENCE public.snmp_msgfwd_type_id_seq
+CREATE SEQUENCE snmp_msgfwd_type_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.snmp_msgfwd_type
+CREATE TABLE IF NOT EXISTS snmp_msgfwd_type
 (
    snmp_msgfwd_type_id integer NOT NULL DEFAULT nextval('snmp_msgfwd_type_id_seq'::regclass),
    name character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -418,7 +418,7 @@ CREATE TABLE IF NOT EXISTS public.snmp_msgfwd_type
    CONSTRAINT snmp_msgfwd_type_name UNIQUE (name)
 );
 
-CREATE TABLE IF NOT EXISTS public.snmp_msgfwd_config
+CREATE TABLE IF NOT EXISTS snmp_msgfwd_config
 (
    rsu_id integer NOT NULL,
    msgfwd_type integer NOT NULL,
@@ -432,23 +432,23 @@ CREATE TABLE IF NOT EXISTS public.snmp_msgfwd_config
    security bit(1) NOT NULL,
    CONSTRAINT snmp_msgfwd_config_pkey PRIMARY KEY (rsu_id, msgfwd_type, snmp_index),
    CONSTRAINT fk_rsu_id FOREIGN KEY (rsu_id)
-      REFERENCES public.rsus (rsu_id) MATCH SIMPLE
+      REFERENCES rsus (rsu_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_msgfwd_type FOREIGN KEY (msgfwd_type)
-      REFERENCES public.snmp_msgfwd_type (snmp_msgfwd_type_id) MATCH SIMPLE
+      REFERENCES snmp_msgfwd_type (snmp_msgfwd_type_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE SEQUENCE public.email_type_email_type_id_seq
+CREATE SEQUENCE email_type_email_type_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.email_type
+CREATE TABLE IF NOT EXISTS email_type
 (
    email_type_id integer NOT NULL DEFAULT nextval('email_type_email_type_id_seq'::regclass),
    email_type character varying(128) COLLATE pg_catalog.default NOT NULL,
@@ -463,14 +463,14 @@ CREATE TABLE IF NOT EXISTS public.email_type
    CONSTRAINT at_least_one_frequency CHECK (supports_immediate OR supports_hourly OR supports_daily OR supports_weekly OR supports_monthly)
 );
 
-CREATE SEQUENCE public.user_email_notification_user_email_notification_id_seq
+CREATE SEQUENCE user_email_notification_user_email_notification_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.user_email_notification
+CREATE TABLE IF NOT EXISTS user_email_notification
 (
    user_email_notification_id integer NOT NULL DEFAULT nextval('user_email_notification_user_email_notification_id_seq'::regclass),
    user_id integer NOT NULL,
@@ -484,23 +484,23 @@ CREATE TABLE IF NOT EXISTS public.user_email_notification
    CONSTRAINT user_email_notification_unique UNIQUE (user_id, email_type_id),
    CONSTRAINT at_least_one_subscription CHECK (immediate OR hourly OR daily OR weekly OR monthly),
    CONSTRAINT fk_user_id FOREIGN KEY (user_id)
-      REFERENCES public.users (user_id) MATCH SIMPLE
+      REFERENCES users (user_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE CASCADE,
    CONSTRAINT fk_email_type_id FOREIGN KEY (email_type_id)
-      REFERENCES public.email_type (email_type_id) MATCH SIMPLE
+      REFERENCES email_type (email_type_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE CASCADE
 );
 
-CREATE SEQUENCE public.obu_ota_request_id_seq
+CREATE SEQUENCE obu_ota_request_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.obu_ota_requests (
+CREATE TABLE IF NOT EXISTS obu_ota_requests (
    request_id integer NOT NULL DEFAULT nextval('obu_ota_request_id_seq'::regclass),
    obu_sn character varying(128) NOT NULL,
    request_datetime timestamp NOT NULL,
@@ -511,17 +511,17 @@ CREATE TABLE IF NOT EXISTS public.obu_ota_requests (
    error_message varchar(128) NOT NULL,
    manufacturer int4 NOT NULL,
    CONSTRAINT obu_ota_requests_pkey PRIMARY KEY (request_id),
-   CONSTRAINT fk_manufacturer FOREIGN KEY (manufacturer) REFERENCES public.manufacturers(manufacturer_id)
+   CONSTRAINT fk_manufacturer FOREIGN KEY (manufacturer) REFERENCES manufacturers(manufacturer_id)
 );
 
-CREATE SEQUENCE public.intersections_intersection_id_seq
+CREATE SEQUENCE intersections_intersection_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.intersections
+CREATE TABLE IF NOT EXISTS intersections
 (
    intersection_id integer NOT NULL DEFAULT nextval('intersections_intersection_id_seq'::regclass),
    intersection_number character varying(128) NOT NULL,
@@ -533,37 +533,37 @@ CREATE TABLE IF NOT EXISTS public.intersections
    CONSTRAINT intersection_intersection_number UNIQUE (intersection_number)
 );
 
-CREATE SEQUENCE public.intersection_organization_intersection_organization_id_seq
+CREATE SEQUENCE intersection_organization_intersection_organization_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.intersection_organization
+CREATE TABLE IF NOT EXISTS intersection_organization
 (
    intersection_organization_id integer NOT NULL DEFAULT nextval('intersection_organization_intersection_organization_id_seq'::regclass),
    intersection_id integer NOT NULL,
    organization_id integer NOT NULL,
    CONSTRAINT intersection_organization_pkey PRIMARY KEY (intersection_organization_id),
    CONSTRAINT fk_intersection_id FOREIGN KEY (intersection_id)
-      REFERENCES public.intersections (intersection_id) MATCH SIMPLE
+      REFERENCES intersections (intersection_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_organization_id FOREIGN KEY (organization_id)
-      REFERENCES public.organizations (organization_id) MATCH SIMPLE
+      REFERENCES organizations (organization_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE SEQUENCE public.rsu_intersection_rsu_intersection_id_seq
+CREATE SEQUENCE rsu_intersection_rsu_intersection_id_seq
    INCREMENT 1
    START 1
    MINVALUE 1
    MAXVALUE 2147483647
    CACHE 1;
 
-CREATE TABLE IF NOT EXISTS public.rsu_intersection
+CREATE TABLE IF NOT EXISTS rsu_intersection
 (
    rsu_intersection_id integer NOT NULL DEFAULT nextval('rsu_intersection_rsu_intersection_id_seq'::regclass),
    rsu_id integer NOT NULL,
@@ -571,61 +571,61 @@ CREATE TABLE IF NOT EXISTS public.rsu_intersection
    CONSTRAINT rsu_intersection_pkey PRIMARY KEY (rsu_intersection_id),
    CONSTRAINT rsu_intersection_unique UNIQUE (rsu_id, intersection_id),
    CONSTRAINT fk_rsu_id FOREIGN KEY (rsu_id)
-      REFERENCES public.rsus (rsu_id) MATCH SIMPLE
+      REFERENCES rsus (rsu_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_intersection_id FOREIGN KEY (intersection_id)
-      REFERENCES public.intersections (intersection_id) MATCH SIMPLE
+      REFERENCES intersections (intersection_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE TABLE IF NOT EXISTS public.consecutive_firmware_upgrade_failures
+CREATE TABLE IF NOT EXISTS consecutive_firmware_upgrade_failures
 (
    rsu_id integer NOT NULL,
    consecutive_failures integer NOT NULL,
    CONSTRAINT consecutive_firmware_upgrade_failures_pkey PRIMARY KEY (rsu_id),
    CONSTRAINT fk_rsu_id FOREIGN KEY (rsu_id)
-      REFERENCES public.rsus (rsu_id) MATCH SIMPLE
+      REFERENCES rsus (rsu_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
-CREATE TABLE IF NOT EXISTS public.max_retry_limit_reached_instances
+CREATE TABLE IF NOT EXISTS max_retry_limit_reached_instances
 (
    rsu_id integer NOT NULL,
    reached_at timestamp without time zone NOT NULL,
    target_firmware_version integer NOT NULL,
    CONSTRAINT max_retry_limit_reached_instances_pkey PRIMARY KEY (rsu_id, reached_at),
    CONSTRAINT fk_rsu_id FOREIGN KEY (rsu_id)
-      REFERENCES public.rsus (rsu_id) MATCH SIMPLE
+      REFERENCES rsus (rsu_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION,
    CONSTRAINT fk_target_firmware_version FOREIGN KEY (target_firmware_version)
-      REFERENCES public.firmware_images (firmware_id) MATCH SIMPLE
+      REFERENCES firmware_images (firmware_id) MATCH SIMPLE
       ON UPDATE NO ACTION
       ON DELETE NO ACTION
 );
 
 -- Indexes
-CREATE INDEX idx_organizations_name ON public.organizations (name);
+CREATE INDEX idx_organizations_name ON organizations (name);
 
 -- RSUs
-CREATE INDEX idx_rsu_organization ON public.rsu_organization (organization_id, rsu_id);
-CREATE INDEX idx_rsus_ipv4_address ON public.rsus (ipv4_address);
-CREATE INDEX idx_rsus_ipv4_rsu_id ON public.rsus (ipv4_address, rsu_id);
+CREATE INDEX idx_rsu_organization ON rsu_organization (organization_id, rsu_id);
+CREATE INDEX idx_rsus_ipv4_address ON rsus (ipv4_address);
+CREATE INDEX idx_rsus_ipv4_rsu_id ON rsus (ipv4_address, rsu_id);
 
 -- Intersections
-CREATE INDEX idx_intersections_intersection_number ON public.intersections (intersection_number);
-CREATE INDEX idx_intersection_id ON public.intersections (intersection_id);
-CREATE INDEX idx_intersection_organization ON public.intersection_organization (organization_id, intersection_id);
+CREATE INDEX idx_intersections_intersection_number ON intersections (intersection_number);
+CREATE INDEX idx_intersection_id ON intersections (intersection_id);
+CREATE INDEX idx_intersection_organization ON intersection_organization (organization_id, intersection_id);
 
 -- Users
-CREATE INDEX idx_users_email ON public.users (email);
-CREATE INDEX idx_users_user_id ON public.users (user_id);
-CREATE INDEX idx_user_organization ON public.user_organization (user_id, organization_id);
+CREATE INDEX idx_users_email ON users (email);
+CREATE INDEX idx_users_user_id ON users (user_id);
+CREATE INDEX idx_user_organization ON user_organization (user_id, organization_id);
 
 -- SCMS health
-CREATE INDEX IF NOT EXISTS idx_scms_health_timestamp ON public.scms_health (timestamp);
+CREATE INDEX IF NOT EXISTS idx_scms_health_timestamp ON scms_health (timestamp);
 
 COMMIT;

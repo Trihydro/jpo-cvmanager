@@ -13,4 +13,6 @@ services:
     profiles:
       - rsu-info-bridge
     depends_on:
-      - cvmanager_postgres
+      cvmanager_postgres:
+        required: false
+        condition: service_healthy
