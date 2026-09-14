@@ -24,6 +24,7 @@ services:
       PG_DB_NAME: ${PG_DB_NAME:-postgres}
       PG_DB_USER: ${PG_DB_USER:-postgres}
       PG_DB_PASS: ${PG_DB_PASS:-postgres}
+      PG_DB_SCHEMA: ${DB_SCHEMA:-public}
 
       DESTINATION_DB: ${COUNT_DESTINATION_DB:-MONGODB}
 
@@ -68,6 +69,7 @@ services:
       PG_DB_NAME: ${PG_DB_NAME:-postgres}
       PG_DB_USER: ${PG_DB_USER:-postgres}
       PG_DB_PASS: ${PG_DB_PASS:-postgres}
+      PG_DB_SCHEMA: ${DB_SCHEMA:-public}
 
       LOGGING_LEVEL: ${RSU_STATUS_LOGGING_LEVEL:-}
     volumes:
@@ -104,6 +106,7 @@ services:
       PG_DB_NAME: ${PG_DB_NAME:-postgres}
       PG_DB_USER: ${PG_DB_USER:-postgres}
       PG_DB_PASS: ${PG_DB_PASS:-postgres}
+      PG_DB_SCHEMA: ${DB_SCHEMA:-public}
 
       PROJECT_ID: ${GCP_PROJECT_ID:-}
       GOOGLE_APPLICATION_CREDENTIALS: /home/gcp_key.json
@@ -134,6 +137,7 @@ services:
       PG_DB_NAME: ${PG_DB_NAME:-postgres}
       PG_DB_USER: ${PG_DB_USER:-postgres}
       PG_DB_PASS: ${PG_DB_PASS:-postgres}
+      PG_DB_SCHEMA: ${DB_SCHEMA:-public}
 
       UPGRADE_RUNNER_ENDPOINT: ${FIRMWARE_MANAGER_UPGRADE_RUNNER_ENDPOINT:-http://firmware_manager_upgrade_runner:8080}
 

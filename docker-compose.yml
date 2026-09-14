@@ -45,10 +45,11 @@ services:
     ports:
       - '8081:5000'
     environment:
-      PG_DB_HOST: ${PG_DB_HOST:-cvmanager_postgres:5432}
+      PG_DB_HOST: ${PG_DB_HOST:-${DB_HOST:-cvmanager_postgres}:${DB_PORT:-5432}}
       PG_DB_USER: ${PG_DB_USER:-postgres}
       PG_DB_PASS: ${PG_DB_PASS:-postgres}
       PG_DB_NAME: ${PG_DB_NAME:-postgres}
+      PG_DB_SCHEMA: ${DB_SCHEMA:-public}
       INSTANCE_CONNECTION_NAME: ${INSTANCE_CONNECTION_NAME}
 
       MONGO_DB_URI: ${MONGO_DB_URI:-mongodb://${MONGO_READ_WRITE_USER:-ode}:${MONGO_READ_WRITE_PASS:-replace-me}@${DB_HOST_IP:-mongo}:${DB_HOST_PORT:-27017}/?directConnection=true&authSource=admin}
@@ -146,7 +147,6 @@ services:
 
   cvmanager_postgres:
     profiles:
-      - basic
       - cvmanager_postgres
     image: postgis/postgis:15-master
     restart: always
@@ -195,11 +195,12 @@ services:
       KC_LOG_LEVEL: ${KC_LOG_LEVEL:-INFO}
       KC_DB: postgres
       KC_DB_SCHEMA: keycloak
-      KC_DB_URL_HOST: cvmanager_postgres
+      KC_DB_URL_HOST: ${DB_HOST:-cvmanager_postgres}
       KC_DB_URL_DATABASE: postgres
-      KC_DB_URL_PORT: 5432
+      KC_DB_URL_PORT: ${DB_PORT:-5432}
       KC_DB_USERNAME: ${PG_DB_USER:-postgres}
       KC_DB_PASSWORD: ${PG_DB_PASS:-postgres}
+      CVMANAGER_DB_SCHEMA: ${DB_SCHEMA:-public}
       KC_HOSTNAME: ${KEYCLOAK_ENDPOINT:-http://${DOCKER_HOST_IP:?error}:8084}
       KEYCLOAK_API_CLIENT_SECRET_KEY: ${KEYCLOAK_API_CLIENT_SECRET_KEY:-keycloak-secret-key}
       KEYCLOAK_SA_COUNT_METRIC_CLIENT_SECRET_KEY: ${KEYCLOAK_SA_COUNT_METRIC_CLIENT_SECRET_KEY:-sa-count-metric-secret-key}
@@ -230,11 +231,14 @@ services:
       - ./resources/db/migration:/flyway/sql
       - ./resources/db/flyway.toml:/flyway/conf/flyway.toml
     environment:
-      FLYWAY_URL: jdbc:postgresql://cvmanager_postgres:5432/${PG_DB_NAME:-postgres}
+      FLYWAY_URL: jdbc:postgresql://${DB_HOST:-cvmanager_postgres}:${DB_PORT:-5432}/${PG_DB_NAME:-postgres}
       FLYWAY_USER: ${PG_DB_USER:-postgres}
       FLYWAY_PASSWORD: ${PG_DB_PASS:-postgres}
+      FLYWAY_SCHEMAS: ${DB_SCHEMA:-public}
+      FLYWAY_DEFAULT_SCHEMA: ${DB_SCHEMA:-public}
     depends_on:
       cvmanager_postgres:
+        required: false
         condition: service_healthy
     restart: no
 

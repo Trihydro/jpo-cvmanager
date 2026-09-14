@@ -24,13 +24,13 @@ FROM (
         org.name AS org_name,
         roles.name AS role
     FROM
-        public.users
+        users
     LEFT JOIN
-        public.user_organization AS uo ON uo.user_id = users.user_id
+        user_organization AS uo ON uo.user_id = users.user_id
     LEFT JOIN
-        public.organizations AS org ON org.organization_id = uo.organization_id
+        organizations AS org ON org.organization_id = uo.organization_id
     LEFT JOIN
-        public.roles ON roles.role_id = uo.role_id
+        roles ON roles.role_id = uo.role_id
 ) AS subquery
 GROUP BY
     user_id,

@@ -5,19 +5,19 @@ def build_user_email_list(msg_type, org_name):
     # Build the user email query based on the availability of an organization name
     email_query = (
         "SELECT to_jsonb(row) FROM ("
-        "SELECT email FROM public.users "
+        "SELECT email FROM users "
         "WHERE user_id IN ("
-        "SELECT user_id FROM public.user_email_notification "
+        "SELECT user_id FROM user_email_notification "
         "WHERE email_type_id = ("
-        f"SELECT email_type_id FROM public.email_type WHERE email_type = '{msg_type}'"
+        f"SELECT email_type_id FROM email_type WHERE email_type = '{msg_type}'"
         "))"
     )
     if org_name:
         email_query += (
             " AND user_id IN ("
-            "SELECT user_id FROM public.user_organization "
+            "SELECT user_id FROM user_organization "
             "WHERE organization_id = ("
-            f"SELECT organization_id FROM public.organizations WHERE name = '{org_name}'"
+            f"SELECT organization_id FROM organizations WHERE name = '{org_name}'"
             "))"
         )
     email_query += ") as row"
@@ -34,7 +34,7 @@ def build_user_email_list(msg_type, org_name):
 def build_org_email_list(org_name):
     email_query = (
         "SELECT to_jsonb(row) FROM ("
-        f"SELECT email FROM public.organizations WHERE name = '{org_name}'"
+        f"SELECT email FROM organizations WHERE name = '{org_name}'"
         ") as row"
     )
 
@@ -68,11 +68,11 @@ def get_email_list(msg_type, org_name=None):
 def get_email_list_from_rsu(msg_type, rsu_ip):
     email_query = (
         "SELECT to_jsonb(row) FROM ("
-        "SELECT name, email FROM public.organizations "
+        "SELECT name, email FROM organizations "
         "WHERE organization_id IN ("
-        "SELECT organization_id FROM public.rsu_organization "
+        "SELECT organization_id FROM rsu_organization "
         "WHERE rsu_id IN ("
-        f"SELECT rsu_id FROM public.rsus WHERE ipv4_address = '{rsu_ip}'"
+        f"SELECT rsu_id FROM rsus WHERE ipv4_address = '{rsu_ip}'"
         "))) as row"
     )
 

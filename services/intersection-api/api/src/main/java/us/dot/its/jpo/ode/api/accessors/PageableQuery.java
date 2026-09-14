@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -110,7 +111,10 @@ public interface PageableQuery {
         if (latest != null) {
             resultList.add(latest);
         }
-        return new PageImpl<>(resultList);
+        // Use a concrete Pageable rather than PageImpl's default Pageable.unpaged() --
+        // Unpaged.getOffset() throws UnsupportedOperationException, which crashes
+        // Jackson serialization of the returned Page.
+        return new PageImpl<>(resultList, PageRequest.of(0, 1), resultList.size());
     }
 
     private static AggregationResult getAggregationResult(@Nonnull MongoTemplate mongoTemplate,
