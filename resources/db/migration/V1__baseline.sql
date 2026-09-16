@@ -7,7 +7,6 @@
 BEGIN;
 
 CREATE EXTENSION IF NOT EXISTS postgis;
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE SCHEMA IF NOT EXISTS keycloak;
 
@@ -281,7 +280,7 @@ CREATE SEQUENCE users_user_id_seq
 CREATE TABLE IF NOT EXISTS users
 (
    user_id integer NOT NULL DEFAULT nextval('users_user_id_seq'::regclass),
-   keycloak_id UUID NOT NULL DEFAULT uuid_generate_v4(),
+   keycloak_id UUID NOT NULL DEFAULT gen_random_uuid(),
    email character varying(128) COLLATE pg_catalog.default NOT NULL,
    first_name character varying(128),
    last_name character varying(128),
