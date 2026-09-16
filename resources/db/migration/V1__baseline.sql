@@ -8,8 +8,6 @@ BEGIN;
 
 CREATE EXTENSION IF NOT EXISTS postgis;
 
-CREATE SCHEMA IF NOT EXISTS keycloak;
-
 CREATE SEQUENCE manufacturers_manufacturer_id_seq
    INCREMENT 1
    START 1
