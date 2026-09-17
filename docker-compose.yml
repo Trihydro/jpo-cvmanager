@@ -77,7 +77,7 @@ services:
       ENABLE_WZDX_FEATURES: ${ENABLE_WZDX_FEATURES:-false}
 
       CORS_DOMAIN: ${CORS_DOMAIN:-*}
-      KEYCLOAK_ENDPOINT: ${KEYCLOAK_ENDPOINT:-http://${DOCKER_HOST_IP:?error}:8084}
+      KEYCLOAK_ENDPOINT: ${KEYCLOAK_INTERNAL_ENDPOINT:-http://cvmanager_keycloak:8080}
       KEYCLOAK_REALM: ${KEYCLOAK_REALM:-cvmanager}
       KEYCLOAK_API_CLIENT_ID: ${KEYCLOAK_API_CLIENT_ID:-cvmanager-api}
       KEYCLOAK_API_CLIENT_SECRET_KEY: ${KEYCLOAK_API_CLIENT_SECRET_KEY:-keycloak-secret-key}
@@ -196,10 +196,10 @@ services:
       KC_DB: postgres
       KC_DB_SCHEMA: keycloak
       KC_DB_URL_HOST: ${DB_HOST:-cvmanager_postgres}
-      KC_DB_URL_DATABASE: postgres
+      KC_DB_URL_DATABASE: ${PG_DB_NAME:-postgres}
       KC_DB_URL_PORT: ${DB_PORT:-5432}
-      KC_DB_USERNAME: ${PG_DB_USER:-postgres}
-      KC_DB_PASSWORD: ${PG_DB_PASS:-postgres}
+      KC_DB_USERNAME: ${PG_DB_KEYCLOAK_USER:-postgres}
+      KC_DB_PASSWORD: ${PG_DB_KEYCLOAK_PASS:-postgres}
       CVMANAGER_DB_SCHEMA: ${DB_SCHEMA:-public}
       KC_HOSTNAME: ${KEYCLOAK_ENDPOINT:-http://${DOCKER_HOST_IP:?error}:8084}
       KEYCLOAK_API_CLIENT_SECRET_KEY: ${KEYCLOAK_API_CLIENT_SECRET_KEY:-keycloak-secret-key}
