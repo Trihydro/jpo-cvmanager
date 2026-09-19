@@ -5,10 +5,12 @@ spring:
     compose:
       enabled: false
   datasource:
-    url: ${POSTGRES_SERVER_URL:jdbc:postgresql://localhost:5432}/${POSTGRES_DB:postgres}?currentSchema=${PG_DB_SCHEMA:public}
+    url: ${POSTGRES_SERVER_URL:jdbc:postgresql://localhost:5432}/${POSTGRES_DB:postgres}
     username: ${PG_DB_USER:postgres}
     password: ${PG_DB_PASS:postgres}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-init-sql: SET search_path TO ${PG_DB_SCHEMA:public}
   jpa:
     hibernate:
       ddl-auto: none

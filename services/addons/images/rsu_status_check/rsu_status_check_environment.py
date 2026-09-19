@@ -5,6 +5,6 @@ ZABBIX=get_env_var("ZABBIX", "False", warn=False).lower() == "true"
 STALE_PERIOD_HOURS=int(get_env_var("STALE_PERIOD", "24", warn=False))
 RSU_MSGFWD_FETCH=get_env_var("RSU_MSGFWD_FETCH", "False", warn=False).lower() == "true"
 
-ZABBIX_ENDPOINT=get_env_var("ZABBIX_ENDPOINT", error=True)
-ZABBIX_USER=get_env_var("ZABBIX_USER", error=True)
-ZABBIX_PASSWORD=get_env_var("ZABBIX_PASSWORD", error=True)
+ZABBIX_ENDPOINT=get_env_var("ZABBIX_ENDPOINT", error=ZABBIX)
+ZABBIX_USER=get_env_var("ZABBIX_USER", error=ZABBIX)
+ZABBIX_PASSWORD=get_env_var("ZABBIX_PASSWORD", error=ZABBIX, secret=True)

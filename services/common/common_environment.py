@@ -44,4 +44,5 @@ PG_DB_USER = get_env_var("PG_DB_USER")
 PG_DB_PASS = get_env_var("PG_DB_PASS")
 PG_DB_NAME = get_env_var("PG_DB_NAME")
 PG_DB_SCHEMA = get_env_var("PG_DB_SCHEMA", "public")
+PG_DB_SSL = get_env_var("PG_DB_SSL", "False", warn=False).lower() == "true"
 INSTANCE_CONNECTION_NAME = get_env_var("INSTANCE_CONNECTION_NAME", "").strip()
