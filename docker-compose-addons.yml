@@ -70,6 +70,7 @@ services:
       PG_DB_USER: ${PG_DB_USER:-postgres}
       PG_DB_PASS: ${PG_DB_PASS:-postgres}
       PG_DB_SCHEMA: ${DB_SCHEMA:-public}
+      PG_DB_SSL: ${PG_DB_SSL:-False}
 
       LOGGING_LEVEL: ${RSU_STATUS_LOGGING_LEVEL:-}
     volumes:
