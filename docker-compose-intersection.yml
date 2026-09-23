@@ -42,7 +42,8 @@ services:
 
       PG_DB_USER: ${PG_DB_USER:-postgres}
       PG_DB_PASS: ${PG_DB_PASS:-postgres}
-      POSTGRES_SERVER_URL: jdbc:postgresql://${PG_DB_HOST:-cvmanager_postgres:5432}
+      PG_DB_NAME: ${PG_DB_NAME:-postgres}
+      POSTGRES_SERVER_URL: jdbc:postgresql://${PG_DB_HOST:-${DB_HOST:-cvmanager_postgres}:${DB_PORT:-5432}}
 
       INTERSECTION_API_ENABLE_API: ${INTERSECTION_API_ENABLE_API:-True}
       INTERSECTION_API_ENABLE_EMAILER: ${INTERSECTION_API_ENABLE_EMAILER:-true}

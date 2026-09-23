@@ -64,7 +64,7 @@ spring:
       detection-strategy: annotated
   # Postgres Configuration
   datasource:
-    url: ${POSTGRES_SERVER_URL:jdbc:postgresql://cvmanager_postgres:5432}/postgres
+    url: ${POSTGRES_SERVER_URL:jdbc:postgresql://cvmanager_postgres:5432}/${PG_DB_NAME:postgres}
     username: ${PG_DB_USER:postgres}
     password: ${PG_DB_PASS}
   jpa:

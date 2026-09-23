@@ -50,6 +50,7 @@ services:
       PG_DB_PASS: ${PG_DB_PASS:-postgres}
       PG_DB_NAME: ${PG_DB_NAME:-postgres}
       PG_DB_SCHEMA: ${DB_SCHEMA:-public}
+      PG_DB_SSL: ${PG_DB_SSL:-False}
       INSTANCE_CONNECTION_NAME: ${INSTANCE_CONNECTION_NAME}
 
       MONGO_DB_URI: ${MONGO_DB_URI:-mongodb://${MONGO_READ_WRITE_USER:-ode}:${MONGO_READ_WRITE_PASS:-replace-me}@${DB_HOST_IP:-mongo}:${DB_HOST_PORT:-27017}/?directConnection=true&authSource=admin}
@@ -194,7 +195,7 @@ services:
       KC_HEALTH_ENABLED: 'true'
       KC_LOG_LEVEL: ${KC_LOG_LEVEL:-INFO}
       KC_DB: postgres
-      KC_DB_SCHEMA: keycloak
+      KC_DB_SCHEMA: ${KC_DB_SCHEMA:-keycloak}
       KC_DB_URL_HOST: ${DB_HOST:-cvmanager_postgres}
       KC_DB_URL_DATABASE: ${PG_DB_NAME:-postgres}
       KC_DB_URL_PORT: ${DB_PORT:-5432}
