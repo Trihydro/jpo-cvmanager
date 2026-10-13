@@ -792,6 +792,7 @@
           "http://localhost:3001/*",
           "http://localhost:3002/*",
           "http://localhost/*",
+          "https://localhost:8444/*",
           "${WEBAPP_ENDPOINT}/*"
         ],
         "webOrigins": [
