@@ -1,4 +1,5 @@
 import sqlalchemy
+from sqlalchemy import event
 import logging
 from common import common_environment
 
@@ -59,6 +60,15 @@ def init_socket_connection_engine(db_user, db_pass, db_name, unix_query):
     return pool
 
 
+def _set_search_path(pool, schema):
+    @event.listens_for(pool, "connect")
+    def _on_connect(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute(f'SET search_path TO "{schema}"')
+        cursor.close()
+        dbapi_connection.commit()
+
+
 def init_connection_engine():
     db_user = common_environment.PG_DB_USER
     db_pass = common_environment.PG_DB_PASS
@@ -68,16 +78,18 @@ def init_connection_engine():
         unix_query = {
             "unix_sock": f"/cloudsql/{common_environment.INSTANCE_CONNECTION_NAME}/.s.PGSQL.5432"
         }
-        return init_socket_connection_engine(db_user, db_pass, db_name, unix_query)
+        pool = init_socket_connection_engine(db_user, db_pass, db_name, unix_query)
     else:
         logging.debug("Using tcp connection")
         db_host = common_environment.PG_DB_HOST
         # Extract host and port from db_host
         host_args = db_host.split(":")
         db_hostname, db_port = host_args[0], int(host_args[1])
-        return init_tcp_connection_engine(
+        pool = init_tcp_connection_engine(
             db_user, db_pass, db_name, db_hostname, db_port
         )
+    _set_search_path(pool, common_environment.PG_DB_SCHEMA)
+    return pool
 
 
 def query_db(query_string, params=None):

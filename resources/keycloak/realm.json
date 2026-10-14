@@ -1995,7 +1995,7 @@
           "subComponents": {},
           "config": {
             "JDBC_URL": [
-              "jdbc:postgresql://${KC_DB_URL_HOST}:${KC_DB_URL_PORT}/${KC_DB_URL_DATABASE}?currentSchema=${KC_DB_SCHEMA}"
+              "jdbc:postgresql://${KC_DB_URL_HOST}:${KC_DB_URL_PORT}/${KC_DB_URL_DATABASE}?currentSchema=${CVMANAGER_DB_SCHEMA}"
             ],
             "DB_USERNAME": ["${KC_DB_USERNAME}"],
             "VALIDATION_QUERY": ["select 1"],

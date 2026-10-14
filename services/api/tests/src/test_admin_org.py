@@ -441,10 +441,10 @@ def test_modify_org_bulk_tim_deposit_success(app, permission_result):
 
             # Check bulk update call
             bulk_query = (
-                "INSERT INTO public.rsu_options (rsu_id, tim_deposit) "
+                "INSERT INTO rsu_options (rsu_id, tim_deposit) "
                 "SELECT ro.rsu_id, :tim_deposit "
-                "FROM public.rsu_organization ro "
-                "JOIN public.organizations org ON ro.organization_id = org.organization_id "
+                "FROM rsu_organization ro "
+                "JOIN organizations org ON ro.organization_id = org.organization_id "
                 "WHERE org.name = :name "
                 "ON CONFLICT (rsu_id) DO UPDATE SET tim_deposit = EXCLUDED.tim_deposit"
             )
@@ -485,10 +485,10 @@ def test_modify_org_bulk_snmp_monitoring_success(app, permission_result):
 
             # Check bulk update call
             bulk_query = (
-                "INSERT INTO public.rsu_options (rsu_id, snmp_monitoring) "
+                "INSERT INTO rsu_options (rsu_id, snmp_monitoring) "
                 "SELECT ro.rsu_id, :snmp_monitoring "
-                "FROM public.rsu_organization ro "
-                "JOIN public.organizations org ON ro.organization_id = org.organization_id "
+                "FROM rsu_organization ro "
+                "JOIN organizations org ON ro.organization_id = org.organization_id "
                 "WHERE org.name = :name "
                 "ON CONFLICT (rsu_id) DO UPDATE SET snmp_monitoring = EXCLUDED.snmp_monitoring"
             )
@@ -530,10 +530,10 @@ def test_modify_org_bulk_both_success(app, permission_result):
 
             # Check bulk update call
             bulk_query = (
-                "INSERT INTO public.rsu_options (rsu_id, tim_deposit, snmp_monitoring) "
+                "INSERT INTO rsu_options (rsu_id, tim_deposit, snmp_monitoring) "
                 "SELECT ro.rsu_id, :tim_deposit, :snmp_monitoring "
-                "FROM public.rsu_organization ro "
-                "JOIN public.organizations org ON ro.organization_id = org.organization_id "
+                "FROM rsu_organization ro "
+                "JOIN organizations org ON ro.organization_id = org.organization_id "
                 "WHERE org.name = :name "
                 "ON CONFLICT (rsu_id) DO UPDATE SET tim_deposit = EXCLUDED.tim_deposit, snmp_monitoring = EXCLUDED.snmp_monitoring"
             )
@@ -578,7 +578,7 @@ def test_modify_org_no_bulk_endpoint(app, permission_result):
             # Should only have 1 call (for org update)
             assert mock_write_db.call_count == 1
             assert (
-                "INSERT INTO public.rsu_options"
+                "INSERT INTO rsu_options"
                 not in mock_write_db.call_args_list[0][0][0]
             )
 

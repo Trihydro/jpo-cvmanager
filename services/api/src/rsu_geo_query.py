@@ -16,8 +16,8 @@ from common.auth_tools import (
 
 def query_org_rsus(orgName):
     query = (
-        "SELECT ipv4_address from public.rsus as rd "
-        "JOIN public.rsu_organization_name AS ron_v ON ron_v.rsu_id = rd.rsu_id "
+        "SELECT ipv4_address from rsus as rd "
+        "JOIN rsu_organization_name AS ron_v ON ron_v.rsu_id = rd.rsu_id "
         "WHERE ron_v.name = :org_name"
     )
     params = {"org_name": orgName}
@@ -59,9 +59,9 @@ def query_rsu_devices(ipList, pointList, vendor=None):
     if vendor is not None:
         query += (
             "AND ipv4_address IN (SELECT rd.ipv4_address "
-            "FROM public.rsus as rd "
-            "JOIN public.rsu_models as rm ON rm.rsu_model_id = rd.model "
-            "JOIN public.manufacturers as man on man.manufacturer_id = rm.manufacturer "
+            "FROM rsus as rd "
+            "JOIN rsu_models as rm ON rm.rsu_model_id = rd.model "
+            "JOIN manufacturers as man on man.manufacturer_id = rm.manufacturer "
             "WHERE man.name = :vendor) "
         )
         params["vendor"] = vendor

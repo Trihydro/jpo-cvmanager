@@ -18,7 +18,7 @@ def calculate_max_workers(rsu_count):
 
 def insert_ping_data(ping_data, ping_time):
     # Build the insert query with the RSU ping data
-    query = "INSERT INTO public.ping (timestamp, result, rsu_id) VALUES"
+    query = "INSERT INTO ping (timestamp, result, rsu_id) VALUES"
     for rsu_id, online_status in ping_data.items():
         query += f" (TO_TIMESTAMP('{ping_time}', 'YYYY-MM-DD HH24:MI:SS'), B'{online_status}', {rsu_id}),"
     query = query[:-1]
@@ -99,7 +99,7 @@ def get_rsu_ips():
     query = (
         "SELECT to_jsonb(row) "
         "FROM ("
-        "SELECT rsu_id, ipv4_address FROM public.rsus"
+        "SELECT rsu_id, ipv4_address FROM rsus"
         ") as row"
     )
 
